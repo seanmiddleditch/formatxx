@@ -176,7 +176,7 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 				index = next_index;
 
 			// if we hit the end of the string, we have an incomplete format
-			if (cur == format.end)
+			if (end == format.end)
 			{
 				write_error(writer, sErrIncomplete);
 				break;
