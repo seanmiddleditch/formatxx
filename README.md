@@ -31,6 +31,47 @@ and pointers are intended to be as absolutel light-weight on the compiler as pos
 actual formatting work is all implemented in a source file and not the header, to keep the
 header small and cheap to include.
 
+## Usage
+
+formatxx can write into user-defined buffers, or a user may use one of the provided buffer
+types. Formatting is support for any type that has an appropriate `format` free function with
+the signature `void format(fmt2::IWriter&, TheType, fmt2::FormatSpec)`. For instance:
+
+```C++
+struct Foo { int value };
+	
+void format(fmt2::IWriter& writer, Foo foo, fmt2::FormatSpec const& unused)
+{
+	writer.Format("Foo({})", foo.value);
+}
+	
+int main()
+{
+	std::cout << fmt2::FormatString<>("testing {0}", Foo{123});
+}
+```
+
+The above will print `testing Foo(123)` to standard output.
+
+The `fmt2::FormatString<StringT = std::string>(format_string, ...)` template can be used
+for formatting a series of arguments into a `std::string` or any compatible string type.
+
+The `fmt2::FormatInfo<WriterT>(WriterT&, format_string, ...)` template can be used to
+write into a write buffer.
+
+The provided write buffers are:
+- `fmt::FixedWriter<N>` - a write buffer that will never allocate but only support
+  `N`-1 characters.
+- `fmt::StringWriter<StringT>` - a write buffer that writes into a `std::string`-
+  compatible type.
+- `fmt::BufferedWriter<N, AllocatorT = std::allocator<char>>` - a write buffer that
+  will not allocate for strings up to `N`-1 characters long but will allocate when
+  necessary if that length is exceeded.
+
+All three of the provided write buffers guarantee NUL-terminated strings, but support
+use with string types that are not NUL-terminated (another important use case for
+formatxx).
+
 ## History and Design Notes
 
 The library that motivated this author to write formatxx is the excellent
@@ -68,6 +109,7 @@ code).
 
 ## To Do
 
+- Pick a more unique and meaningful namespace.
 - The remaining primitive types.
 - Basic format specifier support.
 - Custom format specifier support.
