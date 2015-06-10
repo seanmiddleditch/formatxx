@@ -34,7 +34,7 @@ header small and cheap to include.
 ## History and Design Notes
 
 The library that motivated this author to write formatxx is the excellent
-(cppformat)[https://cppformat.github.io/] by Victor Zverovich. cppformat does much of what this
+[cppformat](https://cppformat.github.io/) by Victor Zverovich. cppformat does much of what this
 library does, has excellent runtime speed, and a responsive and talented author. Unfortunately,
 the library failed to meet a few needs that cppformat seeks to address: cppformat relies on
 some very heavy standard headers, its error handling mechanisms are limited to C++ exceptions
