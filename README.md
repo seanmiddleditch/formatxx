@@ -113,6 +113,9 @@ code).
 - The remaining primitive types.
 - Basic format specifier support.
 - Custom format specifier support.
+- Detectable errors
+  - Throw by default, with option/`std::nothrow` to disable?
+  - Return value to indicate if an error happened?
 - `printf` syntax option.
 - Convert naming to C++ standard's conventions.
 - Performance pass
