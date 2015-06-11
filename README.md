@@ -24,7 +24,7 @@ cannot allocate, and use in log systems where allocation should be avoided but i
 necessary.
 
 The underlying method of operation of formatxx is to collect a list of arguments via variadic
-templates, lookup a `format` function for each of those arguments, and then pass the format
+templates, lookup a `format_value` function for each of those arguments, and then pass the format
 string, an array of format functions, and an array of `void` pointers to arguments into the
 the actual formatting function. The header mechanisms that generate these lists of functions
 and pointers are intended to be as absolutel light-weight on the compiler as possible. The
@@ -34,37 +34,37 @@ header small and cheap to include.
 ## Usage
 
 formatxx can write into user-defined buffers, or a user may use one of the provided buffer
-types. Formatting is support for any type that has an appropriate `format` free function with
-the signature `void format(fmt2::IWriter&, TheType, fmt2::FormatSpec)`. For instance:
+types. Formatting is support for any type that has an appropriate `format_value` free function with
+the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_spec)`. For instance:
 
 ```C++
 struct Foo { int value };
 	
-void format(fmt2::IWriter& writer, Foo foo, fmt2::FormatSpec const& unused)
+void format_value(formatxx::writer& out, Foo foo, formatxx::format_spec const& unused)
 {
-	writer.Format("Foo({})", foo.value);
+	format(out, "Foo({})", foo.value);
 }
 	
 int main()
 {
-	std::cout << fmt2::FormatString<>("testing {0}", Foo{123});
+	std::cout << formatxx::FormatString<>("testing {0}", Foo{123});
 }
 ```
 
 The above will print `testing Foo(123)` to standard output.
 
-The `fmt2::FormatString<StringT = std::string>(format_string, ...)` template can be used
+The `formatxx::format<StringT = std::string>(string_view, ...)` template can be used
 for formatting a series of arguments into a `std::string` or any compatible string type.
 
-The `fmt2::FormatInfo<WriterT>(WriterT&, format_string, ...)` template can be used to
+The `formatxx::format(formatxx::writer&, string_view, ...)` template can be used to
 write into a write buffer.
 
 The provided write buffers are:
-- `fmt::FixedWriter<N>` - a write buffer that will never allocate but only support
+- `fmt::fixed_writer<N>` - a write buffer that will never allocate but only support
   `N`-1 characters.
-- `fmt::StringWriter<StringT>` - a write buffer that writes into a `std::string`-
+- `fmt::string_writer<StringT>` - a write buffer that writes into a `std::string`-
   compatible type.
-- `fmt::BufferedWriter<N, AllocatorT = std::allocator<char>>` - a write buffer that
+- `fmt::buffered_writer<N, AllocatorT = std::allocator<char>>` - a write buffer that
   will not allocate for strings up to `N`-1 characters long but will allocate when
   necessary if that length is exceeded.
 
@@ -84,13 +84,13 @@ including its primary header is pretty large, and its support for formatting use
 types relies on `std::ostream` wrappers (which are neither lightweight includes nor are they
 runtime efficient). For these reasons, research into formatxx began.
 
-The initial design did not use a `format` function for each type. Instead, an enumeration for
-the basic categories of primitives (`bool`, `signed long`, `double`, etc.) was computed via
+The initial design did not use a `format_value` function for each type. Instead, an enumeration
+for the basic categories of primitives (`bool`, `signed long`, `double`, etc.) was computed via
 a template, values would be cast into their desired "native" representation, and that would
 be passed into the format function. Unfortunately, this added a lot of heavy template machinery
 to the header: the enum selection, a `std::tuple` for storing the converted inputs, etc. It
-also proved to be difficult to get good support for `format` functions for user-defined types
-with clean and concise error messages.
+also proved to be difficult to get good support for `format_value` functions for user-defined
+types with clean and concise error messages.
 
 The current internal implementation supports a home-grown format lightly modeled after than in
 cppformat. The intended syntax will allow positional and non-positional arguments, "standard"
@@ -99,17 +99,16 @@ user-defined types.
 
 The current header relies on a function template wrapper around the real formatting functions.
 This is one template more than is desired that will lead to object file bloat, and for
-unoptimized debug builds essentially means that all `format` functions get an extra unnecessary
-"trampoline" that can be very heavyweight with many compilers' debug checks enabled. Ideally,
-these templates would be externed or converted away from wrappers. One solution would be to
-make the templates' functions for primitive types directly be the formatters for those types
-and then make `format` be the template wrapper (since it is expect to be more rarely used; it
-mostly exists to keep the same API between primitives and user-defined types for generic user
-code).
+unoptimized debug builds essentially means that all `format_value` functions get an extra
+unnecessary "trampoline" that can be very heavyweight with many compilers' debug checks
+enabled. Ideally, these templates would be externed or converted away from wrappers. One
+solution would be to make the templates' functions for primitive types directly be the
+formatters for those types and then make `format_value` be the template wrapper (since it is
+expected to be more rarely used; it mostly exists to keep the same API between primitives and
+user-defined types for generic user code).
 
 ## To Do
 
-- Pick a more unique and meaningful namespace.
 - The remaining primitive types.
 - Basic format specifier support.
 - Custom format specifier support.
@@ -117,7 +116,6 @@ code).
   - Throw by default, with option/`std::nothrow` to disable?
   - Return value to indicate if an error happened?
 - `printf` syntax option.
-- Convert naming to C++ standard's conventions.
 - Performance pass
   - Remove `std::strlen` calls for C-style strings where not strictly needed.
   - Efficient formatters in place of `snprintf` for most basic types.
