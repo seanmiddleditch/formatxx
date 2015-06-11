@@ -41,58 +41,62 @@ namespace std
 	template <typename> class allocator;
 }
 
-namespace fmt2
+namespace formatxx
 {
-	struct StringView;
-	struct FormatSpec;
+	struct string_view;
+	struct format_spec;
 
-	class IWriter;
-	template <typename>	class StringWriter;
-	template <std::size_t> class FixedWriter;
-	template <std::size_t, typename> class BufferedWriter;
+	class format_writer;
+	template <typename>	class string_writer;
+	template <std::size_t> class fixed_writer;
+	template <std::size_t, typename> class buffered_writer;
 
-	template <typename StringT, typename... Args> StringT FormatString(StringView format, Args&&... args);
+	template <typename... Args> void format(format_writer& out, string_view format, Args&&... args);
+	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
 
-	template <typename T> void format(IWriter&, T const&, FormatSpec const&);
+	template <typename T> void format_value(format_writer&, T const&, format_spec const&);
 }
 
 /// \brief Describes a format string.
-struct fmt2::StringView
+struct formatxx::string_view
 {
 	char const* begin = nullptr;
 	char const* end = nullptr;
 
-	StringView(char const* str) : begin(str), end(str + std::strlen(str)) {}
+	string_view(char const* str) : begin(str), end(str + std::strlen(str)) {}
 
 	template <typename TraitsT, typename AllocatorT>
-	StringView(std::basic_string<char, TraitsT, AllocatorT> const& str) : begin(str.c_str()), end(str.c_str() + str.size()) {}
+	string_view(std::basic_string<char, TraitsT, AllocatorT> const& str) : begin(str.c_str()), end(str.c_str() + str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
-	template <size_t N> StringView(char (&str)[N]) : begin(str), end(str + N) {}
+	template <size_t N> string_view(char (&str)[N]) : begin(str), end(str + N) {}
 };
 
 /// \brief Interface for any buffer that the format library can write into.
-class fmt2::IWriter
+class formatxx::format_writer
 {
 public:
-	virtual ~IWriter() = default;
+	virtual ~format_writer() = default;
 
-	virtual void Write(char const* nstr, std::size_t length) = 0;
-	virtual void Write(char const* zstr) = 0;
+	/// \brief Write a string slice.
+	/// \param nstr A length-delimited string.
+	/// \param length The length of the string in nstr.
+	virtual void write(char const* nstr, std::size_t length) = 0;
 
-	template <typename... Args>
-	void Format(StringView format, Args&&... args);
+	/// \brief Write a C-style string.
+	/// \param zstr A NUL-terminated string.
+	virtual void write(char const* zstr) { write(zstr, std::strlen(zstr)); }
 };
 
 /// \brief A writer that generates a buffer (intended for std::string).
 template <typename StringT = std::string>
-class fmt2::StringWriter : public IWriter
+class formatxx::string_writer : public format_writer
 {
 	StringT _string;
 
 public:
-	void Write(char const* nstr, std::size_t length) override { _string.append(nstr, length); }
-	void Write(char const* zstr) override { _string.append(zstr); }
+	void write(char const* nstr, std::size_t length) override { _string.append(nstr, length); }
+	void write(char const* zstr) override { _string.append(zstr); }
 
 	StringT const& String() const& { return _string; }
 	StringT&& String() && { return std::move(_string); }
@@ -103,14 +107,14 @@ public:
 
 /// \brief A writer with a fixed buffer that will never allocate.
 template <std::size_t SizeN = 512>
-class fmt2::FixedWriter : public IWriter
+class formatxx::fixed_writer : public format_writer
 {
 	std::size_t _length = 0;
 	char _buffer[SizeN] = {'\0',};
 
 public:
-	void Write(char const* nstr, size_t length) override;
-	void Write(char const* zstr) override;
+	void write(char const* nstr, size_t length) override;
+	void write(char const* zstr) override;
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
@@ -118,7 +122,7 @@ public:
 
 /// \brief A writer with a fixed buffer that will allocate when the buffer is exhausted.
 template <std::size_t SizeN = 256, typename AllocatorT = std::allocator<char>>
-class fmt2::BufferedWriter : public IWriter, private AllocatorT
+class formatxx::buffered_writer : public format_writer, private AllocatorT
 {
 	std::size_t _length = 0;
 	std::size_t _capacity = SizeN;
@@ -128,21 +132,21 @@ class fmt2::BufferedWriter : public IWriter, private AllocatorT
 	void Ensure(std::size_t amount);
 
 public:
-	BufferedWriter() = default;
-	~BufferedWriter();
+	buffered_writer() = default;
+	~buffered_writer();
 
-	BufferedWriter(BufferedWriter const&) = delete;
-	BufferedWriter& operator=(BufferedWriter const&) = delete;
+	buffered_writer(buffered_writer const&) = delete;
+	buffered_writer& operator=(buffered_writer const&) = delete;
 
-	void Write(char const* nstr, size_t length) override;
-	void Write(char const* zstr) override { Write(zstr, std::strlen(zstr)); }
+	void write(char const* nstr, size_t length) override;
+	using format_writer::write;
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
 };
 
 /// \brief Extra formatting specifications.
-struct fmt2::FormatSpec
+struct formatxx::format_spec
 {
 	unsigned width = 0;
 	unsigned precision = 0;
@@ -151,69 +155,74 @@ struct fmt2::FormatSpec
 	// #FIXME: custom string part
 };
 
-namespace fmt2
+namespace formatxx
 {
 	/// \brief Format interface to overload for custom types.
-	template <typename T> void format(IWriter& writer, T const& value, FormatSpec const& spec) = delete;
+	template <typename T> void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
 
 	/// \brief Default format helpers.
-	void format(IWriter& writer, char const* zstr, FormatSpec const& spec);
-	void format(IWriter& writer, StringView str, FormatSpec const& spec);
-	void format(IWriter& writer, char ch, FormatSpec const& spec);
-	void format(IWriter& writer, bool value, FormatSpec const& spec);
-	void format(IWriter& writer, float value, FormatSpec const& spec);
-	void format(IWriter& writer, signed int value, FormatSpec const& spec);
-	void format(IWriter& writer, signed long value, FormatSpec const& spec);
-	void format(IWriter& writer, signed short value, FormatSpec const& spec);
-	void format(IWriter& writer, signed long long value, FormatSpec const& spec);
-	void format(IWriter& writer, unsigned int value, FormatSpec const& spec);
-	void format(IWriter& writer, unsigned long value, FormatSpec const& spec);
-	void format(IWriter& writer, unsigned short value, FormatSpec const& spec);
-	void format(IWriter& writer, unsigned long long value, FormatSpec const& spec);
+	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
+	void format_value(format_writer& out, string_view str, format_spec const& spec);
+	void format_value(format_writer& out, char ch, format_spec const& spec);
+	void format_value(format_writer& out, bool value, format_spec const& spec);
+	void format_value(format_writer& out, float value, format_spec const& spec);
+	void format_value(format_writer& out, signed int value, format_spec const& spec);
+	void format_value(format_writer& out, signed long value, format_spec const& spec);
+	void format_value(format_writer& out, signed short value, format_spec const& spec);
+	void format_value(format_writer& out, signed long long value, format_spec const& spec);
+	void format_value(format_writer& out, unsigned int value, format_spec const& spec);
+	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
+	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
+	void format_value(format_writer& out, unsigned long long value, format_spec const& spec);
 
 	template <typename TraitsT, typename AllocatorT>
-	void format(IWriter& writer, std::basic_string<char, TraitsT, AllocatorT> const& string, FormatSpec const& spec);
+	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec);
 
 	/// \internal
 	namespace _detail
 	{
-		using FormatFunc = void(*)(IWriter&, void const*, FormatSpec const&);
+		using FormatFunc = void(*)(format_writer&, void const*, format_spec const&);
 
-		template <typename T> struct wrap { static void fwd(IWriter& writer, void const* ptr, FormatSpec const& spec) { format(writer, *static_cast<T const*>(ptr), spec); } };
+		template <typename T> struct wrap { static void fwd(format_writer& out, void const* ptr, format_spec const& spec) { format_value(out, *static_cast<T const*>(ptr), spec); } };
 		// #FIXME: char[N] types will horribly do the wrong thing here.
 
-		void format_impl(IWriter& writer, StringView format, std::size_t count, FormatFunc const* funcs, void const** values);
+		void format_impl(format_writer& out, string_view format, std::size_t count, FormatFunc const* funcs, void const** values);
 	}
+}
+
+/// \brief Write the string format using the given parameters into a buffer.
+/// \param writer The write buffer that will receive the formatted text.
+/// \param format The primary text and formatting controls to be written.
+/// \param args The arguments used by the formatting string.
+template <typename... Args>
+void formatxx::format(format_writer& out, string_view format, Args&&... args)
+{
+	void const* values[] = {std::addressof(args)..., nullptr};
+	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
+
+	_detail::format_impl(out, format, sizeof...(Args), funcs, values);
 }
 
 /// \brief Write the string format using the given parameters into a buffer.
 /// \param format The primary text and formatting controls to be written.
 /// \param args The arguments used by the formatting string.
-template <typename... Args>
-void fmt2::IWriter::Format(StringView format, Args&&... args)
-{
-	void const* values[] = {std::addressof(args)..., nullptr};
-	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
-
-	_detail::format_impl(*this, format, sizeof...(Args), funcs, values);
-}
-
+/// \returns a formatted string.
 template <typename StringT = std::string, typename... Args>
-StringT fmt2::FormatString(StringView format, Args&&... args)
+StringT formatxx::format(string_view format, Args&&... args)
 {
-	StringWriter<StringT> writer;
-	writer.Format(format, args...);
-	return std::move(writer).String();
+	string_writer<StringT> tmp;
+	formatxx::format(tmp, format, args...);
+	return std::move(tmp).String();
 }
 
 template <typename TraitsT, typename AllocatorT>
-void fmt2::format(IWriter& writer, std::basic_string<char, TraitsT, AllocatorT> const& string, FormatSpec const&)
+void formatxx::format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const&)
 {
-	writer.Write(string.c_str(), string.size());
+	out.write(string.c_str(), string.size());
 }
 
 template <std::size_t SizeN>
-void fmt2::FixedWriter<SizeN>::Write(char const* nstr, std::size_t length)
+void formatxx::fixed_writer<SizeN>::write(char const* nstr, std::size_t length)
 {
 	while (length > 0 && _length < SizeN-1)
 		_buffer[_length++] = *(nstr++);
@@ -221,7 +230,7 @@ void fmt2::FixedWriter<SizeN>::Write(char const* nstr, std::size_t length)
 }
 
 template <std::size_t SizeN>
-void fmt2::FixedWriter<SizeN>::Write(char const* zstr)
+void formatxx::fixed_writer<SizeN>::write(char const* zstr)
 {
 	while (_length < SizeN-1 && *zstr != '\0')
 		_buffer[_length++] = *(zstr++);
@@ -229,14 +238,14 @@ void fmt2::FixedWriter<SizeN>::Write(char const* zstr)
 }
 
 template <std::size_t SizeN, typename AllocatorT>
-fmt2::BufferedWriter<SizeN, AllocatorT>::~BufferedWriter()
+formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
 {
 	if (_buffer != _fixed)
 		this->deallocate(_buffer, _capacity);
 }
 
 template <std::size_t SizeN, typename AllocatorT>
-void fmt2::BufferedWriter<SizeN, AllocatorT>::Ensure(std::size_t amount)
+void formatxx::buffered_writer<SizeN, AllocatorT>::Ensure(std::size_t amount)
 {
 	size_t const required = _length + amount + 1;
 	if (required > _capacity) // need space for NUL byte
@@ -258,7 +267,7 @@ void fmt2::BufferedWriter<SizeN, AllocatorT>::Ensure(std::size_t amount)
 }
 
 template <std::size_t SizeN, typename AllocatorT>
-void fmt2::BufferedWriter<SizeN, AllocatorT>::Write(char const* nstr, std::size_t length)
+void formatxx::buffered_writer<SizeN, AllocatorT>::write(char const* nstr, std::size_t length)
 {
 	Ensure(length);
 	std::memcpy(_buffer + _length, nstr, length);

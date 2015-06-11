@@ -39,25 +39,25 @@ namespace
 	const char sErrOutOfRange[] = "#RNGE";
 
 	template <size_t N>
-	void write_error(fmt2::IWriter& writer, const char(&string)[N])
+	void write_error(formatxx::format_writer& out, const char(&string)[N])
 	{
-		writer.Write(string, N - 1);
+		out.write(string, N - 1);
 	}
 
 	template <typename T>
-	void write_signed(fmt2::IWriter& writer, T const& value, fmt2::FormatSpec const&)
+	void write_signed(formatxx::format_writer& out, T const& value, formatxx::format_spec const&)
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%li", static_cast<signed long>(value));
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 
 	template <typename T>
-	void write_unsigned(fmt2::IWriter& writer, T const& value, fmt2::FormatSpec const&)
+	void write_unsigned(formatxx::format_writer& out, T const& value, formatxx::format_spec const&)
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%lu", static_cast<unsigned long>(value));
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 
 	char const* parse_unsigned(char const* start, char const* end, unsigned* result)
@@ -74,67 +74,67 @@ namespace
 	}
 }
 
-namespace fmt2
+namespace formatxx
 {
-	void format(IWriter& writer, char ch, FormatSpec const&)
+	void format_value(format_writer& out, char ch, format_spec const&)
 	{
-		writer.Write(&ch, 1);
+		out.write(&ch, 1);
 	}
 
-	void format(IWriter& writer, bool value, FormatSpec const&)
+	void format_value(format_writer& out, bool value, format_spec const&)
 	{
-		value ? write_error(writer, "true") : write_error(writer, "false");
+		value ? write_error(out, "true") : write_error(out, "false");
 	}
 
-	void format(IWriter& writer, char const* zstr, FormatSpec const&)
+	void format_value(format_writer& out, char const* zstr, format_spec const&)
 	{
 		auto const len = std::strlen(zstr);
-		writer.Write(zstr, len);
+		out.write(zstr, len);
 	}
 
-	void format(IWriter& writer, StringView str, FormatSpec const&)
+	void format_value(format_writer& out, string_view str, format_spec const&)
 	{
-		writer.Write(str.begin, str.end - str.begin);
+		out.write(str.begin, str.end - str.begin);
 	}
 
-	void format(IWriter& writer, signed int value, FormatSpec const& spec) { write_signed(writer, value, spec); }
-	void format(IWriter& writer, signed long value, FormatSpec const& spec) { write_signed(writer, value, spec); }
-	void format(IWriter& writer, signed short value, FormatSpec const& spec) { write_signed(writer, value, spec); }
+	void format_value(format_writer& out, signed int value, format_spec const& spec) { write_signed(out, value, spec); }
+	void format_value(format_writer& out, signed long value, format_spec const& spec) { write_signed(out, value, spec); }
+	void format_value(format_writer& out, signed short value, format_spec const& spec) { write_signed(out, value, spec); }
 
-	void format(IWriter& writer, signed long long value, FormatSpec const& spec)
+	void format_value(format_writer& out, signed long long value, format_spec const& spec)
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%lli", value);
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 
-	void format(IWriter& writer, unsigned int value, FormatSpec const& spec) { write_unsigned(writer, value, spec); }
-	void format(IWriter& writer, unsigned long value, FormatSpec const& spec) { write_unsigned(writer, value, spec); }
-	void format(IWriter& writer, unsigned short value, FormatSpec const& spec) { write_unsigned(writer, value, spec); }
+	void format_value(format_writer& out, unsigned int value, format_spec const& spec) { write_unsigned(out, value, spec); }
+	void format_value(format_writer& out, unsigned long value, format_spec const& spec) { write_unsigned(out, value, spec); }
+	void format_value(format_writer& out, unsigned short value, format_spec const& spec) { write_unsigned(out, value, spec); }
 	
-	void format(IWriter& writer, unsigned long long value, FormatSpec const& spec)
+	void format_value(format_writer& out, unsigned long long value, format_spec const& spec)
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%llu", value);
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 
-	void format(IWriter& writer, float value, FormatSpec const&)
+	void format_value(format_writer& out, float value, format_spec const&)
 	{
 		char buf[512]; // not actually enough for every float, but...
 		int len = std::snprintf(buf, sizeof(buf), "%f", value);
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 
-	void format(IWriter& writer, void const* ptr, FormatSpec const&)
+	void format_value(format_writer& out, void const* ptr, format_spec const&)
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%p", ptr);
-		writer.Write(buf, len);
+		out.write(buf, len);
 	}
 }
 
-void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t count, FormatFunc const* funcs, void const** values)
+void formatxx::_detail::format_impl(format_writer& out, string_view format, std::size_t count, FormatFunc const* funcs, void const** values)
 {
 	unsigned next_index = 0;
 
@@ -147,7 +147,7 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 			// write out the string so far, since we don't write characters immediately
 			if (cur > span)
 			{
-				writer.Write(span, cur - span);
+				out.write(span, cur - span);
 			}
 
 			++cur; // swallow the {
@@ -155,7 +155,7 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (cur == format.end)
 			{
-				write_error(writer, sErrIncomplete);
+				write_error(out, sErrIncomplete);
 				break;
 			}
 
@@ -176,9 +176,9 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 				index = next_index;
 
 			// if we hit the end of the string, we have an incomplete format
-			if (end == format.end)
+			if (cur == format.end)
 			{
-				write_error(writer, sErrIncomplete);
+				write_error(out, sErrIncomplete);
 				break;
 			}
 
@@ -191,14 +191,14 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 
 				if (end == format.end)
 				{
-					write_error(writer, sErrIncomplete);
+					write_error(out, sErrIncomplete);
 					break;
 				}
 			}
 			else if (*end != '}')
 			{
 				// we have something besides a number, no bueno
-				write_error(writer, sErrIncomplete);
+				write_error(out, sErrIncomplete);
 				span = cur = end; // make sure we're set up for the next span, which starts at this unknown character
 				continue;
 			}
@@ -209,15 +209,15 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 			// if the index is out of range, we have nothing to format
 			if (index >= count)
 			{
-				write_error(writer, sErrOutOfRange);
+				write_error(out, sErrOutOfRange);
 				continue;
 			}
 
 			// magic!
-			FormatSpec spec;
+			format_spec spec;
 			FormatFunc func = funcs[index];
 			void const* value = values[index];
-			func(writer, value, spec);
+			func(out, value, spec);
 
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;
@@ -230,5 +230,5 @@ void fmt2::_detail::format_impl(IWriter& writer, StringView format, std::size_t 
 
 	// write out tail end of format string
 	if (cur > span)
-		writer.Write(span, cur - span);
+		out.write(span, cur - span);
 }
