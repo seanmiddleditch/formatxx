@@ -31,12 +31,82 @@
 #include "format.h"
 
 #include <cstdio>
+#include <limits>
 
 namespace
 {
-	const char sErrBadFormat[] =  "#BADF";
-	const char sErrIncomplete[] = "#INCL";
-	const char sErrOutOfRange[] = "#RNGE";
+	constexpr char sErrBadFormat[]  = "#BADF";
+	constexpr char sErrIncomplete[] = "#INCL";
+	constexpr char sErrOutOfRange[] = "#RNGE";
+
+	// during integer formatting, we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
+	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
+	constexpr char sHundredsTable[] =
+		"00010203040506070809"
+		"10111213141516171819"
+		"20212223242526272829"
+		"30313233343536373839"
+		"40414243444546474849"
+		"50515253545556575859"
+		"60616263646566676869"
+		"70717273747576777879"
+		"80818283848586878889"
+		"90919293949596979899";
+
+	// base-10 digits, NUL, sign, signed extension
+	constexpr std::size_t kIntBufferSize = std::numeric_limits<unsigned long long>::digits10 + 3;
+
+	char* gen_unsigned(char buffer[kIntBufferSize], unsigned long long value)
+	{
+		// we're going to write backwards into the buffer, starting from the end character
+		char* end = buffer + kIntBufferSize;
+
+		// ensure we get the NUL character
+		*--end = '\0';
+
+		// work on every two decimal digits (groups of 100). notes taken from cppformat,
+		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
+		while (value >= 100)
+		{
+			// I feel like we could do the % and / better... somehow
+			// we multiply the index by two to find the pair of digits to index
+			unsigned const digit = (value % 100) << 1;
+			value /= 100;
+
+			// write out both digits of the given index, starting with the second, since we're writing backwards
+			*--end = sHundredsTable[digit + 1];
+			*--end = sHundredsTable[digit];
+		}
+
+		if (value >= 10)
+		{
+			// we have two difits left; this is identical to the above loop, but without the division
+			unsigned const digit = static_cast<unsigned>(value << 1);
+			*--end = sHundredsTable[digit + 1];
+			*--end = sHundredsTable[digit];
+		}
+		else
+		{
+			// we have but a single digit left, so this is easy
+			*--end = static_cast<char>('0' + value);
+		}
+
+		// we return the location in the buffer that our formatted string starts at
+		return end;
+	}
+
+	char* gen_signed(char buffer[kIntBufferSize], signed long long value)
+	{
+		// if the value is non-negative, the unsigned version does everything we need
+		if (value >= 0)
+			return gen_unsigned(buffer, static_cast<unsigned long long>(value));
+
+		// subtract form 0 _after_ converting to deal with 2's complement format
+		unsigned long long abs_value = 0 - static_cast<unsigned long long>(value);
+		char* end = gen_unsigned(buffer, abs_value);
+		*--end = '-';
+		return end;
+	}
 
 	template <size_t N>
 	void write_error(formatxx::format_writer& out, const char(&string)[N])
@@ -45,31 +115,28 @@ namespace
 	}
 
 	template <typename T>
-	void write_signed(formatxx::format_writer& out, T const& value, formatxx::format_spec const&)
+	void write_unsigned(formatxx::format_writer& out, T value, formatxx::format_spec const&)
 	{
-		char buf[48];
-		int len = std::snprintf(buf, sizeof(buf), "%li", static_cast<signed long>(value));
-		out.write(buf, len);
+		char buffer[kIntBufferSize];
+		out.write(gen_unsigned(buffer, value));
 	}
 
 	template <typename T>
-	void write_unsigned(formatxx::format_writer& out, T const& value, formatxx::format_spec const&)
+	void write_signed(formatxx::format_writer& out, T value, formatxx::format_spec const& spec)
 	{
-		char buf[48];
-		int len = std::snprintf(buf, sizeof(buf), "%lu", static_cast<unsigned long>(value));
-		out.write(buf, len);
+		char buffer[kIntBufferSize];
+		out.write(gen_signed(buffer, value));
 	}
 
 	char const* parse_unsigned(char const* start, char const* end, unsigned* result)
 	{
-		unsigned tmp = 0;
+		*result = 0;
 		while (start != end && *start >= '0' && *start <= '9')
 		{
-			tmp *= 10;
-			tmp += *start - '0';
+			*result *= 10;
+			*result += *start - '0';
 			++start;
 		}
-		*result = tmp;
 		return start;
 	}
 }
@@ -100,24 +167,12 @@ namespace formatxx
 	void format_value(format_writer& out, signed int value, format_spec const& spec) { write_signed(out, value, spec); }
 	void format_value(format_writer& out, signed long value, format_spec const& spec) { write_signed(out, value, spec); }
 	void format_value(format_writer& out, signed short value, format_spec const& spec) { write_signed(out, value, spec); }
-
-	void format_value(format_writer& out, signed long long value, format_spec const& spec)
-	{
-		char buf[48];
-		int len = std::snprintf(buf, sizeof(buf), "%lli", value);
-		out.write(buf, len);
-	}
+	void format_value(format_writer& out, signed long long value, format_spec const& spec) { write_signed(out, value, spec); }
 
 	void format_value(format_writer& out, unsigned int value, format_spec const& spec) { write_unsigned(out, value, spec); }
 	void format_value(format_writer& out, unsigned long value, format_spec const& spec) { write_unsigned(out, value, spec); }
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec) { write_unsigned(out, value, spec); }
-	
-	void format_value(format_writer& out, unsigned long long value, format_spec const& spec)
-	{
-		char buf[48];
-		int len = std::snprintf(buf, sizeof(buf), "%llu", value);
-		out.write(buf, len);
-	}
+	void format_value(format_writer& out, unsigned long long value, format_spec const& spec) { write_unsigned(out, value, spec); }
 
 	void format_value(format_writer& out, float value, format_spec const&)
 	{
@@ -146,9 +201,7 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (cur > span)
-			{
 				out.write(span, cur - span);
-			}
 
 			++cur; // swallow the {
 
@@ -169,10 +222,11 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 
 			// determine which argument we're going to format
 			unsigned index = 0;
-			char const* end = parse_unsigned(cur, format.end, &index);
+			char const* const start = cur;
+			char const* cur = parse_unsigned(start, format.end, &index);
 
 			// if we read nothing, we have a "next index" situation (or an error)
-			if (end == cur)
+			if (cur == start)
 				index = next_index;
 
 			// if we hit the end of the string, we have an incomplete format
@@ -183,28 +237,28 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 			}
 
 			// if a | follows the number, we have some formatting controls
-			if (*end == '|')
+			if (*cur == '|')
 			{
 				// #FIXME: parse and save these
-				while (end < format.end && *end != '}')
-					++end;
+				while (cur < format.end && *cur != '}')
+					++cur;
 
-				if (end == format.end)
+				if (cur == format.end)
 				{
 					write_error(out, sErrIncomplete);
 					break;
 				}
 			}
-			else if (*end != '}')
+			else if (*cur != '}')
 			{
 				// we have something besides a number, no bueno
 				write_error(out, sErrIncomplete);
-				span = cur = end; // make sure we're set up for the next span, which starts at this unknown character
+				span = cur; // make sure we're set up for the next span, which starts at this unknown character
 				continue;
 			}
 
 			// the current text span begins with the next character following the format directive's end
-			span = cur = end + 1;
+			span = cur = cur + 1;
 
 			// if the index is out of range, we have nothing to format
 			if (index >= count)
@@ -215,9 +269,7 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 
 			// magic!
 			format_spec spec;
-			FormatFunc func = funcs[index];
-			void const* value = values[index];
-			func(out, value, spec);
+			funcs[index](out, values[index], spec);
 
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;
