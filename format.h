@@ -57,7 +57,7 @@ namespace formatxx
 	template <typename T> void format_value(format_writer&, T const&, format_spec const&);
 }
 
-/// \brief Describes a format string.
+/// Describes a format string.
 struct formatxx::string_view
 {
 	char const* begin = nullptr;
@@ -72,23 +72,23 @@ struct formatxx::string_view
 	template <size_t N> string_view(char (&str)[N]) : begin(str), end(str + N) {}
 };
 
-/// \brief Interface for any buffer that the format library can write into.
+/// Interface for any buffer that the format library can write into.
 class formatxx::format_writer
 {
 public:
 	virtual ~format_writer() = default;
 
-	/// \brief Write a string slice.
-	/// \param nstr A length-delimited string.
-	/// \param length The length of the string in nstr.
+	/// Write a string slice.
+	/// @param nstr A length-delimited string.
+	/// @param length The length of the string in nstr.
 	virtual void write(char const* nstr, std::size_t length) = 0;
 
-	/// \brief Write a C-style string.
-	/// \param zstr A NUL-terminated string.
+	/// Write a C-style string.
+	/// @param zstr A NUL-terminated string.
 	virtual void write(char const* zstr) { write(zstr, std::strlen(zstr)); }
 };
 
-/// \brief A writer that generates a buffer (intended for std::string).
+/// A writer that generates a buffer (intended for std::string).
 template <typename StringT = std::string>
 class formatxx::string_writer : public format_writer
 {
@@ -105,7 +105,7 @@ public:
 	char const* c_str() const { return _string.c_str(); }
 };
 
-/// \brief A writer with a fixed buffer that will never allocate.
+/// A writer with a fixed buffer that will never allocate.
 template <std::size_t SizeN = 512>
 class formatxx::fixed_writer : public format_writer
 {
@@ -120,7 +120,7 @@ public:
 	char const* c_str() const { return _buffer; }
 };
 
-/// \brief A writer with a fixed buffer that will allocate when the buffer is exhausted.
+/// A writer with a fixed buffer that will allocate when the buffer is exhausted.
 template <std::size_t SizeN = 256, typename AllocatorT = std::allocator<char>>
 class formatxx::buffered_writer : public format_writer, private AllocatorT
 {
@@ -145,7 +145,7 @@ public:
 	char const* c_str() const { return _buffer; }
 };
 
-/// \brief Extra formatting specifications.
+/// Extra formatting specifications.
 struct formatxx::format_spec
 {
 	unsigned width = 0;
@@ -157,10 +157,10 @@ struct formatxx::format_spec
 
 namespace formatxx
 {
-	/// \brief Format interface to overload for custom types.
+	/// Format interface to overload for custom types.
 	template <typename T> void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
 
-	/// \brief Default format helpers.
+	/// Default format helpers.
 	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
 	void format_value(format_writer& out, string_view str, format_spec const& spec);
 	void format_value(format_writer& out, char ch, format_spec const& spec);
@@ -178,7 +178,7 @@ namespace formatxx
 	template <typename TraitsT, typename AllocatorT>
 	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec);
 
-	/// \internal
+	/// @internal
 	namespace _detail
 	{
 		using FormatFunc = void(*)(format_writer&, void const*, format_spec const&);
@@ -190,10 +190,10 @@ namespace formatxx
 	}
 }
 
-/// \brief Write the string format using the given parameters into a buffer.
-/// \param writer The write buffer that will receive the formatted text.
-/// \param format The primary text and formatting controls to be written.
-/// \param args The arguments used by the formatting string.
+/// Write the string format using the given parameters into a buffer.
+/// @param writer The write buffer that will receive the formatted text.
+/// @param format The primary text and formatting controls to be written.
+/// @param args The arguments used by the formatting string.
 template <typename... Args>
 void formatxx::format(format_writer& out, string_view format, Args&&... args)
 {
@@ -203,10 +203,10 @@ void formatxx::format(format_writer& out, string_view format, Args&&... args)
 	_detail::format_impl(out, format, sizeof...(Args), funcs, values);
 }
 
-/// \brief Write the string format using the given parameters into a buffer.
-/// \param format The primary text and formatting controls to be written.
-/// \param args The arguments used by the formatting string.
-/// \returns a formatted string.
+/// Write the string format using the given parameters into a buffer.
+/// @param format The primary text and formatting controls to be written.
+/// @param args The arguments used by the formatting string.
+/// @returns a formatted string.
 template <typename StringT = std::string, typename... Args>
 StringT formatxx::format(string_view format, Args&&... args)
 {
