@@ -63,13 +63,15 @@ struct formatxx::string_view
 	char const* begin = nullptr;
 	char const* end = nullptr;
 
-	string_view(char const* str) : begin(str), end(str + std::strlen(str)) {}
+	string_view(char const* first, char const* last) : begin(first), end(last) {}
+	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
+	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
 
 	template <typename TraitsT, typename AllocatorT>
-	string_view(std::basic_string<char, TraitsT, AllocatorT> const& str) : begin(str.c_str()), end(str.c_str() + str.size()) {}
+	string_view(std::basic_string<char, TraitsT, AllocatorT> const& str) : string_view(str.c_str(), str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
-	template <size_t N> string_view(char (&str)[N]) : begin(str), end(str + N) {}
+	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
 };
 
 /// Interface for any buffer that the format library can write into.
