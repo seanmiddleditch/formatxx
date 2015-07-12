@@ -100,8 +100,8 @@ public:
 	void write(char const* nstr, std::size_t length) override { _string.append(nstr, length); }
 	void write(char const* zstr) override { _string.append(zstr); }
 
-	StringT const& String() const& { return _string; }
-	StringT&& String() && { return std::move(_string); }
+	StringT const& str() const& { return _string; }
+	StringT&& str() && { return std::move(_string); }
 
 	std::size_t size() const { return _string.size(); }
 	char const* c_str() const { return _string.c_str(); }
@@ -131,7 +131,7 @@ class formatxx::buffered_writer : public format_writer, private AllocatorT
 	char* _buffer = _fixed;
 	char _fixed[SizeN] = {'\0',};
 
-	void Ensure(std::size_t amount);
+	void _grow(std::size_t amount);
 
 public:
 	buffered_writer() = default;
@@ -214,7 +214,7 @@ StringT formatxx::format(string_view format, Args&&... args)
 {
 	string_writer<StringT> tmp;
 	formatxx::format(tmp, format, args...);
-	return std::move(tmp).String();
+	return std::move(tmp).str();
 }
 
 template <typename TraitsT, typename AllocatorT>
@@ -247,7 +247,7 @@ formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
 }
 
 template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::Ensure(std::size_t amount)
+void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 {
 	size_t const required = _length + amount + 1;
 	if (required > _capacity) // need space for NUL byte
@@ -271,7 +271,7 @@ void formatxx::buffered_writer<SizeN, AllocatorT>::Ensure(std::size_t amount)
 template <std::size_t SizeN, typename AllocatorT>
 void formatxx::buffered_writer<SizeN, AllocatorT>::write(char const* nstr, std::size_t length)
 {
-	Ensure(length);
+	_grow(length);
 	std::memcpy(_buffer + _length, nstr, length);
 	_length += length;
 	_buffer[_length] = '\0';
