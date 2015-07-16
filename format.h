@@ -168,6 +168,7 @@ namespace formatxx
 	void format_value(format_writer& out, char ch, format_spec const& spec);
 	void format_value(format_writer& out, bool value, format_spec const& spec);
 	void format_value(format_writer& out, float value, format_spec const& spec);
+	void format_value(format_writer& out, double value, format_spec const& spec);
 	void format_value(format_writer& out, signed int value, format_spec const& spec);
 	void format_value(format_writer& out, signed long value, format_spec const& spec);
 	void format_value(format_writer& out, signed short value, format_spec const& spec);

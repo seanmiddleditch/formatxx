@@ -181,6 +181,13 @@ namespace formatxx
 		out.write(buf, len);
 	}
 
+	void format_value(format_writer& out, double value, format_spec const&)
+	{
+		char buf[1048]; // not actually enough for every float, but...
+		int len = std::snprintf(buf, sizeof(buf), "%g", value);
+		out.write(buf, len);
+	}
+
 	void format_value(format_writer& out, void const* ptr, format_spec const&)
 	{
 		char buf[48];
