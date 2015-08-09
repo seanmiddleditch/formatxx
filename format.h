@@ -54,7 +54,7 @@ namespace formatxx
 	template <typename... Args> void format(format_writer& out, string_view format, Args&&... args);
 	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
 
-	template <typename T> void format_value(format_writer&, T const&, format_spec const&);
+	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
 }
 
 /// Describes a format string.
@@ -159,9 +159,6 @@ struct formatxx::format_spec
 
 namespace formatxx
 {
-	/// Format interface to overload for custom types.
-	template <typename T> void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
-
 	/// Default format helpers.
 	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
 	void format_value(format_writer& out, string_view str, format_spec const& spec);
@@ -177,9 +174,22 @@ namespace formatxx
 	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned long long value, format_spec const& spec);
+	void format_value(format_writer& out, void const* value, format_spec const& spec);
 
+	/// Formatting for enumerations, using their numeric value.
+	template <typename EnumT, typename = std::enable_if_t<std::is_enum<EnumT>::value>>
+	void format_value(format_writer& out, EnumT value, format_spec const& spec)
+	{
+		format_value(out, std::underlying_type_t<EnumT>(value), spec);
+	}
+
+	/// Formatting for C++ standard strings.
 	template <typename TraitsT, typename AllocatorT>
 	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec);
+
+	/// Cause a friendlier error message on unknown type.
+	template <typename T, typename = std::enable_if_t<!std::is_enum<T>::value>>
+	void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
 
 	/// @internal
 	namespace _detail
