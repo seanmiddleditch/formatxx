@@ -41,7 +41,7 @@ namespace
 
 	// during integer formatting, we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
-	constexpr char sHundredsTable[] =
+	constexpr char sDecimalTable[] =
 		"00010203040506070809"
 		"10111213141516171819"
 		"20212223242526272829"
@@ -56,7 +56,7 @@ namespace
 	// base-10 digits, NUL, sign, signed extension
 	constexpr std::size_t kIntBufferSize = std::numeric_limits<unsigned long long>::digits10 + 3;
 
-	char* gen_unsigned(char buffer[kIntBufferSize], unsigned long long value)
+	char* gen_unsigned_decimal(char buffer[kIntBufferSize], unsigned long long value)
 	{
 		// we're going to write backwards into the buffer, starting from the end character
 		char* end = buffer + kIntBufferSize;
@@ -74,16 +74,16 @@ namespace
 			value /= 100;
 
 			// write out both digits of the given index, starting with the second, since we're writing backwards
-			*--end = sHundredsTable[digit + 1];
-			*--end = sHundredsTable[digit];
+			*--end = sDecimalTable[digit + 1];
+			*--end = sDecimalTable[digit];
 		}
 
 		if (value >= 10)
 		{
 			// we have two difits left; this is identical to the above loop, but without the division
 			unsigned const digit = static_cast<unsigned>(value << 1);
-			*--end = sHundredsTable[digit + 1];
-			*--end = sHundredsTable[digit];
+			*--end = sDecimalTable[digit + 1];
+			*--end = sDecimalTable[digit];
 		}
 		else
 		{
@@ -95,15 +95,15 @@ namespace
 		return end;
 	}
 
-	char* gen_signed(char buffer[kIntBufferSize], signed long long value)
+	char* gen_signed_decimal(char buffer[kIntBufferSize], signed long long value)
 	{
 		// if the value is non-negative, the unsigned version does everything we need
 		if (value >= 0)
-			return gen_unsigned(buffer, static_cast<unsigned long long>(value));
+			return gen_unsigned_decimal(buffer, static_cast<unsigned long long>(value));
 
 		// subtract form 0 _after_ converting to deal with 2's complement format
 		unsigned long long abs_value = 0 - static_cast<unsigned long long>(value);
-		char* end = gen_unsigned(buffer, abs_value);
+		char* end = gen_unsigned_decimal(buffer, abs_value);
 		*--end = '-';
 		return end;
 	}
@@ -118,14 +118,14 @@ namespace
 	void write_unsigned(formatxx::format_writer& out, T value, formatxx::format_spec const&)
 	{
 		char buffer[kIntBufferSize];
-		out.write(gen_unsigned(buffer, value));
+		out.write(gen_unsigned_decimal(buffer, value));
 	}
 
 	template <typename T>
 	void write_signed(formatxx::format_writer& out, T value, formatxx::format_spec const& spec)
 	{
 		char buffer[kIntBufferSize];
-		out.write(gen_signed(buffer, value));
+		out.write(gen_signed_decimal(buffer, value));
 	}
 
 	char const* parse_unsigned(char const* start, char const* end, unsigned* result)
