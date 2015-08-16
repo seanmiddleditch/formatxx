@@ -34,6 +34,7 @@
 
 #include <type_traits>
 #include <cstring>
+#include <memory>
 
 namespace std
 {
