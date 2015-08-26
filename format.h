@@ -38,7 +38,9 @@
 
 namespace std
 {
+#ifndef __GNUC__
 	template <typename, typename, typename> class basic_string;
+#endif
 	template <typename> class allocator;
 }
 
