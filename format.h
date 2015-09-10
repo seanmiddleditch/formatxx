@@ -36,13 +36,7 @@
 #include <cstring>
 #include <memory>
 
-namespace std
-{
-#ifndef __GNUC__
-	template <typename, typename, typename> class basic_string;
-#endif
-	template <typename> class allocator;
-}
+#include "format_std.h"
 
 namespace formatxx
 {
