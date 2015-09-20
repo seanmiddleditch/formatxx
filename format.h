@@ -238,7 +238,8 @@ void formatxx::format_value(format_writer& out, std::basic_string<char, TraitsT,
 template <std::size_t SizeN>
 void formatxx::fixed_writer<SizeN>::write(char const* nstr, std::size_t length)
 {
-	while (length > 0 && _length < SizeN-1)
+	char const* end = nstr + length;
+	while (nstr != end && _length < SizeN-1)
 		_buffer[_length++] = *(nstr++);
 	_buffer[_length] = '\0';
 }
