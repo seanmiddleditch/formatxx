@@ -153,6 +153,11 @@ namespace formatxx
 		value ? write_error(out, "true") : write_error(out, "false");
 	}
 
+	void format_value(format_writer& out, char* ptr, format_spec const& spec)
+	{
+		format_value(out, static_cast<char const*>(ptr), spec);
+	}
+
 	void format_value(format_writer& out, char const* zstr, format_spec const&)
 	{
 		auto const len = std::strlen(zstr);
@@ -186,6 +191,11 @@ namespace formatxx
 		char buf[1048]; // not actually enough for every float, but...
 		int len = std::snprintf(buf, sizeof(buf), "%g", value);
 		out.write(buf, len);
+	}
+
+	void format_value(format_writer& out, void* ptr, format_spec const& spec)
+	{
+		format_value(out, static_cast<void const*>(ptr), spec);
 	}
 
 	void format_value(format_writer& out, void const* ptr, format_spec const&)

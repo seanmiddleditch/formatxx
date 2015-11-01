@@ -161,6 +161,7 @@ struct formatxx::format_spec
 namespace formatxx
 {
 	/// Default format helpers.
+	void format_value(format_writer& out, char* zstr, format_spec const& spec);
 	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
 	void format_value(format_writer& out, string_view str, format_spec const& spec);
 	void format_value(format_writer& out, char ch, format_spec const& spec);
@@ -175,6 +176,7 @@ namespace formatxx
 	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned long long value, format_spec const& spec);
+	void format_value(format_writer& out, void* value, format_spec const& spec);
 	void format_value(format_writer& out, void const* value, format_spec const& spec);
 
 	/// Formatting for enumerations, using their numeric value.
