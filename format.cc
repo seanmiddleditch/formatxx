@@ -122,7 +122,7 @@ namespace
 	}
 
 	template <typename T>
-	void write_signed(formatxx::format_writer& out, T value, formatxx::format_spec const& spec)
+	void write_signed(formatxx::format_writer& out, T value, formatxx::format_spec const&)
 	{
 		char buffer[kIntBufferSize];
 		out.write(gen_signed_decimal(buffer, value));

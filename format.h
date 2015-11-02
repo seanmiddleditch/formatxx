@@ -36,11 +36,7 @@
 #include <cstring>
 #include <memory>
 
-namespace std
-{
-	template <typename, typename, typename> class basic_string;
-	template <typename> class allocator;
-}
+#include "format_std.h"
 
 namespace formatxx
 {
