@@ -38,7 +38,6 @@
 
 namespace std
 {
-	template <typename, typename, typename> class basic_string;
 	template <typename> class allocator;
 }
 
@@ -68,9 +67,6 @@ struct formatxx::string_view
 	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
 
-	template <typename TraitsT, typename AllocatorT>
-	string_view(std::basic_string<char, TraitsT, AllocatorT> const& str) : string_view(str.c_str(), str.size()) {}
-
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
 	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
 };
@@ -92,7 +88,7 @@ public:
 };
 
 /// A writer that generates a buffer (intended for std::string).
-template <typename StringT = std::string>
+template <typename StringT>
 class formatxx::string_writer : public format_writer
 {
 	StringT _string;
@@ -124,7 +120,7 @@ public:
 };
 
 /// A writer with a fixed buffer that will allocate when the buffer is exhausted.
-template <std::size_t SizeN = 256, typename AllocatorT = std::allocator<char>>
+template <std::size_t SizeN, typename AllocatorT>
 class formatxx::buffered_writer : public format_writer, private AllocatorT
 {
 	std::size_t _length = 0;
@@ -186,10 +182,6 @@ namespace formatxx
 		format_value(out, std::underlying_type_t<EnumT>(value), spec);
 	}
 
-	/// Formatting for C++ standard strings.
-	template <typename TraitsT, typename AllocatorT>
-	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec);
-
 	/// Cause a friendlier error message on unknown type.
 	template <typename T, typename = std::enable_if_t<!std::is_enum<T>::value>>
 	void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
@@ -229,12 +221,6 @@ StringT formatxx::format(string_view format, Args&&... args)
 	string_writer<StringT> tmp;
 	formatxx::format(tmp, format, args...);
 	return std::move(tmp).str();
-}
-
-template <typename TraitsT, typename AllocatorT>
-void formatxx::format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const&)
-{
-	out.write(string.c_str(), string.size());
 }
 
 template <std::size_t SizeN>
