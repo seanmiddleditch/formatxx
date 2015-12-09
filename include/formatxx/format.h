@@ -36,11 +36,6 @@
 #include <cstring>
 #include <memory>
 
-namespace std
-{
-	template <typename> class allocator;
-}
-
 namespace formatxx
 {
 	struct string_view;
