@@ -171,15 +171,21 @@ namespace formatxx
 	void format_value(format_writer& out, void const* value, format_spec const& spec);
 
 	/// Formatting for enumerations, using their numeric value.
-	template <typename EnumT, typename = std::enable_if_t<std::is_enum<EnumT>::value>>
-	void format_value(format_writer& out, EnumT value, format_spec const& spec)
+	template <typename EnumT>
+	auto format_value(format_writer& out, EnumT value, format_spec const& spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
 	{
 		format_value(out, std::underlying_type_t<EnumT>(value), spec);
 	}
 
+	template <typename PointerT>
+	auto format_value(format_writer& out, PointerT value, format_spec const& spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
+	{
+		format_value(out, static_cast<void const*>(value), spec);
+	}
+
 	/// Cause a friendlier error message on unknown type.
-	template <typename T, typename = std::enable_if_t<!std::is_enum<T>::value>>
-	void format_value(format_writer& writer, T const& value, format_spec const& spec) = delete;
+	template <typename T>
+	auto format_value(format_writer& writer, T const& value, format_spec const& spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
 
 	/// @internal
 	namespace _detail
