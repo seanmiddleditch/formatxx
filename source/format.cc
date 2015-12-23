@@ -28,7 +28,7 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#include "format.h"
+#include "formatxx/format.h"
 
 #include <cstdio>
 #include <limits>
