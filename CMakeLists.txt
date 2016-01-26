@@ -8,3 +8,4 @@ add_library(formatxx STATIC
 	source/format.cc
 )
 target_include_directories(formatxx PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
