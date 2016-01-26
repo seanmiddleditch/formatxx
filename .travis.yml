@@ -12,5 +12,5 @@ install:
   - sudo apt-get install gcc-5 --yes
   - sudo apt-get install cmake cmake-data --yes
 script:
-  - export CXX=g++-5.3
+  - export CXX=g++-5
   - mkdir build && cd build && cmake .. && cmake --build .
