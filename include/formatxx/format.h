@@ -55,20 +55,21 @@ namespace formatxx
 /// Describes a format string.
 class formatxx::string_view
 {
-	char const* begin = nullptr;
-	char const* end = nullptr;
-
 public:
-	string_view(char const* first, char const* last) : begin(first), end(last) {}
+	string_view(char const* first, char const* last) : _begin(first), _end(last) {}
 	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
 	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
 
-	char const* data() const { return begin; }
-	std::size_t size() const { return end - begin; }
-	bool empty() const { return begin != end; }
+	char const* data() const { return _begin; }
+	std::size_t size() const { return _end - _begin; }
+	bool empty() const { return _begin != _end; }
+
+private:
+	char const* _begin = nullptr;
+	char const* _end = nullptr;
 };
 
 /// Interface for any buffer that the format library can write into.
@@ -86,43 +87,38 @@ public:
 template <typename StringT>
 class formatxx::string_writer : public format_writer
 {
-	StringT _string;
-
 public:
-	void write(string_view str) override { _string.append(str.begin, str.end - str.begin); }
+	void write(string_view str) override { _string.append(str._begin, str._end - str._begin); }
 
 	StringT const& str() const& { return _string; }
 	StringT&& str() && { return std::move(_string); }
 
 	std::size_t size() const { return _string.size(); }
 	char const* c_str() const { return _string.c_str(); }
+
+private:
+	StringT _string;
 };
 
 /// A writer with a fixed buffer that will never allocate.
 template <std::size_t SizeN = 512>
 class formatxx::fixed_writer : public format_writer
 {
-	std::size_t _length = 0;
-	char _buffer[SizeN] = {'\0',};
-
 public:
 	void write(string_view str) override;
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
+
+private:
+	std::size_t _length = 0;
+	char _buffer[SizeN] = {'\0',};
 };
 
 /// A writer with a fixed buffer that will allocate when the buffer is exhausted.
 template <std::size_t SizeN, typename AllocatorT>
 class formatxx::buffered_writer : public format_writer, private AllocatorT
 {
-	std::size_t _length = 0;
-	std::size_t _capacity = SizeN;
-	char* _buffer = _fixed;
-	char _fixed[SizeN] = {'\0',};
-
-	void _grow(std::size_t amount);
-
 public:
 	buffered_writer() = default;
 	~buffered_writer();
@@ -134,6 +130,14 @@ public:
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
+
+private:
+	void _grow(std::size_t amount);
+
+	std::size_t _length = 0;
+	std::size_t _capacity = SizeN;
+	char* _buffer = _fixed;
+	char _fixed[SizeN] = {'\0',};
 };
 
 /// Extra formatting specifications.
