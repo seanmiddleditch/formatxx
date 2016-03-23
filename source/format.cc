@@ -111,7 +111,7 @@ namespace
 	template <size_t N>
 	void write_error(formatxx::format_writer& out, const char(&string)[N])
 	{
-		out.write(string, N - 1);
+		out.write(formatxx::string_view(string, N - 1));
 	}
 
 	template <typename T>
@@ -145,7 +145,7 @@ namespace formatxx
 {
 	void format_value(format_writer& out, char ch, format_spec const&)
 	{
-		out.write(&ch, 1);
+		out.write(string_view(&ch, 1));
 	}
 
 	void format_value(format_writer& out, bool value, format_spec const&)
@@ -160,13 +160,12 @@ namespace formatxx
 
 	void format_value(format_writer& out, char const* zstr, format_spec const&)
 	{
-		auto const len = std::strlen(zstr);
-		out.write(zstr, len);
+		out.write(string_view(zstr));
 	}
 
 	void format_value(format_writer& out, string_view str, format_spec const&)
 	{
-		out.write(str.begin, str.end - str.begin);
+		out.write(str);
 	}
 
 	void format_value(format_writer& out, signed int value, format_spec const& spec) { write_signed(out, value, spec); }
@@ -183,14 +182,14 @@ namespace formatxx
 	{
 		char buf[512]; // not actually enough for every float, but...
 		int len = std::snprintf(buf, sizeof(buf), "%f", value);
-		out.write(buf, len);
+		out.write(string_view(buf, len));
 	}
 
 	void format_value(format_writer& out, double value, format_spec const&)
 	{
 		char buf[1048]; // not actually enough for every float, but...
 		int len = std::snprintf(buf, sizeof(buf), "%g", value);
-		out.write(buf, len);
+		out.write(string_view(buf, len));
 	}
 
 	void format_value(format_writer& out, void* ptr, format_spec const& spec)
@@ -202,7 +201,7 @@ namespace formatxx
 	{
 		char buf[48];
 		int len = std::snprintf(buf, sizeof(buf), "%p", ptr);
-		out.write(buf, len);
+		out.write(string_view(buf, len));
 	}
 }
 
@@ -210,20 +209,21 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 {
 	unsigned next_index = 0;
 
-	char const* span = format.begin;
-	char const* cur = format.begin;
-	while (cur < format.end)
+	char const* span = format.data();
+	char const* cur = span;
+	char const* const end = span + format.size();
+	while (cur < end)
 	{
 		if (*cur == '{')
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (cur > span)
-				out.write(span, cur - span);
+				out.write(string_view(span, cur - span));
 
 			++cur; // swallow the {
 
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
-			if (cur == format.end)
+			if (cur == end)
 			{
 				write_error(out, sErrIncomplete);
 				break;
@@ -240,14 +240,14 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 			// determine which argument we're going to format
 			unsigned index = 0;
 			char const* const start = cur;
-			char const* cur = parse_unsigned(start, format.end, &index);
+			char const* cur = parse_unsigned(start, end, &index);
 
 			// if we read nothing, we have a "next index" situation (or an error)
 			if (cur == start)
 				index = next_index;
 
 			// if we hit the end of the string, we have an incomplete format
-			if (cur == format.end)
+			if (cur == end)
 			{
 				write_error(out, sErrIncomplete);
 				break;
@@ -257,10 +257,10 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 			if (*cur == '|')
 			{
 				// #FIXME: parse and save these
-				while (cur < format.end && *cur != '}')
+				while (cur < end && *cur != '}')
 					++cur;
 
-				if (cur == format.end)
+				if (cur == end)
 				{
 					write_error(out, sErrIncomplete);
 					break;
@@ -299,5 +299,5 @@ void formatxx::_detail::format_impl(format_writer& out, string_view format, std:
 
 	// write out tail end of format string
 	if (cur > span)
-		out.write(span, cur - span);
+		out.write(string_view(span, cur - span));
 }

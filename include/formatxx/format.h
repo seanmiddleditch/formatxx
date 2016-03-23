@@ -38,7 +38,7 @@
 
 namespace formatxx
 {
-	struct string_view;
+	class string_view;
 	struct format_spec;
 
 	class format_writer;
@@ -53,17 +53,22 @@ namespace formatxx
 }
 
 /// Describes a format string.
-struct formatxx::string_view
+class formatxx::string_view
 {
 	char const* begin = nullptr;
 	char const* end = nullptr;
 
+public:
 	string_view(char const* first, char const* last) : begin(first), end(last) {}
 	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
 	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
+
+	char const* data() const { return begin; }
+	std::size_t size() const { return end - begin; }
+	bool empty() const { return begin != end; }
 };
 
 /// Interface for any buffer that the format library can write into.
@@ -73,13 +78,8 @@ public:
 	virtual ~format_writer() = default;
 
 	/// Write a string slice.
-	/// @param nstr A length-delimited string.
-	/// @param length The length of the string in nstr.
-	virtual void write(char const* nstr, std::size_t length) = 0;
-
-	/// Write a C-style string.
-	/// @param zstr A NUL-terminated string.
-	virtual void write(char const* zstr) { write(zstr, std::strlen(zstr)); }
+	/// @param str The string to write.
+	virtual void write(string_view str) = 0;
 };
 
 /// A writer that generates a buffer (intended for std::string).
@@ -89,8 +89,7 @@ class formatxx::string_writer : public format_writer
 	StringT _string;
 
 public:
-	void write(char const* nstr, std::size_t length) override { _string.append(nstr, length); }
-	void write(char const* zstr) override { _string.append(zstr); }
+	void write(string_view str) override { _string.append(str.begin, str.end - str.begin); }
 
 	StringT const& str() const& { return _string; }
 	StringT&& str() && { return std::move(_string); }
@@ -107,8 +106,7 @@ class formatxx::fixed_writer : public format_writer
 	char _buffer[SizeN] = {'\0',};
 
 public:
-	void write(char const* nstr, size_t length) override;
-	void write(char const* zstr) override;
+	void write(string_view str) override;
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
@@ -132,8 +130,7 @@ public:
 	buffered_writer(buffered_writer const&) = delete;
 	buffered_writer& operator=(buffered_writer const&) = delete;
 
-	void write(char const* nstr, size_t length) override;
-	using format_writer::write;
+	void write(string_view str) override;
 
 	std::size_t size() const { return _length; }
 	char const* c_str() const { return _buffer; }
@@ -225,19 +222,12 @@ StringT formatxx::format(string_view format, Args&&... args)
 }
 
 template <std::size_t SizeN>
-void formatxx::fixed_writer<SizeN>::write(char const* nstr, std::size_t length)
+void formatxx::fixed_writer<SizeN>::write(string_view str)
 {
-	char const* end = nstr + length;
-	while (nstr != end && _length < SizeN-1)
-		_buffer[_length++] = *(nstr++);
-	_buffer[_length] = '\0';
-}
-
-template <std::size_t SizeN>
-void formatxx::fixed_writer<SizeN>::write(char const* zstr)
-{
-	while (_length < SizeN-1 && *zstr != '\0')
-		_buffer[_length++] = *(zstr++);
+	std::size_t const remaining = SizeN - _length - 1;
+	std::size_t const length = remaining < str.size() ? remaining : str.size();
+	std::memcpy(_buffer + _length, str.data(), length);
+	_length += length;
 	_buffer[_length] = '\0';
 }
 
@@ -271,11 +261,11 @@ void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 }
 
 template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::write(char const* nstr, std::size_t length)
+void formatxx::buffered_writer<SizeN, AllocatorT>::write(string_view str)
 {
-	_grow(length);
-	std::memcpy(_buffer + _length, nstr, length);
-	_length += length;
+	_grow(str.size());
+	std::memcpy(_buffer + _length, str.data(), str.size());
+	_length += str.size();
 	_buffer[_length] = '\0';
 }
 
