@@ -15,7 +15,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)include\formatxx\format.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\formatxx\stdfmt.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\format.cc" />

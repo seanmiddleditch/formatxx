@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <cstring>
 #include <memory>
+#include <string>
 
 namespace formatxx
 {
@@ -42,9 +43,9 @@ namespace formatxx
 	struct format_spec;
 
 	class format_writer;
-	template <typename>	class string_writer;
+	template <typename = std::string> class string_writer;
 	template <std::size_t> class fixed_writer;
-	template <std::size_t, typename> class buffered_writer;
+	template <std::size_t, typename = std::allocator<char>> class buffered_writer;
 
 	template <typename... Args> void format(format_writer& out, string_view format, Args&&... args);
 	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
@@ -59,9 +60,10 @@ public:
 	string_view(char const* first, char const* last) : _begin(first), _end(last) {}
 	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
+	string_view(std::string const& str) : string_view(str.c_str(), str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
-	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
+	template <std::size_t N> string_view(char const (&str)[N]) : string_view(str, N) {}
 
 	char const* data() const { return _begin; }
 	std::size_t size() const { return _end - _begin; }
@@ -90,8 +92,8 @@ class formatxx::string_writer : public format_writer
 public:
 	void write(string_view str) override { _string.append(str._begin, str._end - str._begin); }
 
-	StringT const& str() const& { return _string; }
-	StringT&& str() && { return std::move(_string); }
+	StringT const& str() const { return _string; }
+	StringT& str() { return _string; }
 
 	std::size_t size() const { return _string.size(); }
 	char const* c_str() const { return _string.c_str(); }
@@ -171,6 +173,12 @@ namespace formatxx
 	void format_value(format_writer& out, void* value, format_spec const& spec);
 	void format_value(format_writer& out, void const* value, format_spec const& spec);
 
+	template <typename TraitsT, typename AllocatorT>
+	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec)
+	{
+		format_value(out, string_view(string), spec);
+	}
+
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>
 	auto format_value(format_writer& out, EnumT value, format_spec const& spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
@@ -222,7 +230,7 @@ StringT formatxx::format(string_view format, Args&&... args)
 {
 	string_writer<StringT> tmp;
 	formatxx::format(tmp, format, args...);
-	return std::move(tmp).str();
+	return static_cast<StringT&&>(tmp.str());
 }
 
 template <std::size_t SizeN>
@@ -245,10 +253,10 @@ formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
 template <std::size_t SizeN, typename AllocatorT>
 void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 {
-	size_t const required = _length + amount + 1;
+	std::size_t const required = _length + amount + 1;
 	if (required > _capacity) // need space for NUL byte
 	{
-		size_t newCapacity = _capacity;
+		std::size_t newCapacity = _capacity;
 		newCapacity += newCapacity >> 1; // grow by 50%
 		if (newCapacity < required) // ensure we get the space we asked for
 			newCapacity = required;

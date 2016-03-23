@@ -14,9 +14,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)include\formatxx\format.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)include\formatxx\stdfmt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)source\format.cc">
