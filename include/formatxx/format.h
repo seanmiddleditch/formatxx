@@ -109,11 +109,11 @@ class formatxx::fixed_writer : public format_writer
 public:
 	void write(string_view str) override;
 
-	std::size_t size() const { return _length; }
+	std::size_t size() const { return _last - _buffer; }
 	char const* c_str() const { return _buffer; }
 
 private:
-	std::size_t _length = 0;
+	char* _last = _buffer;
 	char _buffer[SizeN] = {'\0',};
 };
 
@@ -130,16 +130,16 @@ public:
 
 	void write(string_view str) override;
 
-	std::size_t size() const { return _length; }
-	char const* c_str() const { return _buffer; }
+	std::size_t size() const { return _last - _first; }
+	char const* c_str() const { return _first; }
 
 private:
 	void _grow(std::size_t amount);
 
-	std::size_t _length = 0;
-	std::size_t _capacity = SizeN;
-	char* _buffer = _fixed;
-	char _fixed[SizeN] = {'\0',};
+	char* _first = _buffer;
+	char* _last = _buffer;
+	char* _sentinel = _buffer + SizeN;
+	char _buffer[SizeN] = {'\0',};
 };
 
 /// Extra formatting specifications.
@@ -236,39 +236,43 @@ StringT formatxx::format(string_view format, Args&&... args)
 template <std::size_t SizeN>
 void formatxx::fixed_writer<SizeN>::write(string_view str)
 {
-	std::size_t const remaining = SizeN - _length - 1;
+	std::size_t const remaining = SizeN - size() - 1;
 	std::size_t const length = remaining < str.size() ? remaining : str.size();
-	std::memcpy(_buffer + _length, str.data(), length);
-	_length += length;
-	_buffer[_length] = '\0';
+	std::memcpy(_last, str.data(), length);
+	_last += length;
+	*_last = '\0';
 }
 
 template <std::size_t SizeN, typename AllocatorT>
 formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
 {
-	if (_buffer != _fixed)
-		this->deallocate(_buffer, _capacity);
+	if (_first != _buffer)
+		this->deallocate(_first, _sentinel - _first);
 }
 
 template <std::size_t SizeN, typename AllocatorT>
 void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 {
-	std::size_t const required = _length + amount + 1;
-	if (required > _capacity) // need space for NUL byte
+	std::size_t const size = _last - _first;
+	std::size_t const capacity = _sentinel - _first;
+	std::size_t const required = size + amount + 1;
+
+	if (required > capacity) // need space for NUL byte
 	{
-		std::size_t newCapacity = _capacity;
+		std::size_t newCapacity = capacity;
 		newCapacity += newCapacity >> 1; // grow by 50%
 		if (newCapacity < required) // ensure we get the space we asked for
 			newCapacity = required;
 
 		char* newBuffer = this->allocate(newCapacity);
-		std::memcpy(newBuffer, _buffer, _length + 1);
+		std::memcpy(newBuffer, _first, size + 1);
 
-		if (_buffer != _fixed)
-			this->deallocate(_buffer, _capacity);
+		if (_first != _buffer)
+			this->deallocate(_first, capacity);
 
-		_buffer = newBuffer;
-		_capacity = newCapacity;
+		_first = newBuffer;
+		_last = _first + size;
+		_sentinel = _first + newCapacity;
 	}
 }
 
@@ -276,9 +280,9 @@ template <std::size_t SizeN, typename AllocatorT>
 void formatxx::buffered_writer<SizeN, AllocatorT>::write(string_view str)
 {
 	_grow(str.size());
-	std::memcpy(_buffer + _length, str.data(), str.size());
-	_length += str.size();
-	_buffer[_length] = '\0';
+	std::memcpy(_last, str.data(), str.size());
+	_last += str.size();
+	*_last = '\0';
 }
 
 #endif // !defined(_guard_FORMATXX_H)
