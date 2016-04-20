@@ -95,6 +95,7 @@ public:
 	StringT const& str() const { return _string; }
 	StringT& str() { return _string; }
 
+	void clear() { _string.clear(); }
 	std::size_t size() const { return _string.size(); }
 	char const* c_str() const { return _string.c_str(); }
 
@@ -109,6 +110,7 @@ class formatxx::fixed_writer : public format_writer
 public:
 	void write(string_view str) override;
 
+	void clear() { _last = _buffer; }
 	std::size_t size() const { return _last - _buffer; }
 	char const* c_str() const { return _buffer; }
 
@@ -130,6 +132,7 @@ public:
 
 	void write(string_view str) override;
 
+	void clear() { _last = _first; }
 	std::size_t size() const { return _last - _first; }
 	char const* c_str() const { return _first; }
 
