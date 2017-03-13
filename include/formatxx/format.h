@@ -218,7 +218,7 @@ namespace formatxx
 template <typename... Args>
 void formatxx::format(format_writer& out, string_view format, Args&&... args)
 {
-	void const* values[] = {std::addressof(args)..., nullptr};
+	void const* values[] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))..., nullptr};
 	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
 
 	_detail::format_impl(out, format, sizeof...(Args), funcs, values);
