@@ -155,12 +155,18 @@ namespace formatxx
 
 	void format_value(format_writer& out, char* ptr, format_spec const& spec)
 	{
-		format_value(out, static_cast<char const*>(ptr), spec);
+		if (ptr != nullptr)
+			format_value(out, static_cast<char const*>(ptr), spec);
+		else
+			format_value(out, static_cast<void const*>(nullptr), spec);
 	}
 
-	void format_value(format_writer& out, char const* zstr, format_spec const&)
+	void format_value(format_writer& out, char const* zstr, format_spec const& spec)
 	{
-		out.write(string_view(zstr));
+		if (zstr != nullptr)
+			out.write(string_view(zstr));
+		else
+			format_value(out, static_cast<void const*>(nullptr), spec);
 	}
 
 	void format_value(format_writer& out, string_view str, format_spec const&)
