@@ -90,7 +90,7 @@ template <typename StringT>
 class formatxx::string_writer : public format_writer
 {
 public:
-	void write(string_view str) override { _string.append(str._begin, str._end - str._begin); }
+	void write(string_view str) override { _string.append(str.data(), str.size()); }
 
 	StringT const& str() const { return _string; }
 	StringT& str() { return _string; }
