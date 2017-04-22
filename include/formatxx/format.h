@@ -57,21 +57,21 @@ namespace formatxx
 class formatxx::string_view
 {
 public:
-	string_view(char const* first, char const* last) : _begin(first), _end(last) {}
-	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
+	constexpr string_view(char const* first, char const* last) : _begin(first), _size(last - first) {}
+	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
 	string_view(std::string const& str) : string_view(str.c_str(), str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
 	template <std::size_t N> string_view(char const (&str)[N]) : string_view(str, N) {}
 
-	char const* data() const { return _begin; }
-	std::size_t size() const { return _end - _begin; }
-	bool empty() const { return _begin != _end; }
+	constexpr char const* data() const { return _begin; }
+	constexpr std::size_t size() const { return _size; }
+	constexpr bool empty() const { return _size == 0; }
 
 private:
 	char const* _begin = nullptr;
-	char const* _end = nullptr;
+	std::size_t _size = 0;
 };
 
 /// Interface for any buffer that the format library can write into.
