@@ -31,6 +31,8 @@
 #include "formatxx/format.h"
 
 #include <cstdio>
+#include <limits>
+#include <climits>
 
 namespace
 {
@@ -171,7 +173,7 @@ namespace
 		case 'b':
 		case 'B':
 			{
-				char buffer[CHAR_BIT * sizeof(value)]; // 8 bits per octet
+				char buffer[CHAR_BIT * sizeof(value)]; // bits per octet
 				char* end = buffer + sizeof(buffer);
 
 				do
