@@ -7,4 +7,10 @@ add_library(formatxx STATIC
 	source/format.cc
 )
 target_include_directories(formatxx PUBLIC "include")
-set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
+if (MSVC)
+	target_compile_options(formatxx
+		PUBLIC
+			/std:c++latest
+	)
+endif()
+set_property(TARGET formatxx PROPERTY CXX_STANDARD 17)

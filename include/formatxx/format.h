@@ -40,6 +40,7 @@
 namespace formatxx
 {
 	class string_view;
+	namespace format_flags {}
 	struct format_spec;
 
 	class format_writer;
@@ -57,6 +58,7 @@ namespace formatxx
 class formatxx::string_view
 {
 public:
+	constexpr string_view() = default;
 	constexpr string_view(char const* first, char const* last) : _begin(first), _size(last - first) {}
 	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
@@ -145,14 +147,23 @@ private:
 	char _buffer[SizeN] = {'\0',};
 };
 
+/// Flags controlling format behavior
+namespace formatxx::format_flags
+{
+	enum
+	{
+		hash = 1, // prints leading 0d, 0x, 0X, 0b, 0B, 0o, or 0O prefix
+		sign = 2, // always prints leading sign, - or +
+		sign_space = 4, // always printing sign, - or a space
+	};
+}
+
 /// Extra formatting specifications.
 struct formatxx::format_spec
 {
-	unsigned width = 0;
-	unsigned precision = 0;
-	// #FIXME: alignment
-	// #FIXME: flags
-	// #FIXME: custom string part
+	char code = '\0';
+	int flags = 0;
+	formatxx::string_view extra;
 };
 
 namespace formatxx
