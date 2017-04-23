@@ -4,17 +4,17 @@ os:
 sudo: required
 dist: trusty
 compilers:
-  - g++-5
+  - g++-6
   - clang
 addons:
   apt:
     sources:
-    - ppa:george-edison55/cmake-3.x
-    - ppa:ubuntu-toolchain-r/test
-    packages:
+    - sourceline: 'ppa:adrozdoff/cmake'
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
     - software-properties-common
-    - gcc-5
-    - g++-5
+    packages:
+    - gcc-6
+    - g++-6
     - cmake
     - cmake-data
     - clang
