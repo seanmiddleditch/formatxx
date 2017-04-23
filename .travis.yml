@@ -1,7 +1,7 @@
 language: cpp
 os:
   - linux
-sudo: required
+sudo: false
 dist: trusty
 compilers:
   - g++-6
@@ -18,5 +18,10 @@ addons:
     - cmake
     - cmake-data
     - clang
+matrix:
+  - os: linux
+    env: CXX=g++-6 CC=gcc-6
+  - os: linux
+    env: CXX=clang++ CC=clang
 script:
   - mkdir build && cd build && cmake .. && cmake --build .
