@@ -3,15 +3,11 @@ os:
   - linux
 sudo: false
 dist: trusty
-compilers:
-  - g++-6
-  - clang
 addons:
   apt:
     sources:
     - sourceline: 'ppa:adrozdoff/cmake'
     - sourceline: 'ppa:ubuntu-toolchain-r/test'
-    - software-properties-common
     packages:
     - gcc-6
     - g++-6
@@ -19,9 +15,8 @@ addons:
     - cmake-data
     - clang
 matrix:
-  - os: linux
-    env: CXX=g++-6 CC=gcc-6
-  - os: linux
-    env: CXX=clang++ CC=clang
+  include:
+  - env: CXX=g++-6 CC=gcc-6
+  - env: CXX=clang++ CC=clang
 script:
   - mkdir build && cd build && cmake .. && cmake --build .
