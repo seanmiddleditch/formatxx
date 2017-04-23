@@ -40,7 +40,7 @@
 namespace formatxx
 {
 	class string_view;
-	namespace format_flags {}
+	struct format_flags; // pretend namespace
 	struct format_spec;
 
 	class format_writer;
@@ -48,7 +48,7 @@ namespace formatxx
 	template <std::size_t> class fixed_writer;
 	template <std::size_t, typename = std::allocator<char>> class buffered_writer;
 
-	template <typename... Args> void format(format_writer& out, string_view format, Args&&... args);
+	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
 	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
 
 	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
@@ -85,6 +85,9 @@ public:
 	/// Write a string slice.
 	/// @param str The string to write.
 	virtual void write(string_view str) = 0;
+
+	/// Extract the current value of the writer.
+	virtual string_view view() const = 0;
 };
 
 /// A writer that generates a buffer (intended for std::string).
@@ -93,6 +96,7 @@ class formatxx::string_writer : public format_writer
 {
 public:
 	void write(string_view str) override { _string.append(str.data(), str.size()); }
+	string_view view() const override { return string_view(_string.c_str(), _string.size()); }
 
 	StringT const& str() const { return _string; }
 	StringT& str() { return _string; }
@@ -111,6 +115,7 @@ class formatxx::fixed_writer : public format_writer
 {
 public:
 	void write(string_view str) override;
+	string_view view() const override { return string_view(_buffer, _last); }
 
 	void clear() { _last = _buffer; }
 	std::size_t size() const { return _last - _buffer; }
@@ -133,6 +138,7 @@ public:
 	buffered_writer& operator=(buffered_writer const&) = delete;
 
 	void write(string_view str) override;
+	string_view view() const override { return string_view(_first, _last - _first); }
 
 	void clear() { _last = _first; }
 	std::size_t size() const { return _last - _first; }
@@ -148,7 +154,7 @@ private:
 };
 
 /// Flags controlling format behavior
-namespace formatxx::format_flags
+struct formatxx::format_flags
 {
 	enum
 	{
@@ -156,7 +162,7 @@ namespace formatxx::format_flags
 		sign = 2, // always prints leading sign, - or +
 		sign_space = 4, // always printing sign, - or a space
 	};
-}
+};
 
 /// Extra formatting specifications.
 struct formatxx::format_spec
@@ -176,10 +182,12 @@ namespace formatxx
 	void format_value(format_writer& out, bool value, format_spec const& spec);
 	void format_value(format_writer& out, float value, format_spec const& spec);
 	void format_value(format_writer& out, double value, format_spec const& spec);
+	void format_value(format_writer& out, signed char value, format_spec const& spec);
 	void format_value(format_writer& out, signed int value, format_spec const& spec);
 	void format_value(format_writer& out, signed long value, format_spec const& spec);
 	void format_value(format_writer& out, signed short value, format_spec const& spec);
 	void format_value(format_writer& out, signed long long value, format_spec const& spec);
+	void format_value(format_writer& out, unsigned char value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned int value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
@@ -227,12 +235,14 @@ namespace formatxx
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename... Args>
-void formatxx::format(format_writer& out, string_view format, Args&&... args)
+formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args&&... args)
 {
 	void const* values[] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))..., nullptr};
 	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
 
-	_detail::format_impl(out, format, sizeof...(Args), funcs, values);
+	_detail::format_impl(writer, format, sizeof...(Args), funcs, values);
+
+	return writer;
 }
 
 /// Write the string format using the given parameters into a buffer.
@@ -243,7 +253,7 @@ template <typename StringT = std::string, typename... Args>
 StringT formatxx::format(string_view format, Args&&... args)
 {
 	string_writer<StringT> tmp;
-	formatxx::format(tmp, format, args...);
+	formatxx::format(tmp, format, std::forward<Args>(args)...);
 	return static_cast<StringT&&>(tmp.str());
 }
 

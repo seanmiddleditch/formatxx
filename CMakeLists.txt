@@ -7,10 +7,17 @@ add_library(formatxx STATIC
 	source/format.cc
 )
 target_include_directories(formatxx PUBLIC "include")
-if (MSVC)
-	target_compile_options(formatxx
-		PUBLIC
-			/std:c++latest
-	)
-endif()
-set_property(TARGET formatxx PROPERTY CXX_STANDARD 17)
+set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
+
+add_executable(formatxx_tests
+	source/tests.cc
+)
+set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 14)
+target_link_libraries(formatxx_tests formatxx)
+add_custom_command(
+    TARGET formatxx_tests
+    POST_BUILD
+    COMMAND formatxx_tests
+)
+add_test(formatxX_tests COMMAND formatxx_tests)
+

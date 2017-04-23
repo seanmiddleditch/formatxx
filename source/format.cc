@@ -61,17 +61,8 @@ namespace
 	template <typename T>
 	void write_integer(formatxx::format_writer& out, T raw, formatxx::format_spec const& spec)
 	{
-		unsigned long long value;
-		if (raw >= 0)
-		{
-			value = raw;
-		}
-		if (raw < 0)
-		{
-			out.write({ "-", 1 });
-			// subtract from 0 _after_ converting to deal with 2's complement format
-			value = 0 - static_cast<unsigned long long>(raw);
-		}
+		// subtract from 0 _after_ converting to deal with 2's complement format
+		unsigned long long value = raw >= 0 ? raw : 0 - static_cast<unsigned long long>(raw);
 
 		// format any prefix onto the number
 		{
@@ -287,11 +278,13 @@ namespace formatxx
 	}
 
 	void format_value(format_writer& out, signed int value, format_spec const& spec) { write_integer(out, value, spec); }
+	void format_value(format_writer& out, signed char value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, signed long value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, signed short value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, signed long long value, format_spec const& spec) { write_integer(out, value, spec); }
 
 	void format_value(format_writer& out, unsigned int value, format_spec const& spec) { write_integer(out, value, spec); }
+	void format_value(format_writer& out, unsigned char value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, unsigned long value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, unsigned long long value, format_spec const& spec) { write_integer(out, value, spec); }
