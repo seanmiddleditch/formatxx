@@ -249,7 +249,7 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
 /// @returns a formatted string.
-template <typename StringT = std::string, typename... Args>
+template <typename StringT, typename... Args>
 StringT formatxx::format(string_view format, Args&&... args)
 {
 	string_writer<StringT> tmp;
