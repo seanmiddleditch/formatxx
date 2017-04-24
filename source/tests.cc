@@ -104,7 +104,15 @@ void test_integers()
 	CHECK_FORMAT("-0b10", "{:#b}", -2);
 }
 
-int __cdecl main()
+#if defined(WIN32)
+// sometimes useful to compile a whole project with /Gv or the like
+// but that breaks test files
+#	define FORMATXX_MAIN_DECL __cdecl
+#else
+#	define FORMATXX_MAIN_DECL
+#endif
+
+int FORMATXX_MAIN_DECL main()
 {
 	test_fixed();
 	test_integers();
