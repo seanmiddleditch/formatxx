@@ -14,9 +14,9 @@ addons:
     - cmake
     - cmake-data
     - clang
-matrix:
-  include:
-  - env: CXX=g++-6 CC=gcc-6
-  - env: CXX=clang++ CC=clang
+env:
+  - TRAVIS_CXX=g++-6 TRAVIS_CC=gcc-6
+  - TRAVIS_CXX=clang++ TRAVIS_CC=clang
 script:
+  - export CXX=$TRAVIS_CXX CC=$TRAVIS_CC
   - mkdir build && cd build && cmake .. && cmake --build .
