@@ -49,7 +49,7 @@ namespace formatxx
 	template <std::size_t, typename = std::allocator<char>> class buffered_writer;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
-	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
+	template <typename StringT = std::string, typename... Args> StringT format(string_view format, Args&&... args);
 
 	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
 }
@@ -62,7 +62,7 @@ public:
 	constexpr string_view(char const* first, char const* last) : _begin(first), _size(last - first) {}
 	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
 	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
-	string_view(std::string const& str) : string_view(str.c_str(), str.size()) {}
+	template <typename T, typename A> string_view(std::basic_string<char, T, A> const& str) : string_view(str.c_str(), str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
 	template <std::size_t N> string_view(char const (&str)[N]) : string_view(str, N) {}
