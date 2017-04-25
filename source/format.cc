@@ -291,18 +291,36 @@ namespace formatxx
 	void format_value(format_writer& out, unsigned short value, format_spec const& spec) { write_integer(out, value, spec); }
 	void format_value(format_writer& out, unsigned long long value, format_spec const& spec) { write_integer(out, value, spec); }
 
-	void format_value(format_writer& out, float value, format_spec const&)
+	void format_value(format_writer& out, float value, format_spec const& spec)
 	{
-		char buf[512]; // not actually enough for every float, but...
-		int len = std::snprintf(buf, sizeof(buf), "%f", value);
-		out.write(string_view(buf, len));
+		format_value(out, static_cast<double>(value), spec);
 	}
 
-	void format_value(format_writer& out, double value, format_spec const&)
+	void format_value(format_writer& out, double value, format_spec const& spec)
 	{
+		char fmt[3] = "%f";
+
+		switch (spec.code)
+		{
+		case 'a':
+		case 'A':
+		case 'e':
+		case 'E':
+		case 'f':
+		case 'F':
+		case 'g':
+		case 'G':
+			fmt[1] = spec.code;
+			break;
+		default:
+			// leave default
+			break;
+		}
+
 		char buf[1048]; // not actually enough for every float, but...
-		int len = std::snprintf(buf, sizeof(buf), "%f", value);
-		out.write(string_view(buf, len));
+		int len = std::snprintf(buf, sizeof(buf), fmt, value);
+		if (len > 0)
+			out.write(string_view(buf, len));
 	}
 
 	void format_value(format_writer& out, void* ptr, format_spec const& spec)

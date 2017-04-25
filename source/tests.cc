@@ -104,6 +104,30 @@ void test_integers()
 	CHECK_FORMAT("-0b10", "{:#b}", -2);
 }
 
+// FIXME: currently platform-dependent due to sprintf dependence
+void test_floats()
+{
+	CHECK_FORMAT("123987.456000", "{}", 123987.456);
+
+	CHECK_FORMAT("0.000000", "{}", 0.0);
+	CHECK_FORMAT("1.000000", "{}", 1.0);
+	CHECK_FORMAT("-1.000000", "{}", -1.0);
+
+	CHECK_FORMAT("340282346638528859811704183484516925440.000000", "{}", std::numeric_limits<float>::max());
+	CHECK_FORMAT("17976931348623157081452742373170435679807056752584499659891747680315"
+		"72607800285387605895586327668781715404589535143824642343213268894641827684675"
+		"46703537516986049910576551282076245490090389328944075868508455133942304583236"
+		"90322294816580855933212334827479782620414472316873817718091929988125040402618"
+		"4124858368.000000", "{}", std::numeric_limits<double>::max());
+
+	CHECK_FORMAT("234987324.454500", "{:f}", 234987324.4545);
+	CHECK_FORMAT("2.34987e+08", "{:g}", 234987324.4545);
+	CHECK_FORMAT("0x1.c033e78e8b439p+27", "{:a}", 234987324.4545);
+	CHECK_FORMAT("234987324.454500", "{:F}", 234987324.4545);
+	CHECK_FORMAT("2.34987E+08", "{:G}", 234987324.4545);
+	CHECK_FORMAT("0X1.C033E78E8B439P+27", "{:A}", 234987324.4545);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -116,6 +140,7 @@ int FORMATXX_MAIN_DECL main()
 {
 	test_fixed();
 	test_integers();
+	test_floats();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;
