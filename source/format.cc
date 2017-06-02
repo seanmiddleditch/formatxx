@@ -65,20 +65,14 @@ void format_value(format_writer& out, bool value, format_spec const&)
 	out.write(value ? "true" : "false");
 }
 
-void format_value(format_writer& out, char* ptr, string_view spec)
+void format_value(format_writer& out, char* zstr, string_view spec)
 {
-	if (ptr != nullptr)
-		format_value(out, static_cast<char const*>(ptr), spec);
-	else
-		format_value(out, static_cast<void const*>(nullptr), spec);
+	out.write(string_view(zstr));
 }
 
 void format_value(format_writer& out, char const* zstr, string_view spec)
 {
-	if (zstr != nullptr)
-		out.write(string_view(zstr));
-	else
-		format_value(out, static_cast<void const*>(nullptr), spec);
+	out.write(string_view(zstr));
 }
 
 void format_value(format_writer& out, string_view str, format_spec const&)
