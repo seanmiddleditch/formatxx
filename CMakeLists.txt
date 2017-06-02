@@ -4,6 +4,8 @@ project(formatxx)
 
 add_library(formatxx STATIC
 	include/formatxx/format.h
+    include/formatxx/buffered.h
+    include/formatxx/string.h
     source/write_integer.inl
 	source/format.cc
 )
