@@ -29,6 +29,7 @@
 //   Sean Middleditch <sean@middleditch.us>
 
 #include <formatxx/format.h>
+#include <formatxx/buffered.h>
 
 #include <iostream>
 #include <string>
@@ -128,6 +129,17 @@ void test_floats()
 	CHECK_FORMAT("0X1.C033E78E8B439P+27", "{:A}", 234987324.4545);
 }
 
+void test_buffered()
+{
+	formatxx::buffered_writer<4> buf;
+
+	CHECK_FORMAT("123", buf, "1{}3", "2");
+
+	buf.clear();
+
+	CHECK_FORMAT("1234567890", buf, "1{}3{}5{}7{}9{}", 2, 4, 6, 8, 0);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -141,6 +153,7 @@ int FORMATXX_MAIN_DECL main()
 	test_fixed();
 	test_integers();
 	test_floats();
+	test_buffered();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;
