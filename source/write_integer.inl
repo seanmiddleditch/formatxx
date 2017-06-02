@@ -6,10 +6,10 @@ template <typename T> void write_decimal(format_writer& out, T value);
 template <typename T> void write_hexadecimal(format_writer& out, T value, bool lower);
 template <typename T> void write_octal(format_writer& out, T value);
 template <typename T> void write_binary(format_writer& out, T value);
-template <typename T> void write_integer(format_writer& out, T value, format_spec const& spec);
+template <typename T> void write_integer(format_writer& out, T value, string_view spec);
 
 
-void write_integer_prefix(formatxx::format_writer& out, formatxx::format_spec const& spec, bool negative)
+void write_integer_prefix(format_writer& out, format_spec const& spec, bool negative)
 {
 	char prefix_buffer[3]; // sign, type prefix
 	char* prefix = prefix_buffer;
@@ -17,13 +17,13 @@ void write_integer_prefix(formatxx::format_writer& out, formatxx::format_spec co
 	// add sign
 	if (negative)
 		*(prefix++) = '-';
-	else if ((spec.flags & formatxx::format_flags::sign) != 0)
+	else if (spec.sign == format_spec::sign_always)
 		*(prefix++) = '+';
-	else if ((spec.flags & formatxx::format_flags::sign_space) != 0)
+	else if (spec.sign == format_spec::sign_space)
 		*(prefix++) = ' ';
 
 	// add numeric type prefix
-	if ((spec.flags & formatxx::format_flags::hash) != 0)
+	if (spec.type_prefix)
 	{
 		*(prefix++) = '0';
 		*(prefix++) = spec.code ? spec.code : 'd';
@@ -35,7 +35,7 @@ void write_integer_prefix(formatxx::format_writer& out, formatxx::format_spec co
 }
 
 template <typename T>
-void write_decimal(formatxx::format_writer& out, T value)
+void write_decimal(format_writer& out, T value)
 {
 	// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
@@ -89,7 +89,7 @@ void write_decimal(formatxx::format_writer& out, T value)
 }
 
 template <typename T>
-void write_hexadecimal(formatxx::format_writer& out, T value, bool lower)
+void write_hexadecimal(format_writer& out, T value, bool lower)
 {
 	char buffer[2 * sizeof(value)]; // 2 hex digits per octet
 	char* end = buffer + sizeof(buffer);
@@ -108,7 +108,7 @@ void write_hexadecimal(formatxx::format_writer& out, T value, bool lower)
 }
 
 template <typename T>
-void write_octal(formatxx::format_writer& out, T value)
+void write_octal(format_writer& out, T value)
 {
 	char buffer[3 * sizeof(value)]; // 3 octal digits per octet
 	char* end = buffer + sizeof(buffer);
@@ -125,7 +125,7 @@ void write_octal(formatxx::format_writer& out, T value)
 }
 
 template <typename T>
-void write_binary(formatxx::format_writer& out, T value)
+void write_binary(format_writer& out, T value)
 {
 	char buffer[CHAR_BIT * sizeof(value)]; // bits per octet
 	char* end = buffer + sizeof(buffer);
@@ -140,10 +140,12 @@ void write_binary(formatxx::format_writer& out, T value)
 }
 
 template <typename T>
-void write_integer(formatxx::format_writer& out, T raw, formatxx::format_spec const& spec)
+void write_integer(format_writer& out, T raw, string_view spec_string)
 {
 	// subtract from 0 _after_ converting to deal with 2's complement format (abs(min) > abs(max))
-	std::make_unsigned_t<T> value = raw >= 0 ? raw : 0 - static_cast<std::make_unsigned_t<T>>(raw);
+	std::make_unsigned_t<T> const value = raw >= 0 ? raw : 0 - static_cast<std::make_unsigned_t<T>>(raw);
+
+    format_spec const spec = parse_format_spec(spec_string);
 
 	// format any prefix onto the number
 	write_integer_prefix(out, spec, /*negative=*/raw < 0);

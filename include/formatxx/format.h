@@ -40,7 +40,6 @@
 namespace formatxx
 {
 	class string_view;
-	struct format_flags; // pretend namespace
 	struct format_spec;
 
 	class format_writer;
@@ -51,8 +50,7 @@ namespace formatxx
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
 	format_writer& format(format_writer& writer, string_view format);
 	template <typename StringT = std::string, typename... Args> StringT format(string_view format, Args&&... args);
-
-	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
+	format_spec parse_format_spec(string_view spec);
 }
 
 /// Describes a format string.
@@ -64,9 +62,6 @@ public:
 	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
 	string_view(char const* zstr) : string_view(zstr, std::char_traits<char>::length(zstr)) {}
 	template <typename T, typename A> string_view(std::basic_string<char, T, A> const& str) : string_view(str.c_str(), str.size()) {}
-
-	// hmm, this may be a bad idea, it'll bind to over-long character buffers
-	template <std::size_t N> string_view(char const (&str)[N]) : string_view(str, N) {}
 
 	constexpr char const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
@@ -154,80 +149,75 @@ private:
 	char _buffer[SizeN] = {'\0',};
 };
 
-/// Flags controlling format behavior
-struct formatxx::format_flags
-{
-	enum
-	{
-		hash = 1, // prints leading 0d, 0x, 0X, 0b, 0B, 0o, or 0O prefix
-		sign = 2, // always prints leading sign, - or +
-		sign_space = 4, // always printing sign, - or a space
-	};
-};
-
 /// Extra formatting specifications.
 struct formatxx::format_spec
 {
 	char code = '\0';
-	int flags = 0;
+	bool type_prefix = false; // print leading 0x or appropriate type
+	enum
+	{
+		sign_default, // print sign for negative numbers
+		sign_always, // print sign for all numbers
+		sign_space, // print for for negative numbers or a space for non-negative numbers
+	} sign = sign_default;
 	formatxx::string_view extra;
 };
 
 namespace formatxx
 {
 	/// Default format helpers.
-	void format_value(format_writer& out, char* zstr, format_spec const& spec);
-	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
-	void format_value(format_writer& out, string_view str, format_spec const& spec);
-	void format_value(format_writer& out, char ch, format_spec const& spec);
-	void format_value(format_writer& out, bool value, format_spec const& spec);
-	void format_value(format_writer& out, float value, format_spec const& spec);
-	void format_value(format_writer& out, double value, format_spec const& spec);
-	void format_value(format_writer& out, signed char value, format_spec const& spec);
-	void format_value(format_writer& out, signed int value, format_spec const& spec);
-	void format_value(format_writer& out, signed long value, format_spec const& spec);
-	void format_value(format_writer& out, signed short value, format_spec const& spec);
-	void format_value(format_writer& out, signed long long value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned char value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned int value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned long long value, format_spec const& spec);
-	void format_value(format_writer& out, void* value, format_spec const& spec);
-	void format_value(format_writer& out, void const* value, format_spec const& spec);
+	void format_value(format_writer& out, char* zstr, string_view spec);
+	void format_value(format_writer& out, char const* zstr, string_view spec);
+	void format_value(format_writer& out, string_view str, string_view spec);
+	void format_value(format_writer& out, char ch, string_view spec);
+	void format_value(format_writer& out, bool value, string_view spec);
+	void format_value(format_writer& out, float value, string_view spec);
+	void format_value(format_writer& out, double value, string_view spec);
+	void format_value(format_writer& out, signed char value, string_view spec);
+	void format_value(format_writer& out, signed int value, string_view spec);
+	void format_value(format_writer& out, signed long value, string_view spec);
+	void format_value(format_writer& out, signed short value, string_view spec);
+	void format_value(format_writer& out, signed long long value, string_view spec);
+	void format_value(format_writer& out, unsigned char value, string_view spec);
+	void format_value(format_writer& out, unsigned int value, string_view spec);
+	void format_value(format_writer& out, unsigned long value, string_view spec);
+	void format_value(format_writer& out, unsigned short value, string_view spec);
+	void format_value(format_writer& out, unsigned long long value, string_view spec);
+	void format_value(format_writer& out, void* value, string_view spec);
+	void format_value(format_writer& out, void const* value, string_view spec);
 
 	template <typename TraitsT, typename AllocatorT>
-	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec)
+	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, string_view spec)
 	{
 		format_value(out, string_view(string), spec);
 	}
 
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>
-	auto format_value(format_writer& out, EnumT value, format_spec const& spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
+	auto format_value(format_writer& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
 	{
 		format_value(out, std::underlying_type_t<EnumT>(value), spec);
 	}
 
 	template <typename PointerT>
-	auto format_value(format_writer& out, PointerT value, format_spec const& spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
+	auto format_value(format_writer& out, PointerT value, string_view spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
 	{
 		format_value(out, static_cast<void const*>(value), spec);
 	}
 
 	/// Cause a friendlier error message on unknown type.
 	template <typename T>
-	auto format_value(format_writer& writer, T const& value, format_spec const& spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
+	auto format_value(format_writer& writer, T const& value, string_view spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
 
 	/// @internal
 	namespace _detail
 	{
-		using FormatFunc = void(*)(format_writer&, void const*, format_spec const&);
+		using FormatterThunk = void(*)(format_writer&, void const*, string_view);
 
-		template <typename T> struct wrap { static void fwd(format_writer& out, void const* ptr, format_spec const& spec) { format_value(out, *static_cast<T const*>(ptr), spec); } };
+		template <typename T> struct wrap { static void fwd(format_writer& out, void const* ptr, string_view spec) { format_value(out, *static_cast<T const*>(ptr), spec); } };
 		// #FIXME: char[N] types will horribly do the wrong thing here.
 
-		void format_impl(format_writer& out, string_view format, std::size_t count, FormatFunc const* funcs, void const** values);
+		void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
 	}
 }
 
@@ -240,7 +230,7 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 {
 	constexpr auto count = sizeof...(args);
 	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
-	constexpr _detail::FormatFunc funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
+	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
 
 	_detail::format_impl(writer, format, count, funcs, values);
 

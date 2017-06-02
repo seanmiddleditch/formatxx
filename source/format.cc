@@ -66,7 +66,7 @@ void format_value(format_writer& out, bool value, format_spec const&)
 	out.write(value ? "true" : "false");
 }
 
-void format_value(format_writer& out, char* ptr, format_spec const& spec)
+void format_value(format_writer& out, char* ptr, string_view spec)
 {
 	if (ptr != nullptr)
 		format_value(out, static_cast<char const*>(ptr), spec);
@@ -74,7 +74,7 @@ void format_value(format_writer& out, char* ptr, format_spec const& spec)
 		format_value(out, static_cast<void const*>(nullptr), spec);
 }
 
-void format_value(format_writer& out, char const* zstr, format_spec const& spec)
+void format_value(format_writer& out, char const* zstr, string_view spec)
 {
 	if (zstr != nullptr)
 		out.write(string_view(zstr));
@@ -87,26 +87,28 @@ void format_value(format_writer& out, string_view str, format_spec const&)
 	out.write(str);
 }
 
-void format_value(format_writer& out, signed int value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed char value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed short value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long long value, format_spec const& spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed int value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed char value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed long value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed short value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed long long value, string_view spec) { write_integer(out, value, spec); }
 
-void format_value(format_writer& out, unsigned int value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned char value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned short value, format_spec const& spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long long value, format_spec const& spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned int value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned char value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned long value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned short value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned long long value, string_view spec) { write_integer(out, value, spec); }
 
-void format_value(format_writer& out, float value, format_spec const& spec)
+void format_value(format_writer& out, float value, string_view spec)
 {
 	format_value(out, static_cast<double>(value), spec);
 }
 
-void format_value(format_writer& out, double value, format_spec const& spec)
+void format_value(format_writer& out, double value, string_view spec_string)
 {
 	char fmt[3] = "%f";
+
+	format_spec const spec = parse_format_spec(spec_string);
 
 	switch (spec.code)
 	{
@@ -131,92 +133,108 @@ void format_value(format_writer& out, double value, format_spec const& spec)
 		out.write(string_view(buf, len));
 }
 
-void format_value(format_writer& out, void* ptr, format_spec const& spec)
+void format_value(format_writer& out, void* ptr, string_view spec)
 {
 	write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
-void format_value(format_writer& out, void const* ptr, format_spec const& spec)
+void format_value(format_writer& out, void const* ptr, string_view spec)
 {
 	write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+}
+
+format_spec parse_format_spec(string_view spec)
+{
+	format_spec result;
+	parse_spec(spec.data(), spec.data() + spec.size(), result);
+	return result;
 }
 
 namespace _detail {
 
-void format_impl(format_writer& out, string_view format, std::size_t count, FormatFunc const* funcs, void const** values)
+void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values)
 {
 	unsigned next_index = 0;
 
-	char const* span = format.data();
-	char const* cur = span;
-	char const* const end = span + format.size();
-	while (cur < end)
+	char const* begin = format.data();
+	char const* const end = begin + format.size();
+	char const* iter = begin;
+
+	while (iter < end)
 	{
-		if (*cur == '{')
+		if (*iter == '{')
 		{
 			// write out the string so far, since we don't write characters immediately
-			if (cur > span)
-				out.write(string_view(span, cur - span));
+			if (iter > begin)
+				out.write(string_view(begin, iter - begin));
 
-			++cur; // swallow the {
+			++iter; // swallow the {
 
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
-			if (cur == end)
+			if (iter == end)
 			{
 				out.write(sErrIncomplete);
 				break;
 			}
 
-			// if we just have another { then take it as a literal character by starting our next span here,
-			// so it'll get written next time we write out the span; nothing else to do for formatting here
-			if (*cur == '{')
+			// if we just have another { then take it as a literal character by starting our next begin here,
+			// so it'll get written next time we write out the begin; nothing else to do for formatting here
+			if (*iter == '{')
 			{
-				span = cur++;
+				begin = iter++;
 				continue;
 			}
 
 			// determine which argument we're going to format
 			unsigned index = 0;
-			char const* const start = cur;
-			char const* cur = parse_unsigned(start, end, index);
+			char const* const start = iter;
+			char const* iter = parse_unsigned(start, end, index);
 
 			// if we read nothing, we have a "next index" situation (or an error)
-			if (cur == start)
+			if (iter == start)
 				index = next_index;
 
 			// if we hit the end of the string, we have an incomplete format
-			if (cur == end)
+			if (iter == end)
 			{
 				out.write(sErrIncomplete);
 				break;
 			}
 
-			format_spec spec;
+			string_view spec;
 
 			// if a : follows the number, we have some formatting controls
-			if (*cur == ':')
+			if (*iter == ':')
 			{
-				cur = parse_spec(++cur, end, spec);
+				++iter; // eat separator
+				char const* const spec_begin = iter;
 
-				if (cur == end)
+				while (iter < end && *iter != '}')
+				{
+					++iter;
+				}
+
+				if (iter == end)
 				{
 					// invalid spec
 					out.write(sErrBadFormat);
 					break;
 				}
+
+				spec = string_view(spec_begin, iter);
 			}
 
 			// after the index/spec, we expect an end to the format marker
-			if (*cur != '}')
+			if (*iter != '}')
 			{
 				// we have something besides a number, no bueno
 				out.write(sErrIncomplete);
-				span = cur; // make sure we're set up for the next span, which starts at this unknown character
+				begin = iter; // make sure we're set up for the next begin, which starts at this unknown character
 				continue;
 			}
 
-			// the current text span begins with the next character following the format directive's end
-			span = cur = cur + 1;
+			// the iterrent text begin begins with the next character following the format directive's end
+			begin = iter = iter + 1;
 
 			// if the index is out of range, we have nothing to format
 			if (index >= count)
@@ -233,13 +251,13 @@ void format_impl(format_writer& out, string_view format, std::size_t count, Form
 		}
 		else
 		{
-			++cur;
+			++iter;
 		}
 	}
 
 	// write out tail end of format string
-	if (cur > span)
-		out.write(string_view(span, cur - span));
+	if (iter > begin)
+		out.write(string_view(begin, iter - begin));
 }
 
 } // namespace _detail
@@ -263,24 +281,24 @@ char const* parse_spec(char const* start, char const* end, formatxx::format_spec
 	// sign
 	if (start != end && *start == '+')
 	{
-		result.flags |= formatxx::format_flags::sign;
+		result.sign = format_spec::sign_always;
 		++start;
 	}
 	else if (start != end && *start == ' ')
 	{
-		result.flags |= formatxx::format_flags::sign_space;
+		result.sign = format_spec::sign_space;
 		++start;
 	}
 	else if (start != end && *start == '-')
 	{
-		// default flag
+		result.sign = format_spec::sign_default;
 		++start;
 	}
 
 	// print numeric prefix
 	if (start != end && *start == '#')
 	{
-		result.flags |= formatxx::format_flags::hash;
+		result.type_prefix = true;
 		++start;
 	}
 

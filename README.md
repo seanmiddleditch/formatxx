@@ -40,7 +40,7 @@ the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_s
 ```C++
 struct Foo { int value };
 	
-void format_value(formatxx::writer& out, Foo foo, formatxx::format_spec const& unused)
+void format_value(formatxx::writer& out, Foo foo, formatxx::string_view spec)
 {
 	format(out, "Foo({})", foo.value);
 }
@@ -52,6 +52,12 @@ int main()
 ```
 
 The above will print `testing Foo(123)` to standard output.
+
+The `spec` argument are additional options passed to the formatter. These can be
+interpreted by the `format_value` function anyway it sees fit. The
+`formatxx::parse_format_spec` function will return a `formatxx::format_spec` structure
+with various printf-style flags and options parsed, which are used by default for built-in
+format types like integers, floats, and strings.
 
 The `formatxx::format<StringT = std::string>(string_view, ...)` template can be used
 for formatting a series of arguments into a `std::string` or any compatible string type.
@@ -110,15 +116,11 @@ user-defined types for generic user code).
 ## To Do
 
 - The remaining primitive types.
-- Basic format specifier support.
-- Custom format specifier support.
 - Detectable errors
   - Throw by default, with option/`std::nothrow` to disable?
   - Return value to indicate if an error happened?
 - `printf` syntax option.
 - Performance pass
-  - Remove `std::strlen` calls for C-style strings where not strictly needed.
-  - Efficient formatters in place of `snprintf` for most basic types.
   - noexcept(true) where appropriate.
 - wchar/u8/u16/u32 string support? maybe.
 
