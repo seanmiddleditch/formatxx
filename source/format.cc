@@ -46,7 +46,6 @@ constexpr string_view sErrIncomplete{"#INCL", 5};
 constexpr string_view sErrOutOfRange{"#RNGE", 5};
 
 char const* parse_unsigned(char const* start, char const* end, unsigned& result);
-char const* parse_spec(char const* start, char const* end, format_spec& result);
 
 } // anonymous namespace
 
@@ -146,7 +145,57 @@ void format_value(format_writer& out, void const* ptr, string_view spec)
 format_spec parse_format_spec(string_view spec)
 {
 	format_spec result;
-	parse_spec(spec.data(), spec.data() + spec.size(), result);
+
+	if (spec.empty())
+		return result;
+
+	char const* start = spec.data();
+	char const* const end = spec.data() + spec.size();
+
+	// sign
+	if (*start == '+')
+	{
+		result.sign = format_spec::sign_always;
+		++start;
+	}
+	else if (*start == ' ')
+	{
+		result.sign = format_spec::sign_space;
+		++start;
+	}
+	else if (*start == '-')
+	{
+		result.sign = format_spec::sign_default;
+		++start;
+	}
+
+	if (start == end)
+		return result;
+
+	// print numeric prefix
+	if (*start == '#')
+	{
+		result.type_prefix = true;
+		
+		if (++start == end)
+			return result;
+	}
+
+	// generic mode option allowed
+	if (*start != ':' && *start != '}')
+	{
+		result.code = *start;
+
+		if (++start == end)
+			return result;
+	}
+
+	// type-specific format allowed
+	if (*start == ':')
+	{
+		result.extra = string_view(++start, end);
+	}
+
 	return result;
 }
 
@@ -273,51 +322,6 @@ char const* parse_unsigned(char const* start, char const* end, unsigned& result)
 		result += *start - '0';
 		++start;
 	}
-	return start;
-}
-
-char const* parse_spec(char const* start, char const* end, formatxx::format_spec& result)
-{
-	// sign
-	if (start != end && *start == '+')
-	{
-		result.sign = format_spec::sign_always;
-		++start;
-	}
-	else if (start != end && *start == ' ')
-	{
-		result.sign = format_spec::sign_space;
-		++start;
-	}
-	else if (start != end && *start == '-')
-	{
-		result.sign = format_spec::sign_default;
-		++start;
-	}
-
-	// print numeric prefix
-	if (start != end && *start == '#')
-	{
-		result.type_prefix = true;
-		++start;
-	}
-
-	// generic mode option allowed
-	if (start != end && *start != ':' && *start != '}')
-	{
-		result.code = *start;
-		++start;
-	}
-
-	// type-specific format allowed
-	if (start != end && *start == ':')
-	{
-		char const* const extra = ++start;
-		while (start != end && *start != '}' && *start != '{')
-			++start;
-		result.extra = formatxx::string_view(extra, start);
-	}
-
 	return start;
 }
 
