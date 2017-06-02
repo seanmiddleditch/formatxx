@@ -39,13 +39,20 @@
 
 namespace formatxx
 {
-	class string_view;
-	struct format_spec;
+	template <typename CharT> class basic_string_view;
+	template <typename CharT> class basic_format_writer;
+	
+	template <typename CharT, std::size_t> class basic_fixed_writer;
+	template <typename CharT, std::size_t, typename = std::allocator<CharT>> class basic_buffered_writer;
+	template <typename CharT, typename StringT> class basic_string_writer;
 
-	class format_writer;
-	template <typename = std::string> class string_writer;
-	template <std::size_t> class fixed_writer;
-	template <std::size_t, typename = std::allocator<char>> class buffered_writer;
+	struct format_spec;
+	
+	using string_view = basic_string_view<char>;
+	using format_writer = basic_format_writer<char>;
+	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
+	template <std::size_t Size = 512> using buffered_writer = basic_buffered_writer<char, Size>;
+	template <typename StringT = std::string> using string_writer = basic_string_writer<char, StringT>;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
 	format_writer& format(format_writer& writer, string_view format);
@@ -54,29 +61,31 @@ namespace formatxx
 }
 
 /// Describes a format string.
-class formatxx::string_view
+template <typename CharT>
+class formatxx::basic_string_view
 {
 public:
-	constexpr string_view() = default;
-	constexpr string_view(char const* first, char const* last) : _begin(first), _size(last - first) {}
-	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
-	string_view(char const* zstr) : string_view(zstr, std::char_traits<char>::length(zstr)) {}
-	template <typename T, typename A> string_view(std::basic_string<char, T, A> const& str) : string_view(str.c_str(), str.size()) {}
+	constexpr basic_string_view() = default;
+	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
+	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
+	basic_string_view(CharT const* zstr) : basic_string_view(zstr, std::char_traits<CharT>::length(zstr)) {}
+	template <typename T, typename A> basic_string_view(std::basic_string<CharT, T, A> const& str) : basic_string_view(str.c_str(), str.size()) {}
 
-	constexpr char const* data() const { return _begin; }
+	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
 	constexpr bool empty() const { return _size == 0; }
 
 private:
-	char const* _begin = nullptr;
+	CharT const* _begin = nullptr;
 	std::size_t _size = 0;
 };
 
 /// Interface for any buffer that the format library can write into.
-class formatxx::format_writer
+template <typename CharT>
+class formatxx::basic_format_writer
 {
 public:
-	virtual ~format_writer() = default;
+	virtual ~basic_format_writer() = default;
 
 	/// Write a string slice.
 	/// @param str The string to write.
@@ -87,66 +96,66 @@ public:
 };
 
 /// A writer that generates a buffer (intended for std::string).
-template <typename StringT>
-class formatxx::string_writer : public format_writer
+template <typename CharT, typename StringT>
+class formatxx::basic_string_writer : public basic_format_writer<CharT>
 {
 public:
-	void write(string_view str) override { _string.append(str.data(), str.size()); }
-	string_view view() const override { return string_view(_string.c_str(), _string.size()); }
+	void write(basic_string_view<CharT> str) override { _string.append(str.data(), str.size()); }
+	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_string.c_str(), _string.size()); }
 
 	StringT const& str() const { return _string; }
 	StringT& str() { return _string; }
 
 	void clear() { _string.clear(); }
 	std::size_t size() const { return _string.size(); }
-	char const* c_str() const { return _string.c_str(); }
+	CharT const* c_str() const { return _string.c_str(); }
 
 private:
 	StringT _string;
 };
 
 /// A writer with a fixed buffer that will never allocate.
-template <std::size_t SizeN = 512>
-class formatxx::fixed_writer : public format_writer
+template <typename CharT, std::size_t SizeN>
+class formatxx::basic_fixed_writer : public basic_format_writer<CharT>
 {
 public:
-	void write(string_view str) override;
-	string_view view() const override { return string_view(_buffer, _last); }
+	void write(basic_string_view<CharT> str) override;
+	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_buffer, _last); }
 
 	void clear() { _last = _buffer; }
 	std::size_t size() const { return _last - _buffer; }
-	char const* c_str() const { return _buffer; }
+	CharT const* c_str() const { return _buffer; }
 
 private:
-	char* _last = _buffer;
-	char _buffer[SizeN] = {'\0',};
+	CharT* _last = _buffer;
+	CharT _buffer[SizeN] = {CharT(0),};
 };
 
 /// A writer with a fixed buffer that will allocate when the buffer is exhausted.
-template <std::size_t SizeN, typename AllocatorT>
-class formatxx::buffered_writer : public format_writer, private AllocatorT
+template <typename CharT, std::size_t SizeN, typename AllocatorT>
+class formatxx::basic_buffered_writer : public basic_format_writer<CharT>, private AllocatorT
 {
 public:
-	buffered_writer() = default;
-	~buffered_writer();
+	basic_buffered_writer() = default;
+	~basic_buffered_writer();
 
-	buffered_writer(buffered_writer const&) = delete;
-	buffered_writer& operator=(buffered_writer const&) = delete;
+	basic_buffered_writer(basic_buffered_writer const&) = delete;
+	basic_buffered_writer& operator=(basic_buffered_writer const&) = delete;
 
-	void write(string_view str) override;
-	string_view view() const override { return string_view(_first, _last - _first); }
+	void write(basic_string_view<CharT> str) override;
+	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_first, _last - _first); }
 
 	void clear() { _last = _first; }
 	std::size_t size() const { return _last - _first; }
-	char const* c_str() const { return _first; }
+	CharT const* c_str() const { return _first; }
 
 private:
 	void _grow(std::size_t amount);
 
-	char* _first = _buffer;
-	char* _last = _buffer;
-	char* _sentinel = _buffer + SizeN;
-	char _buffer[SizeN] = {'\0',};
+	CharT* _first = _buffer;
+	CharT* _last = _buffer;
+	CharT* _sentinel = _buffer + SizeN;
+	CharT _buffer[SizeN] = {CharT(0),};
 };
 
 /// Extra formatting specifications.
@@ -249,25 +258,25 @@ StringT formatxx::format(string_view format, Args&&... args)
 	return static_cast<StringT&&>(tmp.str());
 }
 
-template <std::size_t SizeN>
-void formatxx::fixed_writer<SizeN>::write(string_view str)
+template <typename CharT, std::size_t SizeN>
+void formatxx::basic_fixed_writer<CharT, SizeN>::write(basic_string_view<CharT> str)
 {
 	std::size_t const remaining = SizeN - size() - 1;
 	std::size_t const length = remaining < str.size() ? remaining : str.size();
-	std::memcpy(_last, str.data(), length);
+	std::memcpy(_last, str.data(), length * sizeof(CharT));
 	_last += length;
-	*_last = '\0';
+	*_last = CharT(0);
 }
 
-template <std::size_t SizeN, typename AllocatorT>
-formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
+template <typename CharT, std::size_t SizeN, typename AllocatorT>
+formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::~basic_buffered_writer()
 {
 	if (_first != _buffer)
 		this->deallocate(_first, _sentinel - _first);
 }
 
-template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
+template <typename CharT, std::size_t SizeN, typename AllocatorT>
+void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::_grow(std::size_t amount)
 {
 	std::size_t const size = _last - _first;
 	std::size_t const capacity = _sentinel - _first;
@@ -281,7 +290,7 @@ void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 			newCapacity = required;
 
 		char* newBuffer = this->allocate(newCapacity);
-		std::memcpy(newBuffer, _first, size + 1);
+		std::memcpy(newBuffer, _first, (size + 1) * sizeof(CharT));
 
 		if (_first != _buffer)
 			this->deallocate(_first, capacity);
@@ -292,13 +301,13 @@ void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
 	}
 }
 
-template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::write(string_view str)
+template <typename CharT, std::size_t SizeN, typename AllocatorT>
+void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::write(basic_string_view<CharT> str)
 {
 	_grow(str.size());
-	std::memcpy(_last, str.data(), str.size());
+	std::memcpy(_last, str.data(), str.size() * sizeof(CharT));
 	_last += str.size();
-	*_last = '\0';
+	*_last = CharT(0);
 }
 
 #endif // !defined(_guard_FORMATXX_H)
