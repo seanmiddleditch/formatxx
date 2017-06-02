@@ -30,6 +30,7 @@
 
 #include <formatxx/format.h>
 #include <formatxx/buffered.h>
+#include <formatxx/string.h>
 
 #include <iostream>
 #include <string>
@@ -40,7 +41,7 @@ static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
 std::string formatxx_tostring(std::string&& str) { return std::move(str); }
-std::string formatxx_tostring(formatxx::format_writer const& writer) { return std::string(writer.view().data(), writer.view().size()); }
+template <typename CharT> std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
 
 #define CHECK_FORMAT_HELPER(expr, expected) \
 	do{ \
@@ -57,6 +58,9 @@ std::string formatxx_tostring(formatxx::format_writer const& writer) { return st
 
 
 #define CHECK_FORMAT(expected, arg0, ...) \
+	CHECK_FORMAT_HELPER(formatxx::sformat(arg0, __VA_ARGS__), (expected))
+
+#define CHECK_FORMAT_WRITER(expected, arg0, ...) \
 	CHECK_FORMAT_HELPER(formatxx::format(arg0, __VA_ARGS__), (expected))
 
 void test_fixed()
@@ -65,11 +69,11 @@ void test_fixed()
 	formatxx::fixed_writer<10> buffer;
 
 	// should not truncate
-	CHECK_FORMAT("test", buffer, "test");
+	CHECK_FORMAT_WRITER("test", buffer, "test");
 
 	// should truncate
 	buffer.clear();
-	CHECK_FORMAT("test 1234", buffer, "test {0}", /*too big*/1234567890LL);
+	CHECK_FORMAT_WRITER("test 1234", buffer, "test {0}", /*too big*/1234567890LL);
 }
 
 void test_integers()
@@ -129,15 +133,23 @@ void test_floats()
 	CHECK_FORMAT("0X1.C033E78E8B439P+27", "{:A}", 234987324.4545);
 }
 
+// this is mostly tested already via the CHECK_FORMAT tests everywhere else
+void test_string_writer()
+{
+	formatxx::string_writer tmp;
+
+	CHECK_FORMAT_WRITER("1234", tmp, "1{}4", 23);
+}
+
 void test_buffered()
 {
 	formatxx::buffered_writer<4> buf;
 
-	CHECK_FORMAT("123", buf, "1{}3", "2");
+	CHECK_FORMAT_WRITER("123", buf, "1{}3", "2");
 
 	buf.clear();
 
-	CHECK_FORMAT("1234567890", buf, "1{}3{}5{}7{}9{}", 2, 4, 6, 8, 0);
+	CHECK_FORMAT_WRITER("1234567890", buf, "1{}3{}5{}7{}9{}", 2, 4, 6, 8, 0);
 }
 
 #if defined(WIN32)
@@ -153,6 +165,7 @@ int FORMATXX_MAIN_DECL main()
 	test_fixed();
 	test_integers();
 	test_floats();
+	test_string_writer();
 	test_buffered();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";

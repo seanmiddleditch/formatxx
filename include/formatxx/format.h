@@ -40,20 +40,16 @@ namespace formatxx
 {
 	template <typename CharT> class basic_string_view;
 	template <typename CharT> class basic_format_writer;
-	
 	template <typename CharT, std::size_t> class basic_fixed_writer;
-	template <typename CharT, typename StringT> class basic_string_writer;
 
 	struct format_spec;
 	
 	using string_view = basic_string_view<char>;
 	using format_writer = basic_format_writer<char>;
 	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
-	template <typename StringT = std::string> using string_writer = basic_string_writer<char, StringT>;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
 	format_writer& format(format_writer& writer, string_view format);
-	template <typename StringT = std::string, typename... Args> StringT format(string_view format, Args&&... args);
 	format_spec parse_format_spec(string_view spec);
 }
 
@@ -66,7 +62,6 @@ public:
 	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
 	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
 	basic_string_view(CharT const* zstr) : basic_string_view(zstr, std::char_traits<CharT>::length(zstr)) {}
-	template <typename T, typename A> basic_string_view(std::basic_string<CharT, T, A> const& str) : basic_string_view(str.c_str(), str.size()) {}
 
 	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
@@ -90,25 +85,6 @@ public:
 
 	/// Extract the current value of the writer.
 	virtual string_view view() const = 0;
-};
-
-/// A writer that generates a buffer (intended for std::string).
-template <typename CharT, typename StringT>
-class formatxx::basic_string_writer : public basic_format_writer<CharT>
-{
-public:
-	void write(basic_string_view<CharT> str) override { _string.append(str.data(), str.size()); }
-	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_string.c_str(), _string.size()); }
-
-	StringT const& str() const { return _string; }
-	StringT& str() { return _string; }
-
-	void clear() { _string.clear(); }
-	std::size_t size() const { return _string.size(); }
-	CharT const* c_str() const { return _string.c_str(); }
-
-private:
-	StringT _string;
 };
 
 /// A writer with a fixed buffer that will never allocate.
@@ -165,12 +141,6 @@ namespace formatxx
 	void format_value(format_writer& out, void* value, string_view spec);
 	void format_value(format_writer& out, void const* value, string_view spec);
 
-	template <typename TraitsT, typename AllocatorT>
-	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, string_view spec)
-	{
-		format_value(out, string_view(string), spec);
-	}
-
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>
 	auto format_value(format_writer& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
@@ -214,18 +184,6 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 	_detail::format_impl(writer, format, count, funcs, values);
 
 	return writer;
-}
-
-/// Write the string format using the given parameters into a buffer.
-/// @param format The primary text and formatting controls to be written.
-/// @param args The arguments used by the formatting string.
-/// @returns a formatted string.
-template <typename StringT, typename... Args>
-StringT formatxx::format(string_view format, Args&&... args)
-{
-	string_writer<StringT> tmp;
-	formatxx::format(tmp, format, std::forward<Args>(args)...);
-	return static_cast<StringT&&>(tmp.str());
 }
 
 template <typename CharT, std::size_t SizeN>

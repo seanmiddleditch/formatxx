@@ -35,6 +35,7 @@
 #include <cstdio>
 #include <limits>
 #include <climits>
+#include <cinttypes>
 
 namespace formatxx {
 
