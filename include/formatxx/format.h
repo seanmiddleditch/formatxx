@@ -49,6 +49,7 @@ namespace formatxx
 	template <std::size_t, typename = std::allocator<char>> class buffered_writer;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
+	format_writer& format(format_writer& writer, string_view format);
 	template <typename StringT = std::string, typename... Args> StringT format(string_view format, Args&&... args);
 
 	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
@@ -61,7 +62,7 @@ public:
 	constexpr string_view() = default;
 	constexpr string_view(char const* first, char const* last) : _begin(first), _size(last - first) {}
 	constexpr string_view(char const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
-	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
+	string_view(char const* zstr) : string_view(zstr, std::char_traits<char>::length(zstr)) {}
 	template <typename T, typename A> string_view(std::basic_string<char, T, A> const& str) : string_view(str.c_str(), str.size()) {}
 
 	// hmm, this may be a bad idea, it'll bind to over-long character buffers
@@ -237,10 +238,11 @@ namespace formatxx
 template <typename... Args>
 formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args&&... args)
 {
-	void const* values[] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))..., nullptr};
-	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
+	constexpr auto count = sizeof...(args);
+	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
+	constexpr _detail::FormatFunc funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
 
-	_detail::format_impl(writer, format, sizeof...(Args), funcs, values);
+	_detail::format_impl(writer, format, count, funcs, values);
 
 	return writer;
 }

@@ -248,6 +248,12 @@ namespace
 
 namespace formatxx
 {
+	format_writer& format(format_writer& writer, string_view format)
+	{
+		_detail::format_impl(writer, format, 0, nullptr, nullptr);
+		return writer;
+	}
+
 	void format_value(format_writer& out, char ch, format_spec const&)
 	{
 		out.write(string_view(&ch, 1));
