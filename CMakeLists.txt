@@ -4,6 +4,7 @@ project(formatxx)
 
 add_library(formatxx STATIC
 	include/formatxx/format.h
+    source/write_integer.inl
 	source/format.cc
 )
 target_include_directories(formatxx PUBLIC "include")
