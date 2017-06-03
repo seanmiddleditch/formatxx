@@ -50,6 +50,10 @@ namespace formatxx
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
 	format_writer& format(format_writer& writer, string_view format);
+
+	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args&&... args);
+	format_writer& printf(format_writer& writer, string_view format);
+
 	format_spec parse_format_spec(string_view spec);
 }
 
@@ -167,6 +171,7 @@ namespace formatxx
 		// #FIXME: char[N] types will horribly do the wrong thing here.
 
 		void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
+		void printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
 	}
 }
 
@@ -182,6 +187,22 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
 
 	_detail::format_impl(writer, format, count, funcs, values);
+
+	return writer;
+}
+
+/// Write the printf format using the given parameters into a buffer.
+/// @param writer The write buffer that will receive the formatted text.
+/// @param format The primary text and printf controls to be written.
+/// @param args The arguments used by the formatting string.
+template <typename... Args>
+formatxx::format_writer& formatxx::printf(format_writer& writer, string_view format, Args&&... args)
+{
+	constexpr auto count = sizeof...(args);
+	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
+	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
+
+	_detail::printf_impl(writer, format, count, funcs, values);
 
 	return writer;
 }

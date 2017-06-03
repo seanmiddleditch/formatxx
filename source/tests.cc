@@ -56,12 +56,17 @@ template <typename CharT> std::basic_string<CharT, std::char_traits<CharT>, std:
 		} \
 	}while(false)
 
+#define CHECK_FORMAT_CALL(expected, formatter, arg0, ...) \
+	CHECK_FORMAT_HELPER(formatter(arg0, __VA_ARGS__), (expected))
 
 #define CHECK_FORMAT(expected, arg0, ...) \
-	CHECK_FORMAT_HELPER(formatxx::sformat(arg0, __VA_ARGS__), (expected))
+	CHECK_FORMAT_CALL((expected), formatxx::sformat, arg0, __VA_ARGS__)
+
+#define CHECK_PRINTF(expected, arg0, ...) \
+	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
 
 #define CHECK_FORMAT_WRITER(expected, arg0, ...) \
-	CHECK_FORMAT_HELPER(formatxx::format(arg0, __VA_ARGS__), (expected))
+	CHECK_FORMAT_CALL((expected), formatxx::format, arg0, __VA_ARGS__)
 
 void test_fixed()
 {
@@ -152,6 +157,11 @@ void test_buffered()
 	CHECK_FORMAT_WRITER("1234567890", buf, "1{}3{}5{}7{}9{}", 2, 4, 6, 8, 0);
 }
 
+void test_printf()
+{
+	CHECK_PRINTF("abcd1234", "a%sd1%d4", "bc", 23);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -167,6 +177,7 @@ int FORMATXX_MAIN_DECL main()
 	test_floats();
 	test_string_writer();
 	test_buffered();
+	test_printf();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;

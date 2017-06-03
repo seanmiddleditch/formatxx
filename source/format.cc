@@ -56,6 +56,12 @@ format_writer& format(format_writer& writer, string_view format)
 	return writer;
 }
 
+format_writer& printf(format_writer& writer, string_view format)
+{
+	_detail::printf_impl(writer, format, 0, nullptr, nullptr);
+	return writer;
+}
+
 void format_value(format_writer& out, char ch, format_spec const&)
 {
 	out.write(string_view(&ch, 1));
@@ -176,20 +182,18 @@ format_spec parse_format_spec(string_view spec)
 			return result;
 	}
 
-	// generic mode option allowed
-	if (*start != ':' && *start != '}')
+	// generic code specified option allowed (required for printf)
+	char const code = *start;
+	if ((code >= 'a' && code <= 'z') || (code >= 'A' && code <= 'Z'))
 	{
-		result.code = *start;
+		result.code = code;
 
 		if (++start == end)
 			return result;
 	}
 
-	// type-specific format allowed
-	if (*start == ':')
-	{
-		result.extra = string_view(++start, end);
-	}
+	// store remaining format specifier
+	result.extra = string_view(start, end);
 
 	return result;
 }
@@ -206,11 +210,16 @@ void format_impl(format_writer& out, string_view format, std::size_t count, Form
 
 	while (iter < end)
 	{
-		if (*iter == '{')
+		if (*iter != '{')
+		{
+			++iter;
+		}
+		else
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 				out.write(string_view(begin, iter - begin));
+
 
 			++iter; // swallow the {
 
@@ -293,9 +302,74 @@ void format_impl(format_writer& out, string_view format, std::size_t count, Form
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;
 		}
-		else
+	}
+
+	// write out tail end of format string
+	if (iter > begin)
+		out.write(string_view(begin, iter - begin));
+}
+
+void printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values)
+{
+	unsigned next_index = 0;
+
+	char const* begin = format.data();
+	char const* const end = begin + format.size();
+	char const* iter = begin;
+
+	while (iter < end)
+	{
+		if (*iter != '%')
 		{
 			++iter;
+		}
+		else
+		{
+			// write out the string so far, since we don't write characters immediately
+			if (iter > begin)
+				out.write(string_view(begin, iter - begin));
+
+			++iter; // swallow the {
+
+			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
+			if (iter == end)
+			{
+				out.write(sErrIncomplete);
+				break;
+			}
+
+			// if we just have another % then take it as a literal character by starting our next begin here,
+			// so it'll get written next time we write out the begin; nothing else to do for formatting here
+			if (*iter == '%')
+			{
+				begin = iter++;
+				continue;
+			}
+		
+			// if the index is out of range, we have nothing to format
+			if (next_index >= count)
+			{
+				out.write(sErrOutOfRange);
+				continue;
+			}
+
+			// parse forward through the specification
+			char const* const spec_begin = iter;
+			format_spec spec = parse_format_spec({iter, end});
+			char const* const spec_end = spec.extra.data();
+			if (spec.code == '\0')
+			{
+				// invalid spec
+				out.write(sErrBadFormat);
+				break;
+			}
+
+			// magic!
+			funcs[next_index](out, values[next_index], {spec_begin, spec_end});
+
+			// prepare for next round
+			begin = iter = spec_end;
+			++next_index;
 		}
 	}
 
