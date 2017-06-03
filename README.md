@@ -115,14 +115,17 @@ user-defined types for generic user code).
 
 ## To Do
 
-- The remaining primitive types.
-- Detectable errors
+- Remaining primitive types
+- Remaining format specifiers and support, particularly for `printf` syntax compatibility
+- Observable errors
   - Throw by default, with option/`std::nothrow` to disable?
-  - Return value to indicate if an error happened?
-- `printf` syntax option.
+  - Return value or error code?
 - Performance pass
-  - noexcept(true) where appropriate.
-- wchar/u8/u16/u32 string support? maybe.
+  - noexcept(true) where appropriate?
+  - Benchmarks
+- Unicode support
+  - wchar
+  - u8/u16/u32?
 
 ## Copying
 
