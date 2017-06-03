@@ -159,7 +159,7 @@ void write_octal(format_writer& out, T value)
 template <typename T>
 void write_binary(format_writer& out, T value)
 {
-	char buffer[CHAR_BIT * sizeof(value)]; // bits per octet
+	char buffer[std::numeric_limits<unsigned char>::digits * sizeof(value)];
 	char* end = buffer + sizeof(buffer);
 
 	do
