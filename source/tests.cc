@@ -40,8 +40,17 @@
 static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
-std::string formatxx_tostring(std::string&& str) { return std::move(str); }
-template <typename CharT> std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
+static std::string formatxx_tostring(std::string&& str) { return std::move(str); }
+template <typename CharT> static std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
+
+template <typename T>
+static std::string format_value_to_string(T const& value, formatxx::string_view spec)
+{
+	using formatxx::format_value;
+	formatxx::string_writer buf;
+	format_value(buf, value, spec);
+	return std::move(buf).str();
+}
 
 #define CHECK_FORMAT_HELPER(expr, expected) \
 	do{ \
@@ -65,10 +74,13 @@ template <typename CharT> std::basic_string<CharT, std::char_traits<CharT>, std:
 #define CHECK_PRINTF(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
 
+#define CHECK_FORMAT_VALUE(expected, value, spec) \
+	CHECK_FORMAT_CALL((expected), format_value_to_string, (value), (spec))
+
 #define CHECK_FORMAT_WRITER(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::format, arg0, __VA_ARGS__)
 
-void test_fixed()
+static void test_fixed()
 {
 	// can hold 9 characters and a NUL byte
 	formatxx::fixed_writer<10> buffer;
@@ -81,7 +93,7 @@ void test_fixed()
 	CHECK_FORMAT_WRITER("test 1234", buffer, "test {0}", /*too big*/1234567890LL);
 }
 
-void test_integers()
+static void test_integers()
 {
 	CHECK_FORMAT("123987", "{}", 123987);
 
@@ -115,7 +127,7 @@ void test_integers()
 }
 
 // FIXME: currently platform-dependent due to sprintf dependence
-void test_floats()
+static void test_floats()
 {
 	CHECK_FORMAT("123987.456000", "{}", 123987.456);
 
@@ -139,14 +151,14 @@ void test_floats()
 }
 
 // this is mostly tested already via the CHECK_FORMAT tests everywhere else
-void test_string_writer()
+static void test_string_writer()
 {
 	formatxx::string_writer tmp;
 
 	CHECK_FORMAT_WRITER("1234", tmp, "1{}4", 23);
 }
 
-void test_buffered()
+static void test_buffered()
 {
 	formatxx::buffered_writer<4> buf;
 
@@ -157,20 +169,33 @@ void test_buffered()
 	CHECK_FORMAT_WRITER("1234567890", buf, "1{}3{}5{}7{}9{}", 2, 4, 6, 8, 0);
 }
 
-void test_printf()
+static void test_printf()
 {
 	CHECK_PRINTF("abcd1234", "a%sd1%d4", "bc", 23);
 }
 
-void test_strings()
+static void test_strings()
 {
+	CHECK_FORMAT_VALUE("test", "test", "");
+	CHECK_FORMAT_VALUE("test", std::string("test"), "");
+	CHECK_FORMAT_VALUE("test", formatxx::string_view("test"), "");
+
 	CHECK_FORMAT("abcdef", "{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef");
 }
 
-void test_bool()
+static void test_bool()
 {
 	CHECK_FORMAT("true", "{}", true);
 	CHECK_FORMAT("false", "{}", false);
+}
+
+static void test_pointers()
+{
+	void const* ptr = reinterpret_cast<void const*>(static_cast<std::uintptr_t>(0xDEADC0DE));
+	int const* iptr = reinterpret_cast<int const*>(static_cast<std::uintptr_t>(0xFEFEFEFE));
+
+	CHECK_FORMAT("DEADC0DE", "{:X}", ptr);
+	CHECK_FORMAT("fefefefe", "{:x}", iptr);
 }
 
 #if defined(WIN32)
@@ -191,6 +216,7 @@ int FORMATXX_MAIN_DECL main()
 	test_printf();
 	test_strings();
 	test_bool();
+	test_pointers();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;

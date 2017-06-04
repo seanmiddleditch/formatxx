@@ -65,7 +65,7 @@ public:
 	constexpr basic_string_view() = default;
 	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
 	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
-	basic_string_view(CharT const* zstr) : basic_string_view(zstr, std::char_traits<CharT>::length(zstr)) {}
+	basic_string_view(CharT const* zstr) : _begin(zstr), _size(std::char_traits<CharT>::length(zstr)) {}
 
 	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
