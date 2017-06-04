@@ -53,7 +53,7 @@ format_writer& printf(format_writer& writer, std::basic_string<CharT, CharTraits
 template <typename TraitsT, typename AllocatorT>
 void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, string_view spec)
 {
-    format_value(out, string_view(string), spec);
+    format_value(out, string_view(string.c_str(), string.size()), spec);
 }
 
 } // namespace formatxx

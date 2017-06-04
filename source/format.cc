@@ -62,12 +62,12 @@ format_writer& printf(format_writer& writer, string_view format)
 	return writer;
 }
 
-void format_value(format_writer& out, char ch, format_spec const&)
+void format_value(format_writer& out, char ch, string_view format)
 {
 	out.write(string_view(&ch, 1));
 }
 
-void format_value(format_writer& out, bool value, format_spec const&)
+void format_value(format_writer& out, bool value, string_view format)
 {
 	out.write(value ? "true" : "false");
 }
@@ -82,7 +82,7 @@ void format_value(format_writer& out, char const* zstr, string_view spec)
 	out.write(string_view(zstr));
 }
 
-void format_value(format_writer& out, string_view str, format_spec const&)
+void format_value(format_writer& out, string_view str, string_view format)
 {
 	out.write(str);
 }

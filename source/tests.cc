@@ -162,6 +162,17 @@ void test_printf()
 	CHECK_PRINTF("abcd1234", "a%sd1%d4", "bc", 23);
 }
 
+void test_strings()
+{
+	CHECK_FORMAT("abcdef", "{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef");
+}
+
+void test_bool()
+{
+	CHECK_FORMAT("true", "{}", true);
+	CHECK_FORMAT("false", "{}", false);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -178,6 +189,8 @@ int FORMATXX_MAIN_DECL main()
 	test_string_writer();
 	test_buffered();
 	test_printf();
+	test_strings();
+	test_bool();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;
