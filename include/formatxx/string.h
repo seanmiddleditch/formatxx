@@ -43,7 +43,7 @@ template <typename StringT> class basic_string_writer;
 using string_writer = basic_string_writer<std::string>;
 
 template <typename StringT = std::string, typename... Args> StringT sformat(string_view format, Args&&... args);
-template <typename StringT = std::string, typename... Args> StringT formatxx::sprintf(string_view format, Args&&... args);
+template <typename StringT = std::string, typename... Args> StringT sprintf(string_view format, Args&&... args);
 
 template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
 format_writer& format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args&&... args);
