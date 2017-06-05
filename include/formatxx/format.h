@@ -82,10 +82,10 @@ public:
 
 	/// Write a string slice.
 	/// @param str The string to write.
-	virtual void write(string_view str) = 0;
+	virtual void write(basic_string_view<CharT> str) = 0;
 
 	/// Extract the current value of the writer.
-	virtual string_view view() const = 0;
+	virtual basic_string_view<CharT> view() const = 0;
 };
 
 /// A writer with a fixed buffer that will never allocate.
@@ -162,13 +162,25 @@ namespace formatxx
 	/// @internal
 	namespace _detail
 	{
-		using FormatterThunk = void(*)(format_writer&, void const*, string_view);
+		template <typename CharT> using BasicFormatterThunk = void(*)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
 		using FormatterParameter = void const*;
 
-		template <typename T> void format_value_thunk(format_writer& out, void const* ptr, string_view spec) { format_value(out, *static_cast<T const*>(ptr), spec); }
+		template <typename CharT, typename T>
+		void format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec)
+		{
+			format_value(out, *static_cast<T const*>(ptr), spec);
+		}
 
-		format_writer& format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values);
-		format_writer& printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values);
+		template <typename CharT>
+		basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		template <typename CharT>
+		basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+
+		extern template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+		//extern template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+
+		extern template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+		//extern template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 	}
 }
 
@@ -180,7 +192,7 @@ template <typename... Args>
 formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args const&... args)
 {
 	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
-	_detail::FormatterThunk const funcs[] = {&_detail::format_value_thunk<Args>..., nullptr};
+	_detail::BasicFormatterThunk<char> const funcs[] = {&_detail::format_value_thunk<char, Args>..., nullptr};
 
 	return _detail::format_impl(writer, format, sizeof...(args), funcs, values);
 }
@@ -193,7 +205,7 @@ template <typename... Args>
 formatxx::format_writer& formatxx::printf(format_writer& writer, string_view format, Args const&... args)
 {
 	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
-	_detail::FormatterThunk const funcs[] = {&_detail::format_value_thunk<Args>..., nullptr};
+	_detail::BasicFormatterThunk<char> const funcs[] = {&_detail::format_value_thunk<char, Args>..., nullptr};
 
 	return _detail::printf_impl(writer, format, sizeof...(args), funcs, values);
 }

@@ -42,11 +42,11 @@ namespace formatxx {
 namespace {
 
 // string_view over string literals is safe on all platforms for which I'm aware
-constexpr string_view sErrBadFormat{"#BADF", 5};
-constexpr string_view sErrIncomplete{"#INCL", 5};
-constexpr string_view sErrOutOfRange{"#RNGE", 5};
+constexpr basic_string_view<char> sErrBadFormat{"#BADF", 5};
+constexpr basic_string_view<char> sErrIncomplete{"#INCL", 5};
+constexpr basic_string_view<char> sErrOutOfRange{"#RNGE", 5};
 
-char const* parse_unsigned(char const* start, char const* end, unsigned& result);
+template <typename CharT> CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result);
 
 } // anonymous namespace
 
@@ -188,13 +188,14 @@ format_spec parse_format_spec(string_view spec)
 
 namespace _detail {
 
-format_writer& format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values)
+template <typename CharT>
+basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
-	char const* begin = format.data();
-	char const* const end = begin + format.size();
-	char const* iter = begin;
+	CharT const* begin = format.data();
+	CharT const* const end = begin + format.size();
+	CharT const* iter = begin;
 
 	while (iter < end)
 	{
@@ -206,7 +207,7 @@ format_writer& format_impl(format_writer& out, string_view format, std::size_t c
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
-				out.write(string_view(begin, iter - begin));
+				out.write({begin, iter});
 
 			++iter; // swallow the {
 
@@ -227,8 +228,8 @@ format_writer& format_impl(format_writer& out, string_view format, std::size_t c
 
 			// determine which argument we're going to format
 			unsigned index = 0;
-			char const* const start = iter;
-			char const* iter = parse_unsigned(start, end, index);
+			CharT const* const start = iter;
+			CharT const* iter = parse_unsigned(start, end, index);
 
 			// if we read nothing, we have a "next index" situation (or an error)
 			if (iter == start)
@@ -247,7 +248,7 @@ format_writer& format_impl(format_writer& out, string_view format, std::size_t c
 			if (*iter == ':')
 			{
 				++iter; // eat separator
-				char const* const spec_begin = iter;
+				CharT const* const spec_begin = iter;
 
 				while (iter < end && *iter != '}')
 				{
@@ -293,22 +294,23 @@ format_writer& format_impl(format_writer& out, string_view format, std::size_t c
 
 	// write out tail end of format string
 	if (iter > begin)
-		out.write(string_view(begin, iter - begin));
+		out.write({begin, iter});
 
 	return out;
 }
 
-format_writer& printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values)
+template <typename CharT>
+basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
-	char const* begin = format.data();
-	char const* const end = begin + format.size();
-	char const* iter = begin;
+	CharT const* begin = format.data();
+	CharT const* const end = begin + format.size();
+	CharT const* iter = begin;
 
 	while (iter < end)
 	{
-		if (*iter != '%')
+		if (*iter != CharT('%'))
 		{
 			++iter;
 		}
@@ -316,7 +318,7 @@ format_writer& printf_impl(format_writer& out, string_view format, std::size_t c
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
-				out.write(string_view(begin, iter - begin));
+				out.write({begin, iter});
 
 			++iter; // swallow the {
 
@@ -329,7 +331,7 @@ format_writer& printf_impl(format_writer& out, string_view format, std::size_t c
 
 			// if we just have another % then take it as a literal character by starting our next begin here,
 			// so it'll get written next time we write out the begin; nothing else to do for formatting here
-			if (*iter == '%')
+			if (*iter == CharT('%'))
 			{
 				begin = iter++;
 				continue;
@@ -343,10 +345,10 @@ format_writer& printf_impl(format_writer& out, string_view format, std::size_t c
 			}
 
 			// parse forward through the specification
-			char const* const spec_begin = iter;
+			CharT const* const spec_begin = iter;
 			format_spec spec = parse_format_spec({iter, end});
-			char const* const spec_end = spec.extra.data();
-			if (spec.code == '\0')
+			CharT const* const spec_end = spec.extra.data();
+			if (spec.code == CharT(0))
 			{
 				// invalid spec
 				out.write(sErrBadFormat);
@@ -364,22 +366,29 @@ format_writer& printf_impl(format_writer& out, string_view format, std::size_t c
 
 	// write out tail end of format string
 	if (iter > begin)
-		out.write(string_view(begin, iter - begin));
+		out.write({begin, iter});
 
 	return out;
 }
+
+template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+//template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+
+template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+//template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 } // namespace _detail
 
 namespace {
 
-char const* parse_unsigned(char const* start, char const* end, unsigned& result)
+template <typename CharT>
+CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result)
 {
 	result = 0;
-	while (start != end && *start >= '0' && *start <= '9')
+	while (start != end && *start >= CharT('0') && *start <= CharT('9'))
 	{
 		result *= 10;
-		result += *start - '0';
+		result += *start - CharT('0');
 		++start;
 	}
 	return start;
