@@ -41,10 +41,41 @@ namespace formatxx {
 
 namespace {
 
-// string_view over string literals is safe on all platforms for which I'm aware
-constexpr basic_string_view<char> sErrBadFormat{"#BADF", 5};
-constexpr basic_string_view<char> sErrIncomplete{"#INCL", 5};
-constexpr basic_string_view<char> sErrOutOfRange{"#RNGE", 5};
+template <typename CharT> struct FormatTraits;
+
+template <> struct FormatTraits<char>
+{
+	static constexpr char cFormatBegin = '{';
+	static constexpr char cFormatEnd = '}';
+	static constexpr char cFormatSep = ':';
+
+	static constexpr char cPrintfSpec = '%';
+
+	// string_view over string literals is safe on all platforms for which I'm aware
+	static constexpr string_view sErrBadFormat{"#BADF", 5};
+	static constexpr string_view sErrIncomplete{"#INCL", 5};
+	static constexpr string_view sErrOutOfRange{"#RNGE", 5};
+
+	static constexpr string_view sTrue{"true", 4};
+	static constexpr string_view sFalse{"false", 5};
+};
+
+template <> struct FormatTraits<wchar_t>
+{
+	static constexpr wchar_t cFormatBegin = L'{';
+	static constexpr wchar_t cFormatEnd = L'}';
+	static constexpr wchar_t cFormatSep = L':';
+
+	static constexpr wchar_t cPrintfSpec = L'%';
+
+	// string_view over string literals is safe on all platforms for which I'm aware
+	static constexpr wstring_view sErrBadFormat{L"#BADF", 5};
+	static constexpr wstring_view sErrIncomplete{L"#INCL", 5};
+	static constexpr wstring_view sErrOutOfRange{L"#RNGE", 5};
+
+	static constexpr wstring_view sTrue{L"true", 4};
+	static constexpr wstring_view sFalse{L"false", 5};
+};
 
 template <typename CharT> CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result);
 
@@ -199,7 +230,7 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 
 	while (iter < end)
 	{
-		if (*iter != '{')
+		if (*iter != FormatTraits<CharT>::cFormatBegin)
 		{
 			++iter;
 		}
@@ -214,13 +245,13 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
 			{
-				out.write(sErrIncomplete);
+				out.write(FormatTraits<CharT>::sErrIncomplete);
 				break;
 			}
 
 			// if we just have another { then take it as a literal character by starting our next begin here,
 			// so it'll get written next time we write out the begin; nothing else to do for formatting here
-			if (*iter == '{')
+			if (*iter == FormatTraits<CharT>::cFormatBegin)
 			{
 				begin = iter++;
 				continue;
@@ -238,19 +269,19 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 			// if we hit the end of the string, we have an incomplete format
 			if (iter == end)
 			{
-				out.write(sErrIncomplete);
+				out.write(FormatTraits<CharT>::sErrIncomplete);
 				break;
 			}
 
-			string_view spec;
+			basic_string_view<CharT> spec;
 
 			// if a : follows the number, we have some formatting controls
-			if (*iter == ':')
+			if (*iter == FormatTraits<CharT>::cFormatSep)
 			{
 				++iter; // eat separator
 				CharT const* const spec_begin = iter;
 
-				while (iter < end && *iter != '}')
+				while (iter < end && *iter != FormatTraits<CharT>::cFormatEnd)
 				{
 					++iter;
 				}
@@ -258,18 +289,18 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 				if (iter == end)
 				{
 					// invalid spec
-					out.write(sErrBadFormat);
+					out.write(FormatTraits<CharT>::sErrBadFormat);
 					break;
 				}
 
-				spec = string_view(spec_begin, iter);
+				spec = basic_string_view<CharT>(spec_begin, iter);
 			}
 
 			// after the index/spec, we expect an end to the format marker
-			if (*iter != '}')
+			if (*iter != FormatTraits<CharT>::cFormatEnd)
 			{
 				// we have something besides a number, no bueno
-				out.write(sErrIncomplete);
+				out.write(FormatTraits<CharT>::sErrIncomplete);
 				begin = iter; // make sure we're set up for the next begin, which starts at this unknown character
 				continue;
 			}
@@ -280,7 +311,7 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 			// if the index is out of range, we have nothing to format
 			if (index >= count)
 			{
-				out.write(sErrOutOfRange);
+				out.write(FormatTraits<CharT>::sErrOutOfRange);
 				continue;
 			}
 
@@ -310,7 +341,7 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 
 	while (iter < end)
 	{
-		if (*iter != CharT('%'))
+		if (*iter != FormatTraits<CharT>::cPrintfSpec)
 		{
 			++iter;
 		}
@@ -325,13 +356,13 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
 			{
-				out.write(sErrIncomplete);
+				out.write(FormatTraits<CharT>::sErrIncomplete);
 				break;
 			}
 
 			// if we just have another % then take it as a literal character by starting our next begin here,
 			// so it'll get written next time we write out the begin; nothing else to do for formatting here
-			if (*iter == CharT('%'))
+			if (*iter == FormatTraits<CharT>::cPrintfSpec)
 			{
 				begin = iter++;
 				continue;
@@ -340,7 +371,7 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 			// if the index is out of range, we have nothing to format
 			if (next_index >= count)
 			{
-				out.write(sErrOutOfRange);
+				out.write(FormatTraits<CharT>::sErrOutOfRange);
 				continue;
 			}
 
@@ -351,7 +382,7 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 			if (spec.code == CharT(0))
 			{
 				// invalid spec
-				out.write(sErrBadFormat);
+				out.write(FormatTraits<CharT>::sErrBadFormat);
 				break;
 			}
 
@@ -372,7 +403,7 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 }
 
 template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-//template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 //template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);

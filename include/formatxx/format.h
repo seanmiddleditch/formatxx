@@ -45,6 +45,7 @@ namespace formatxx
 	struct format_spec;
 	
 	using string_view = basic_string_view<char>;
+	using wstring_view = basic_string_view<wchar_t>;
 	using format_writer = basic_format_writer<char>;
 	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
 
