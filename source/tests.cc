@@ -181,6 +181,8 @@ static void test_strings()
 	CHECK_FORMAT_VALUE("test", formatxx::string_view("test"), "");
 
 	CHECK_FORMAT("abcdef", "{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef");
+
+	CHECK_FORMAT("abc", std::string("a{}c"), "b");
 }
 
 static void test_bool()
