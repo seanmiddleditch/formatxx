@@ -173,8 +173,8 @@ namespace formatxx
 		template <Formatter Func, typename... Args>
 		format_writer& invoke_format(format_writer& writer, string_view format, Args const&... args)
 		{
-			void const* values[] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))..., nullptr};
-			constexpr FormatterThunk funcs[] = {&format_value_thunk<std::decay_t<decltype(args)>>..., nullptr};
+			void const* values[] = {std::addressof(args)..., nullptr};
+			constexpr FormatterThunk funcs[] = {&format_value_thunk<Args>..., nullptr};
 
 			Func(writer, format, sizeof...(args), funcs, values);
 
