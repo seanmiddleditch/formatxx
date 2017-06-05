@@ -42,13 +42,13 @@ template <typename StringT> class basic_string_writer;
 
 using string_writer = basic_string_writer<std::string>;
 
-template <typename StringT = std::string, typename... Args> StringT sformat(string_view format, Args&&... args);
-template <typename StringT = std::string, typename... Args> StringT sprintf(string_view format, Args&&... args);
+template <typename StringT = std::string, typename... Args> StringT sformat(string_view format, Args const&... args);
+template <typename StringT = std::string, typename... Args> StringT sprintf(string_view format, Args const&... args);
 
 template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-format_writer& format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args&&... args);
+format_writer& format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
 template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-format_writer& printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args&&... args);
+format_writer& printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
 
 template <typename TraitsT, typename AllocatorT>
 void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, string_view spec)
@@ -86,9 +86,9 @@ private:
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-formatxx::format_writer& formatxx::format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args&&... args)
+formatxx::format_writer& formatxx::format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args)
 {
-    formatxx::format(writer, basic_string_view<CharT>(format.data(), format.size()), std::forward<Args>(args)...);
+    formatxx::format(writer, basic_string_view<CharT>(format.data(), format.size()), args...);
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -96,15 +96,9 @@ formatxx::format_writer& formatxx::format(format_writer& writer, std::basic_stri
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-formatxx::format_writer& formatxx::printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args&&... args)
+formatxx::format_writer& formatxx::printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args)
 {
-	constexpr auto count = sizeof...(args);
-	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
-	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
-
-	_detail::printf_impl(writer, basic_string_view<CharT>(format.data(), format.size()), count, funcs, values);
-
-	return writer;
+	formatxx::printf(writer, basic_string_view<CharT>(format.data(), format.size()), args...);
 }
 
 /// Write the string format using the given parameters and return a string with the result.
@@ -112,10 +106,10 @@ formatxx::format_writer& formatxx::printf(format_writer& writer, std::basic_stri
 /// @param args The arguments used by the formatting string.
 /// @returns a formatted string.
 template <typename StringT, typename... Args>
-StringT formatxx::sformat(string_view format, Args&&... args)
+StringT formatxx::sformat(string_view format, Args const&... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::format(tmp, format, std::forward<Args>(args)...);
+	formatxx::format(tmp, format, args...);
 	return static_cast<StringT&&>(tmp.str());
 }
 
@@ -124,10 +118,10 @@ StringT formatxx::sformat(string_view format, Args&&... args)
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename StringT, typename... Args>
-StringT formatxx::sprintf(string_view format, Args&&... args)
+StringT formatxx::sprintf(string_view format, Args const&... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::printf(tmp, format, std::forward<Args>(args)...);
+	formatxx::printf(tmp, format, args...);
 	return static_cast<StringT&&>(tmp.str());
 }
 

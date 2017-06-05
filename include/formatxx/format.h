@@ -48,10 +48,10 @@ namespace formatxx
 	using format_writer = basic_format_writer<char>;
 	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
 
-	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args&&... args);
+	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args const&... args);
 	format_writer& format(format_writer& writer, string_view format);
 
-	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args&&... args);
+	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args const&... args);
 	format_writer& printf(format_writer& writer, string_view format);
 
 	format_spec parse_format_spec(string_view spec);
@@ -167,11 +167,31 @@ namespace formatxx
 	{
 		using FormatterThunk = void(*)(format_writer&, void const*, string_view);
 
-		template <typename T> struct wrap { static void fwd(format_writer& out, void const* ptr, string_view spec) { format_value(out, *static_cast<T const*>(ptr), spec); } };
-		// #FIXME: char[N] types will horribly do the wrong thing here.
+		template <typename T> void format_value_thunk(format_writer& out, void const* ptr, string_view spec) { format_value(out, *static_cast<T const*>(ptr), spec); }
 
 		void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
 		void printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
+
+		// std::decay converts T const[] to T*, which is incorrect
+		// not sure if an MSC bug or standard behavior; libstdc++
+		// is also getting unexpected results sometimes, but in a
+		// different case
+		template <typename T>
+		struct decayed
+		{
+		private:
+			using U = std::remove_reference_t<T>;
+		public:
+			using type = std::conditional_t< 
+				std::is_array<U>::value,
+				std::remove_extent_t<U> const*,
+				std::conditional_t< 
+					std::is_function<U>::value,
+					std::add_pointer_t<U>,
+					std::remove_cv_t<U>
+				>>;
+		};
+		template <typename T> using decayed_t = typename decayed<T>::type;
 	}
 }
 
@@ -180,11 +200,11 @@ namespace formatxx
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename... Args>
-formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args&&... args)
+formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args const&... args)
 {
 	constexpr auto count = sizeof...(args);
-	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
-	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
+	void const* values[count] = {std::addressof(static_cast<_detail::decayed_t<Args> const&>(args))...};
+	constexpr _detail::FormatterThunk funcs[count] = {&_detail::format_value_thunk<_detail::decayed_t<Args>>...};
 
 	_detail::format_impl(writer, format, count, funcs, values);
 
@@ -196,11 +216,11 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename... Args>
-formatxx::format_writer& formatxx::printf(format_writer& writer, string_view format, Args&&... args)
+formatxx::format_writer& formatxx::printf(format_writer& writer, string_view format, Args const&... args)
 {
 	constexpr auto count = sizeof...(args);
-	void const* values[count] = {std::addressof(static_cast<std::decay_t<decltype(args)> const&>(args))...};
-	constexpr _detail::FormatterThunk funcs[count] = {&_detail::wrap<std::decay_t<Args>>::fwd...};
+	void const* values[count] = {std::addressof(static_cast<_detail::decayed_t<Args> const&>(args))...};
+	constexpr _detail::FormatterThunk funcs[count] = {&_detail::format_value_thunk<_detail::decayed_t<Args>>...};
 
 	_detail::printf_impl(writer, format, count, funcs, values);
 
