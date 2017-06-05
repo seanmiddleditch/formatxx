@@ -163,23 +163,12 @@ namespace formatxx
 	namespace _detail
 	{
 		using FormatterThunk = void(*)(format_writer&, void const*, string_view);
-		using Formatter = void(*)(format_writer&, string_view, std::size_t, FormatterThunk const*, void const**);
+		using FormatterParameter = void const*;
 
 		template <typename T> void format_value_thunk(format_writer& out, void const* ptr, string_view spec) { format_value(out, *static_cast<T const*>(ptr), spec); }
 
-		void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
-		void printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values);
-
-		template <Formatter Func, typename... Args>
-		format_writer& invoke_format(format_writer& writer, string_view format, Args const&... args)
-		{
-			void const* values[] = {std::addressof(args)..., nullptr};
-			constexpr FormatterThunk funcs[] = {&format_value_thunk<Args>..., nullptr};
-
-			Func(writer, format, sizeof...(args), funcs, values);
-
-			return writer;
-		}
+		format_writer& format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values);
+		format_writer& printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values);
 	}
 }
 
@@ -190,7 +179,10 @@ namespace formatxx
 template <typename... Args>
 formatxx::format_writer& formatxx::format(format_writer& writer, string_view format, Args const&... args)
 {
-	return _detail::invoke_format<_detail::format_impl>(writer, format, args...);
+	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
+	_detail::FormatterThunk const funcs[] = {&_detail::format_value_thunk<Args>..., nullptr};
+
+	return _detail::format_impl(writer, format, sizeof...(args), funcs, values);
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -200,7 +192,10 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 template <typename... Args>
 formatxx::format_writer& formatxx::printf(format_writer& writer, string_view format, Args const&... args)
 {
-	return _detail::invoke_format<_detail::printf_impl>(writer, format, args...);
+	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
+	_detail::FormatterThunk const funcs[] = {&_detail::format_value_thunk<Args>..., nullptr};
+
+	return _detail::printf_impl(writer, format, sizeof...(args), funcs, values);
 }
 
 template <typename CharT, std::size_t SizeN>

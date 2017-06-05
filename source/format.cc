@@ -188,7 +188,7 @@ format_spec parse_format_spec(string_view spec)
 
 namespace _detail {
 
-void format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values)
+format_writer& format_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
@@ -207,7 +207,6 @@ void format_impl(format_writer& out, string_view format, std::size_t count, Form
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 				out.write(string_view(begin, iter - begin));
-
 
 			++iter; // swallow the {
 
@@ -295,9 +294,11 @@ void format_impl(format_writer& out, string_view format, std::size_t count, Form
 	// write out tail end of format string
 	if (iter > begin)
 		out.write(string_view(begin, iter - begin));
+
+	return out;
 }
 
-void printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, void const** values)
+format_writer& printf_impl(format_writer& out, string_view format, std::size_t count, FormatterThunk const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
@@ -364,6 +365,8 @@ void printf_impl(format_writer& out, string_view format, std::size_t count, Form
 	// write out tail end of format string
 	if (iter > begin)
 		out.write(string_view(begin, iter - begin));
+
+	return out;
 }
 
 } // namespace _detail
