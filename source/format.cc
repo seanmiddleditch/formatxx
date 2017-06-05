@@ -50,18 +50,6 @@ char const* parse_unsigned(char const* start, char const* end, unsigned& result)
 
 } // anonymous namespace
 
-format_writer& format(format_writer& writer, string_view format)
-{
-	_detail::format_impl(writer, format, 0, nullptr, nullptr);
-	return writer;
-}
-
-format_writer& printf(format_writer& writer, string_view format)
-{
-	_detail::printf_impl(writer, format, 0, nullptr, nullptr);
-	return writer;
-}
-
 void format_value(format_writer& out, char ch, string_view)
 {
 	out.write(string_view(&ch, 1));
