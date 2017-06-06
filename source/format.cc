@@ -63,6 +63,13 @@ template <> struct FormatTraits<char>
 	static constexpr string_view sPrintfSpecifiers{"bcsdioxXufFeEaAgGp", 18};
 };
 
+constexpr string_view FormatTraits<char>::sErrBadFormat;
+constexpr string_view FormatTraits<char>::sErrIncomplete;
+constexpr string_view FormatTraits<char>::sErrOutOfRange;
+constexpr string_view FormatTraits<char>::sTrue;
+constexpr string_view FormatTraits<char>::sFalse;
+constexpr string_view FormatTraits<char>::sPrintfSpecifiers;
+
 template <> struct FormatTraits<wchar_t>
 {
 	static constexpr wchar_t cFormatBegin = L'{';
@@ -81,6 +88,13 @@ template <> struct FormatTraits<wchar_t>
 
 	static constexpr wstring_view sPrintfSpecifiers{L"bcsdioxXufFeEaAgGp", 18};
 };
+
+constexpr wstring_view FormatTraits<wchar_t>::sErrBadFormat;
+constexpr wstring_view FormatTraits<wchar_t>::sErrIncomplete;
+constexpr wstring_view FormatTraits<wchar_t>::sErrOutOfRange;
+constexpr wstring_view FormatTraits<wchar_t>::sTrue;
+constexpr wstring_view FormatTraits<wchar_t>::sFalse;
+constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;
 
 template <typename CharT> CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result);
 
