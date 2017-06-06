@@ -40,8 +40,6 @@ namespace formatxx
 	using wformat_writer = basic_format_writer<wchar_t>;
 	using wformat_spec = basic_format_spec<wchar_t>;
 
-	template <std::size_t Size = 512> using wfixed_writer = basic_fixed_writer<wchar_t, Size>;
-
 	template <typename... Args> wformat_writer& format(wformat_writer& writer, wstring_view format, Args const&... args);
 	template <typename... Args> wformat_writer& printf(wformat_writer& writer, wstring_view format, Args const&... args);
 

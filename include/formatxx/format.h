@@ -40,14 +40,11 @@ namespace formatxx
 {
 	template <typename CharT> class basic_string_view;
 	template <typename CharT> class basic_format_writer;
-	template <typename CharT, std::size_t> class basic_fixed_writer;
 	template <typename CharT> class basic_format_spec;
 	
 	using string_view = basic_string_view<char>;
 	using format_writer = basic_format_writer<char>;
 	using format_spec = basic_format_spec<char>;
-
-	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args const&... args);
 	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args const&... args);
@@ -92,23 +89,6 @@ public:
 
 	/// Extract the current value of the writer.
 	virtual basic_string_view<CharT> view() const = 0;
-};
-
-/// A writer with a fixed buffer that will never allocate.
-template <typename CharT, std::size_t SizeN>
-class formatxx::basic_fixed_writer : public basic_format_writer<CharT>
-{
-public:
-	void write(basic_string_view<CharT> str) override;
-	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_buffer, _last); }
-
-	void clear() { _last = _buffer; }
-	std::size_t size() const { return _last - _buffer; }
-	CharT const* c_str() const { return _buffer; }
-
-private:
-	CharT* _last = _buffer;
-	CharT _buffer[SizeN] = {CharT(0),};
 };
 
 /// Extra formatting specifications.
@@ -213,16 +193,6 @@ formatxx::format_writer& formatxx::printf(format_writer& writer, string_view for
 	_detail::BasicFormatterThunk<char> const funcs[] = {&_detail::format_value_thunk<char, Args>..., nullptr};
 
 	return _detail::printf_impl(writer, format, sizeof...(args), funcs, values);
-}
-
-template <typename CharT, std::size_t SizeN>
-void formatxx::basic_fixed_writer<CharT, SizeN>::write(basic_string_view<CharT> str)
-{
-	std::size_t const remaining = SizeN - size() - 1;
-	std::size_t const length = remaining < str.size() ? remaining : str.size();
-	std::memcpy(_last, str.data(), length * sizeof(CharT));
-	_last += length;
-	*_last = CharT(0);
 }
 
 #endif // !defined(_guard_FORMATXX_H)

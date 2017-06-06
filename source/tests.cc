@@ -29,6 +29,7 @@
 //   Sean Middleditch <sean@middleditch.us>
 
 #include <formatxx/format.h>
+#include <formatxx/fixed.h>
 #include <formatxx/buffered.h>
 #include <formatxx/string.h>
 #include <formatxx/wide.h>
