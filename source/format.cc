@@ -28,7 +28,8 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#include "formatxx/format.h"
+#include <formatxx/format.h>
+#include <formatxx/wide.h>
 
 #include "write_integer.inl"
 

@@ -32,7 +32,7 @@
 #define _guard_FORMATXX_BUFFERED_H
 #pragma once
 
-#include "format.h"
+#include <formatxx/format.h>
 #include <cstring>
 
 namespace formatxx {

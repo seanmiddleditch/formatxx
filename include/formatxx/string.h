@@ -32,8 +32,7 @@
 #define _guard_FORMATXX_STRING_H
 #pragma once
 
-#include "format.h"
-
+#include <formatxx/format.h>
 #include <string>
 
 namespace formatxx {

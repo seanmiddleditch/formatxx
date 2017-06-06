@@ -31,6 +31,7 @@
 #include <formatxx/format.h>
 #include <formatxx/buffered.h>
 #include <formatxx/string.h>
+#include <formatxx/wide.h>
 
 #include <iostream>
 #include <string>
