@@ -185,6 +185,11 @@ static void test_strings()
 	CHECK_FORMAT("abc", std::string("a{}c"), "b");
 }
 
+static void test_wide_strings()
+{
+	//CHECK_FORMAT(L"abcd1234", L"{}{}{}{}", L"ab", L'c', L'd', 12, 34.0);
+}
+
 static void test_bool()
 {
 	CHECK_FORMAT("true", "{}", true);
@@ -217,6 +222,7 @@ int FORMATXX_MAIN_DECL main()
 	test_buffered();
 	test_printf();
 	test_strings();
+	test_wide_strings();
 	test_bool();
 	test_pointers();
 

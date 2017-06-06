@@ -58,6 +58,8 @@ template <> struct FormatTraits<char>
 
 	static constexpr string_view sTrue{"true", 4};
 	static constexpr string_view sFalse{"false", 5};
+
+	static constexpr string_view sPrintfSpecifiers{"bcsdioxXufFeEaAgGp", 18};
 };
 
 template <> struct FormatTraits<wchar_t>
@@ -75,6 +77,8 @@ template <> struct FormatTraits<wchar_t>
 
 	static constexpr wstring_view sTrue{L"true", 4};
 	static constexpr wstring_view sFalse{L"false", 5};
+
+	static constexpr wstring_view sPrintfSpecifiers{L"bcsdioxXufFeEaAgGp", 18};
 };
 
 template <typename CharT> CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result);
@@ -162,30 +166,31 @@ void format_value(format_writer& out, void const* ptr, string_view spec)
 	write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
-format_spec parse_format_spec(string_view spec)
+template <typename CharT>
+basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 {
-	format_spec result;
+	basic_format_spec<CharT> result;
 
 	if (spec.empty())
 		return result;
 
-	char const* start = spec.data();
-	char const* const end = spec.data() + spec.size();
+	CharT const* start = spec.data();
+	CharT const* const end = spec.data() + spec.size();
 
 	// sign
 	if (*start == '+')
 	{
-		result.sign = format_spec::sign_always;
+		result.sign = basic_format_spec<CharT>::sign_always;
 		++start;
 	}
 	else if (*start == ' ')
 	{
-		result.sign = format_spec::sign_space;
+		result.sign = basic_format_spec<CharT>::sign_space;
 		++start;
 	}
 	else if (*start == '-')
 	{
-		result.sign = format_spec::sign_default;
+		result.sign = basic_format_spec<CharT>::sign_default;
 		++start;
 	}
 
@@ -202,17 +207,20 @@ format_spec parse_format_spec(string_view spec)
 	}
 
 	// generic code specified option allowed (required for printf)
-	char const code = *start;
-	if ((code >= 'a' && code <= 'z') || (code >= 'A' && code <= 'Z'))
+	CharT const code = *start;
+	for (CharT c : FormatTraits<CharT>::sPrintfSpecifiers)
 	{
-		result.code = code;
+		if (code == c)
+		{
+			result.code = code;
 
-		if (++start == end)
-			return result;
+			if (++start == end)
+				return result;
+		}
 	}
 
 	// store remaining format specifier
-	result.extra = string_view(start, end);
+	result.extra = basic_string_view<CharT>(start, end);
 
 	return result;
 }
@@ -377,7 +385,7 @@ basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_s
 
 			// parse forward through the specification
 			CharT const* const spec_begin = iter;
-			format_spec spec = parse_format_spec({iter, end});
+			basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
 			CharT const* const spec_end = spec.extra.data();
 			if (spec.code == CharT(0))
 			{
@@ -406,9 +414,12 @@ template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, 
 template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-//template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 } // namespace _detail
+
+template basic_format_spec<char> parse_format_spec(basic_string_view<char>);
+template basic_format_spec<wchar_t> parse_format_spec(basic_string_view<wchar_t>);
 
 namespace {
 

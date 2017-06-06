@@ -41,18 +41,23 @@ namespace formatxx
 	template <typename CharT> class basic_string_view;
 	template <typename CharT> class basic_format_writer;
 	template <typename CharT, std::size_t> class basic_fixed_writer;
-
-	struct format_spec;
+	template <typename CharT> class basic_format_spec;
 	
 	using string_view = basic_string_view<char>;
 	using wstring_view = basic_string_view<wchar_t>;
 	using format_writer = basic_format_writer<char>;
+	using format_spec = basic_format_spec<char>;
+	using wformat_spec = basic_format_spec<wchar_t>;
+
 	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args const&... args);
 	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args const&... args);
 
-	format_spec parse_format_spec(string_view spec);
+	template <typename CharT> basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec);
+
+	extern template format_spec parse_format_spec(string_view spec);
+	extern template wformat_spec parse_format_spec(wstring_view spec);
 }
 
 /// Describes a format string.
@@ -68,6 +73,9 @@ public:
 	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
 	constexpr bool empty() const { return _size == 0; }
+
+	constexpr CharT const* begin() const { return _begin; }
+	constexpr CharT const* end() const { return _begin + _size; }
 
 private:
 	CharT const* _begin = nullptr;
@@ -107,9 +115,11 @@ private:
 };
 
 /// Extra formatting specifications.
-struct formatxx::format_spec
+template <typename CharT>
+class formatxx::basic_format_spec
 {
-	char code = '\0';
+public:
+	CharT code = 0;
 	bool type_prefix = false; // print leading 0x or appropriate type
 	enum
 	{
@@ -117,7 +127,7 @@ struct formatxx::format_spec
 		sign_always, // print sign for all numbers
 		sign_space, // print for for negative numbers or a space for non-negative numbers
 	} sign = sign_default;
-	formatxx::string_view extra;
+	formatxx::basic_string_view<CharT> extra;
 };
 
 namespace formatxx
@@ -178,10 +188,10 @@ namespace formatxx
 		basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
 
 		extern template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-		//extern template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+		extern template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 		extern template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-		//extern template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+		extern template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 	}
 }
 
