@@ -158,12 +158,32 @@ void format_value(format_writer& out, double value, string_view spec_string)
 
 void format_value(format_writer& out, void* ptr, string_view spec)
 {
-	write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+    write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
 void format_value(format_writer& out, void const* ptr, string_view spec)
 {
-	write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+    write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+}
+
+void format_value(wformat_writer& out, wchar_t ch, wstring_view)
+{
+	out.write(wstring_view(&ch, 1));
+}
+
+void format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec)
+{
+	format_value(out, wstring_view(zstr), spec);
+}
+
+void format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec)
+{
+	format_value(out, wstring_view(zstr), spec);
+}
+
+void format_value(wformat_writer& out, wstring_view str, wstring_view)
+{
+	out.write(str);
 }
 
 template <typename CharT>

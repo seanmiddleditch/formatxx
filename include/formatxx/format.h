@@ -46,6 +46,7 @@ namespace formatxx
 	using string_view = basic_string_view<char>;
 	using wstring_view = basic_string_view<wchar_t>;
 	using format_writer = basic_format_writer<char>;
+	using wformat_writer = basic_format_writer<wchar_t>;
 	using format_spec = basic_format_spec<char>;
 	using wformat_spec = basic_format_spec<wchar_t>;
 
@@ -53,6 +54,9 @@ namespace formatxx
 
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args const&... args);
 	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args const&... args);
+
+	template <typename... Args> wformat_writer& format(wformat_writer& writer, wstring_view format, Args const&... args);
+	template <typename... Args> wformat_writer& printf(wformat_writer& writer, wstring_view format, Args const&... args);
 
 	template <typename CharT> basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec);
 
@@ -153,6 +157,26 @@ namespace formatxx
 	void format_value(format_writer& out, void* value, string_view spec);
 	void format_value(format_writer& out, void const* value, string_view spec);
 
+	void format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec);
+	void format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec);
+	void format_value(wformat_writer& out, wstring_view str, wstring_view spec);
+	void format_value(wformat_writer& out, wchar_t ch, wstring_view spec);
+	void format_value(wformat_writer& out, bool value, wstring_view spec);
+	void format_value(wformat_writer& out, float value, wstring_view spec);
+	void format_value(wformat_writer& out, double value, wstring_view spec);
+	void format_value(wformat_writer& out, signed char value, wstring_view spec);
+	void format_value(wformat_writer& out, signed int value, wstring_view spec);
+	void format_value(wformat_writer& out, signed long value, wstring_view spec);
+	void format_value(wformat_writer& out, signed short value, wstring_view spec);
+	void format_value(wformat_writer& out, signed long long value, wstring_view spec);
+	void format_value(wformat_writer& out, unsigned char value, wstring_view spec);
+	void format_value(wformat_writer& out, unsigned int value, wstring_view spec);
+	void format_value(wformat_writer& out, unsigned long value, wstring_view spec);
+	void format_value(wformat_writer& out, unsigned short value, wstring_view spec);
+	void format_value(wformat_writer& out, unsigned long long value, wstring_view spec);
+	void format_value(wformat_writer& out, void* value, wstring_view spec);
+	void format_value(wformat_writer& out, void const* value, wstring_view spec);
+
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>
 	auto format_value(format_writer& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
@@ -204,6 +228,14 @@ formatxx::format_writer& formatxx::format(format_writer& writer, string_view for
 {
 	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
 	_detail::BasicFormatterThunk<char> const funcs[] = {&_detail::format_value_thunk<char, Args>..., nullptr};
+
+	return _detail::format_impl(writer, format, sizeof...(args), funcs, values);
+}
+template <typename... Args>
+formatxx::wformat_writer& formatxx::format(wformat_writer& writer, wstring_view format, Args const&... args)
+{
+	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
+	_detail::BasicFormatterThunk<wchar_t> const funcs[] = {&_detail::format_value_thunk<wchar_t, Args>..., nullptr};
 
 	return _detail::format_impl(writer, format, sizeof...(args), funcs, values);
 }

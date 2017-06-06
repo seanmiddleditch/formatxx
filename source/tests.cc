@@ -40,7 +40,8 @@
 static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
-static std::string formatxx_tostring(std::string&& str) { return std::move(str); }
+static auto formatxx_tostring(std::string&& str) { return std::move(str); }
+static auto formatxx_tostring(std::wstring&& str) { return std::move(str); }
 template <typename CharT> static std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
 
 template <typename T>
@@ -65,11 +66,30 @@ static std::string format_value_to_string(T const& value, formatxx::string_view 
 		} \
 	}while(false)
 
+#define CHECK_WFORMAT_HELPER(expr, expected) \
+	do{ \
+		++formatxx_tests; \
+		auto const& result = formatxx_tostring((expr)); \
+		if (result == (expected)) {} else { \
+			std::wcerr << __FILE__ << L'(' << __LINE__ << L"): TEST FAILED\n"; \
+			std::wcerr << #expr << L'\n'; \
+			std::wcerr << L"  Expected: " << (expected) << L'\n'; \
+			std::wcerr << L"  Received: " << result << L'\n'; \
+			++formatxx_failed; \
+		} \
+	}while(false)
+
 #define CHECK_FORMAT_CALL(expected, formatter, arg0, ...) \
 	CHECK_FORMAT_HELPER(formatter(arg0, __VA_ARGS__), (expected))
 
+#define CHECK_WFORMAT_CALL(expected, formatter, arg0, ...) \
+	CHECK_WFORMAT_HELPER(formatter(arg0, __VA_ARGS__), (expected))
+
 #define CHECK_FORMAT(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::sformat, arg0, __VA_ARGS__)
+
+#define CHECK_WFORMAT(expected, arg0, ...) \
+	CHECK_WFORMAT_CALL((expected), formatxx::sformat<std::wstring>, arg0, __VA_ARGS__)
 
 #define CHECK_PRINTF(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
@@ -187,7 +207,7 @@ static void test_strings()
 
 static void test_wide_strings()
 {
-	//CHECK_FORMAT(L"abcd1234", L"{}{}{}{}", L"ab", L'c', L'd', 12, 34.0);
+	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}", L"ab", L'c', L'd', L"1234");
 }
 
 static void test_bool()
