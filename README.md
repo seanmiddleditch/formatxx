@@ -98,11 +98,6 @@ to the header: the enum selection, a `std::tuple` for storing the converted inpu
 also proved to be difficult to get good support for `format_value` functions for user-defined
 types with clean and concise error messages.
 
-The current internal implementation supports a home-grown format lightly modeled after than in
-cppformat. The intended syntax will allow positional and non-positional arguments, "standard"
-format specifiers (width, precision, alignment, etc.), and custom format specifiers for
-user-defined types.
-
 The current header relies on a function template wrapper around the real formatting functions.
 This is one template more than is desired that will lead to object file bloat, and for
 unoptimized debug builds essentially means that all `format_value` functions get an extra
@@ -113,10 +108,34 @@ formatters for those types and then make `format_value` be the template wrapper 
 expected to be more rarely used; it mostly exists to keep the same API between primitives and
 user-defined types for generic user code).
 
+Each `format_value` is responsible currently for its own formatting and even its own format
+specifier parsing. This is not necessarily ideal and may change in the long run to standardize
+better for at least things like alignment and padding.
+
+A particular limitation with `printf`-like features right now is that the argument array
+abstracts away integral arguments such that argument precision (e.g. `%.*s`) cannot be
+supported. A fix for this may be to bind a set of simple types instead of binding format
+functions directly to instead form a simple struct with unique identifiers for primitive types
+and only bind the format functions for user-provided types. This would allow the format code
+to parse out integral types efficiently, and possibly also better-optimize primitive formatting.
+
+To the point possible, we use modern C++ and only work with recent compilers. In some cases,
+we're held back to slightly older compilers. We currently target primarily Visual C++ 19.0 (2015)
+and Clang 3.9, and also test against GCC 6.3. The biggest feature lacking from the common
+denominator here that I'd like to use is `string_view`. For now, we have a custom one in the
+formatxx codebase, but it'd be great to switch to the standard one for compatibility once the
+compiler versions can be bumped in the project that drives formatxx.
+
+A final note is that floating point formatting currently bounces through `snprintf` which
+necessarily means that our floating point performance is slower and more complicated than
+calling the CRT directly. Writing a correct floating point formatter is incredibly complex. C++
+now includes helpers like `to_chars` but those might not expose as much functionality as we'd
+like.
+
 ## To Do
 
 - Remaining primitive types
-- Remaining format specifiers and support, particularly for `printf` syntax compatibility
+- Remaining format specifiers and support, particularly for better `printf` syntax compatibility
 - Observable errors
   - Throw by default, with option/`std::nothrow` to disable?
   - Return value or error code?
@@ -124,7 +143,6 @@ user-defined types for generic user code).
   - noexcept(true) where appropriate?
   - Benchmarks
 - Unicode support
-  - wchar
   - u8/u16/u32?
 
 ## Copying
