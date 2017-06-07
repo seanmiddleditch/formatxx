@@ -10,18 +10,19 @@ Sean Middleditch <sean@middleditch.us>
 
 formatxx is a modern C++ string formatting library. Its intended goals are to offer fast compilation
 times, minimal binary bloat, and reasonable speed. Final measurements of these goals are not yet
-available; the library is still in very early development.
+available; the library is still in preliminary development.
 
 The library supports writing primitive types as well as user-defined types into string formatting
 buffers. The libray has as little dependence on the C++ standard library as possible, which is
 intended to make it a very light header to include throughout a larger C++ project.
 
-The included string buffers allow for formatting into a `std::string`-compatible type, a fixed-
+
+The included string writers allow for formatting into a `std::string`-compatible type, a fixed-
 size buffer with guaranteed no allocations, or a buffer that initially has a fixed-size buffer
 but can grow to accomodate larger strings. The combination of these buffers allow for easy use
 in three major cases: quick creation of `std::string` values, use in assert handlers that
 cannot allocate, and use in log systems where allocation should be avoided but is allowed when
-necessary.
+necessary. Users can easily write their own buffer systems as well.
 
 The underlying method of operation of formatxx is to collect a list of arguments via variadic
 templates, lookup a `format_value` function for each of those arguments, and then pass the format
