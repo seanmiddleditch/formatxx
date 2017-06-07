@@ -53,4 +53,4 @@ static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigne
 } // namespace _detail
 } // namespace formatxx
 
-#endif _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H
+#endif // _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H

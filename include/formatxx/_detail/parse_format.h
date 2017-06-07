@@ -95,4 +95,4 @@ static basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 
 } // namespace formatxx
 
-#endif _guard_FORMATXX_DETAIL_PARSE_FORMAT_H
+#endif // _guard_FORMATXX_DETAIL_PARSE_FORMAT_H

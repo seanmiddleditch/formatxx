@@ -104,4 +104,4 @@ constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;
 } // namespace _detail
 } // namespace formatxx
 
-#endif _guard_FORMATXX_DETAIL_FORMAT_TRAITS_H
+#endif // _guard_FORMATXX_DETAIL_FORMAT_TRAITS_H
