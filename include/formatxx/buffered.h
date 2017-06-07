@@ -33,7 +33,7 @@
 #pragma once
 
 #include <formatxx/format.h>
-#include <cstring>
+#include <cstring> // for std::memcpy
 
 namespace formatxx {
 

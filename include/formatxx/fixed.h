@@ -32,6 +32,8 @@
 #define _guard_FORMATXX_FIXED_H
 #pragma once
 
+#include <cstring> // for std::memcpy
+
 namespace formatxx
 {
 	template <typename CharT, std::size_t> class basic_fixed_writer;
