@@ -33,7 +33,6 @@
 #pragma once
 
 #include <type_traits>
-#include <cstring>
 #include <string>
 
 namespace formatxx

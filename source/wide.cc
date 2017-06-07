@@ -38,8 +38,6 @@
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
-#include <cstdlib>
-
 namespace formatxx {
 
 void format_value(wformat_writer& out, wchar_t ch, wstring_view)
