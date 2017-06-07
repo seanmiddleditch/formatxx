@@ -3,11 +3,18 @@ cmake_minimum_required(VERSION 3.0)
 project(formatxx)
 
 add_library(formatxx STATIC
-	include/formatxx/format.h
-    include/formatxx/buffered.h
+	include/formatxx/buffered.h
+    include/formatxx/fixed.h
+    include/formatxx/format.h
     include/formatxx/string.h
+    include/formatxx/wide.h
+    source/format_impl.inl
+    source/parse_unsigned.inl
+    source/printf_impl.inl
+    source/traits.inl
     source/write_integer.inl
 	source/format.cc
+    source/wide.cc
 )
 target_include_directories(formatxx PUBLIC "include")
 set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
