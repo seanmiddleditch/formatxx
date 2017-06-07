@@ -72,7 +72,7 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 			// determine which argument we're going to format
 			unsigned index = 0;
 			CharT const* const start = iter;
-			CharT const* iter = parse_unsigned(start, end, index);
+			iter = parse_unsigned(start, end, index);
 
 			// if we read nothing, we have a "next index" situation (or an error)
 			if (iter == start)
