@@ -28,6 +28,10 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
+#if !defined(_guard_FORMATXX_DETAIL_PARSE_FORMAT_H)
+#define _guard_FORMATXX_DETAIL_PARSE_FORMAT_H
+#pragma once
+
 namespace formatxx {
 
 template <typename CharT>
@@ -42,17 +46,17 @@ static basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 	CharT const* const end = spec.data() + spec.size();
 
 	// sign
-	if (*start == '+')
+	if (*start == _detail::FormatTraits<CharT>::cSpecPlus)
 	{
 		result.sign = basic_format_spec<CharT>::sign_always;
 		++start;
 	}
-	else if (*start == ' ')
+	else if (*start == _detail::FormatTraits<CharT>::cSpecSpace)
 	{
 		result.sign = basic_format_spec<CharT>::sign_space;
 		++start;
 	}
-	else if (*start == '-')
+	else if (*start == _detail::FormatTraits<CharT>::cSpecMinus)
 	{
 		result.sign = basic_format_spec<CharT>::sign_default;
 		++start;
@@ -62,7 +66,7 @@ static basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 		return result;
 
 	// print numeric prefix
-	if (*start == '#')
+	if (*start == _detail::FormatTraits<CharT>::cSpecHash)
 	{
 		result.type_prefix = true;
 		
@@ -72,7 +76,7 @@ static basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 
 	// generic code specified option allowed (required for printf)
 	CharT const code = *start;
-	for (CharT c : FormatTraits<CharT>::sPrintfSpecifiers)
+	for (CharT c : _detail::FormatTraits<CharT>::sPrintfSpecifiers)
 	{
 		if (code == c)
 		{
@@ -90,3 +94,5 @@ static basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
 }
 
 } // namespace formatxx
+
+#endif _guard_FORMATXX_DETAIL_PARSE_FORMAT_H

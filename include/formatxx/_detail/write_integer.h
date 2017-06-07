@@ -28,9 +28,14 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
+#if !defined(_guard_FORMATXX_DETAIL_WRITE_INTEGER_H)
+#define _guard_FORMATXX_DETAIL_WRITE_INTEGER_H
+#pragma once
+
 #include <limits>
 
 namespace formatxx {
+namespace _detail {
 namespace {
 
 void write_integer_prefix(format_writer& out, format_spec const& spec, bool negative);
@@ -207,4 +212,7 @@ void write_integer(format_writer& out, T raw, string_view spec_string)
 }
 
 } // anonymous namespace
+} // namespace _detail
 } // namespace formatxx
+
+#endif // _guard_FORMATXX_DETAIL_WRITE_INTEGER_H

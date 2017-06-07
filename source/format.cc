@@ -31,12 +31,12 @@
 #include <formatxx/format.h>
 #include <formatxx/wide.h>
 
-#include "traits.inl"
-#include "write_integer.inl"
-#include "parse_unsigned.inl"
-#include "parse_format.inl"
-#include "format_impl.inl"
-#include "printf_impl.inl"
+#include <formatxx/_detail/format_traits.h>
+#include <formatxx/_detail/parse_unsigned.h>
+#include <formatxx/_detail/parse_format.h>
+#include <formatxx/_detail/write_integer.h>
+#include <formatxx/_detail/format_impl.h>
+#include <formatxx/_detail/printf_impl.h>
 
 #include <cstdio>
 #include <limits>
@@ -70,17 +70,17 @@ void format_value(format_writer& out, string_view str, string_view)
 	out.write(str);
 }
 
-void format_value(format_writer& out, signed int value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed char value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed short value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long long value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, signed int value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, signed char value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, signed long value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, signed short value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, signed long long value, string_view spec) { _detail::write_integer(out, value, spec); }
 
-void format_value(format_writer& out, unsigned int value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned char value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned short value, string_view spec) { write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long long value, string_view spec) { write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned int value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned char value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned long value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned short value, string_view spec) { _detail::write_integer(out, value, spec); }
+void format_value(format_writer& out, unsigned long long value, string_view spec) { _detail::write_integer(out, value, spec); }
 
 void format_value(format_writer& out, float value, string_view spec)
 {
@@ -118,12 +118,12 @@ void format_value(format_writer& out, double value, string_view spec_string)
 
 void format_value(format_writer& out, void* ptr, string_view spec)
 {
-    write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
 void format_value(format_writer& out, void const* ptr, string_view spec)
 {
-    write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
+	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
 namespace _detail {

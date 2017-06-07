@@ -28,11 +28,15 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
+#if !defined(_guard_FORMATXX_DETAIL_PRINTF_IMPL_H)
+#define _guard_FORMATXX_DETAIL_PRINTF_IMPL_H
+#pragma once
+
 namespace formatxx {
 namespace _detail {
 
 template <typename CharT>
-basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
+basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
@@ -42,7 +46,7 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 
 	while (iter < end)
 	{
-		if (*iter != FormatTraits<CharT>::cFormatBegin)
+		if (*iter != FormatTraits<CharT>::cPrintfSpec)
 		{
 			++iter;
 		}
@@ -61,77 +65,38 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 				break;
 			}
 
-			// if we just have another { then take it as a literal character by starting our next begin here,
+			// if we just have another % then take it as a literal character by starting our next begin here,
 			// so it'll get written next time we write out the begin; nothing else to do for formatting here
-			if (*iter == FormatTraits<CharT>::cFormatBegin)
+			if (*iter == FormatTraits<CharT>::cPrintfSpec)
 			{
 				begin = iter++;
 				continue;
 			}
-
-			// determine which argument we're going to format
-			unsigned index = 0;
-			CharT const* const start = iter;
-			iter = parse_unsigned(start, end, index);
-
-			// if we read nothing, we have a "next index" situation (or an error)
-			if (iter == start)
-				index = next_index;
-
-			// if we hit the end of the string, we have an incomplete format
-			if (iter == end)
-			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
-				break;
-			}
-
-			basic_string_view<CharT> spec;
-
-			// if a : follows the number, we have some formatting controls
-			if (*iter == FormatTraits<CharT>::cFormatSep)
-			{
-				++iter; // eat separator
-				CharT const* const spec_begin = iter;
-
-				while (iter < end && *iter != FormatTraits<CharT>::cFormatEnd)
-				{
-					++iter;
-				}
-
-				if (iter == end)
-				{
-					// invalid spec
-					out.write(FormatTraits<CharT>::sErrBadFormat);
-					break;
-				}
-
-				spec = basic_string_view<CharT>(spec_begin, iter);
-			}
-
-			// after the index/spec, we expect an end to the format marker
-			if (*iter != FormatTraits<CharT>::cFormatEnd)
-			{
-				// we have something besides a number, no bueno
-				out.write(FormatTraits<CharT>::sErrIncomplete);
-				begin = iter; // make sure we're set up for the next begin, which starts at this unknown character
-				continue;
-			}
-
-			// the iterrent text begin begins with the next character following the format directive's end
-			begin = iter = iter + 1;
-
+		
 			// if the index is out of range, we have nothing to format
-			if (index >= count)
+			if (next_index >= count)
 			{
 				out.write(FormatTraits<CharT>::sErrOutOfRange);
 				continue;
 			}
 
-			// magic!
-			funcs[index](out, values[index], spec);
+			// parse forward through the specification
+			CharT const* const spec_begin = iter;
+			basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
+			CharT const* const spec_end = spec.extra.data();
+			if (spec.code == CharT(0))
+			{
+				// invalid spec
+				out.write(FormatTraits<CharT>::sErrBadFormat);
+				break;
+			}
 
-			// if we continue to receive {} then the next index will be the next one after the last one used
-			next_index = index + 1;
+			// magic!
+			funcs[next_index](out, values[next_index], {spec_begin, spec_end});
+
+			// prepare for next round
+			begin = iter = spec_end;
+			++next_index;
 		}
 	}
 
@@ -144,3 +109,5 @@ basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_s
 
 } // namespace _detail
 } // namespace formatxx
+
+#endif // _guard_FORMATXX_DETAIL_PRINTF_IMPL_H

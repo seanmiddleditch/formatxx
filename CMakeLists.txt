@@ -8,11 +8,11 @@ add_library(formatxx STATIC
     include/formatxx/format.h
     include/formatxx/string.h
     include/formatxx/wide.h
-    source/format_impl.inl
-    source/parse_unsigned.inl
-    source/printf_impl.inl
-    source/traits.inl
-    source/write_integer.inl
+	include/formatxx/_detail/parse_unsigned.h
+	include/formatxx/_detail/format_impl.h
+    include/formatxx/_detail/printf_impl.h
+    include/formatxx/_detail/format_traits.h
+    include/formatxx/_detail/write_integer.h
 	source/format.cc
     source/wide.cc
 )

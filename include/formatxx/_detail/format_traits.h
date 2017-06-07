@@ -28,7 +28,12 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
+#if !defined(_guard_FORMATXX_DETAIL_FORMAT_TRAITS_H)
+#define _guard_FORMATXX_DETAIL_FORMAT_TRAITS_H
+#pragma once
+
 namespace formatxx {
+namespace _detail {
 namespace {
 
 template <typename CharT> struct FormatTraits;
@@ -38,6 +43,11 @@ template <> struct FormatTraits<char>
 	static constexpr char cFormatBegin = '{';
 	static constexpr char cFormatEnd = '}';
 	static constexpr char cFormatSep = ':';
+
+	static constexpr char cSpecPlus = '+';
+	static constexpr char cSpecMinus = '-';
+	static constexpr char cSpecSpace = ' ';
+	static constexpr char cSpecHash = '#';
 
 	static constexpr char cPrintfSpec = '%';
 
@@ -65,6 +75,11 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wchar_t cFormatEnd = L'}';
 	static constexpr wchar_t cFormatSep = L':';
 
+	static constexpr char cSpecPlus = L'+';
+	static constexpr char cSpecMinus = L'-';
+	static constexpr char cSpecSpace = L' ';
+	static constexpr char cSpecHash = L'#';
+
 	static constexpr wchar_t cPrintfSpec = L'%';
 
 	// string_view over string literals is safe on all platforms for which I'm aware
@@ -86,4 +101,7 @@ constexpr wstring_view FormatTraits<wchar_t>::sFalse;
 constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;
 
 } // anonymous namespace
+} // namespace _detail
 } // namespace formatxx
+
+#endif _guard_FORMATXX_DETAIL_FORMAT_TRAITS_H

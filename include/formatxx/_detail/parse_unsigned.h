@@ -28,7 +28,12 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
+#if !defined(_guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H)
+#define _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H
+#pragma once
+
 namespace formatxx {
+namespace _detail {
 namespace {
 
 template <typename CharT>
@@ -45,4 +50,7 @@ static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigne
 }
 
 } // anonymous namespace
+} // namespace _detail
 } // namespace formatxx
+
+#endif _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H

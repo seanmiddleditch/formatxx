@@ -31,12 +31,12 @@
 #include <formatxx/format.h>
 #include <formatxx/wide.h>
 
-#include "traits.inl"
-#include "write_integer.inl"
-#include "parse_unsigned.inl"
-#include "parse_format.inl"
-#include "format_impl.inl"
-#include "printf_impl.inl"
+#include <formatxx/_detail/format_traits.h>
+#include <formatxx/_detail/parse_unsigned.h>
+#include <formatxx/_detail/parse_format.h>
+#include <formatxx/_detail/write_integer.h>
+#include <formatxx/_detail/format_impl.h>
+#include <formatxx/_detail/printf_impl.h>
 
 #include <cstdlib>
 
