@@ -40,34 +40,34 @@
 
 namespace formatxx {
 
-void format_value(wformat_writer& out, wchar_t ch, wstring_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t ch, wstring_view)
 {
 	out.write(wstring_view(&ch, 1));
 }
 
-void format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec)
 {
 	format_value(out, wstring_view(zstr), spec);
 }
 
-void format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec)
 {
 	format_value(out, wstring_view(zstr), spec);
 }
 
-void format_value(wformat_writer& out, wstring_view str, wstring_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wstring_view)
 {
 	out.write(str);
 }
 
 namespace _detail {
 
-template basic_format_writer<wchar_t>& format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template basic_format_writer<wchar_t>& FORMATXX_API format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
-template basic_format_writer<wchar_t>& printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template basic_format_writer<wchar_t>& FORMATXX_API printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 
 } // namespace _detail
 
-template basic_format_spec<wchar_t> parse_format_spec(basic_string_view<wchar_t>);
+template basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
 
 } // namespace formatxx

@@ -45,49 +45,49 @@
 
 namespace formatxx {
 
-void format_value(format_writer& out, char ch, string_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view)
 {
 	out.write(string_view(&ch, 1));
 }
 
-void format_value(format_writer& out, bool value, string_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view)
 {
 	out.write(value ? "true" : "false");
 }
 
-void format_value(format_writer& out, char* zstr, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec)
 {
 	format_value(out, string_view(zstr), spec);
 }
 
-void format_value(format_writer& out, char const* zstr, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec)
 {
 	format_value(out, string_view(zstr), spec);
 }
 
-void format_value(format_writer& out, string_view str, string_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view)
 {
 	out.write(str);
 }
 
-void format_value(format_writer& out, signed int value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, signed char value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, signed short value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, signed long long value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec) { _detail::write_integer(out, value, spec); }
 
-void format_value(format_writer& out, unsigned int value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned char value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned short value, string_view spec) { _detail::write_integer(out, value, spec); }
-void format_value(format_writer& out, unsigned long long value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec) { _detail::write_integer(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec) { _detail::write_integer(out, value, spec); }
 
-void format_value(format_writer& out, float value, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec)
 {
 	format_value(out, static_cast<double>(value), spec);
 }
 
-void format_value(format_writer& out, double value, string_view spec_string)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec_string)
 {
 	char fmt[3] = "%f";
 
@@ -116,25 +116,25 @@ void format_value(format_writer& out, double value, string_view spec_string)
 		out.write(string_view(buf, len));
 }
 
-void format_value(format_writer& out, void* ptr, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* ptr, string_view spec)
 {
 	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
-void format_value(format_writer& out, void const* ptr, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* ptr, string_view spec)
 {
 	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
 namespace _detail {
 
-template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 
-template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 
 } // namespace _detail
 
-template basic_format_spec<char> parse_format_spec(basic_string_view<char>);
-template basic_format_spec<wchar_t> parse_format_spec(basic_string_view<wchar_t>);
+template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>);
+template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
 
 } // namespace formatxx

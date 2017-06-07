@@ -35,6 +35,30 @@
 #include <type_traits>
 #include <string>
 
+#if !defined(FORMATXX_API)
+#	if defined(_WIN32)
+#		define FORMATXX_API __stdcall
+#	else
+#		define FORMATXX_API
+#	endif
+#endif
+
+#if defined(_WIN32) && !defined(FORMATXX_PUBLIC)
+#	if defined(FORMATXX_EXPORT)
+#		define FORMATXX_PUBLIC __declspec(dllexport)
+#	elif !defined(FORMATXX_STATIC)
+#		define FORMATXX_PUBLIC __declspec(dllimport)
+#	else
+#		define FORMATXX_PUBLIC
+#	endif
+#elif __GNUC__ >= 4 && !defined(FORMATXX_PUBLIC)
+#	if defined(FORMATXX_EXPORT)
+#		define FORMATXX_PUBLIC __attribute__((visibility("default")))
+#	else
+#		define FORMATXX_PUBLIC
+#	endif
+#endif
+
 namespace formatxx
 {
 	template <typename CharT> class basic_string_view;
@@ -48,9 +72,9 @@ namespace formatxx
 	template <typename... Args> format_writer& format(format_writer& writer, string_view format, Args const&... args);
 	template <typename... Args> format_writer& printf(format_writer& writer, string_view format, Args const&... args);
 
-	template <typename CharT> basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec);
+	template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec);
 
-	extern template format_spec parse_format_spec(string_view spec);
+	extern template FORMATXX_PUBLIC format_spec FORMATXX_API parse_format_spec(string_view spec);
 }
 
 /// Describes a format string.
@@ -109,62 +133,62 @@ public:
 namespace formatxx
 {
 	/// Default format helpers.
-	void format_value(format_writer& out, char* zstr, string_view spec);
-	void format_value(format_writer& out, char const* zstr, string_view spec);
-	void format_value(format_writer& out, string_view str, string_view spec);
-	void format_value(format_writer& out, char ch, string_view spec);
-	void format_value(format_writer& out, bool value, string_view spec);
-	void format_value(format_writer& out, float value, string_view spec);
-	void format_value(format_writer& out, double value, string_view spec);
-	void format_value(format_writer& out, signed char value, string_view spec);
-	void format_value(format_writer& out, signed int value, string_view spec);
-	void format_value(format_writer& out, signed long value, string_view spec);
-	void format_value(format_writer& out, signed short value, string_view spec);
-	void format_value(format_writer& out, signed long long value, string_view spec);
-	void format_value(format_writer& out, unsigned char value, string_view spec);
-	void format_value(format_writer& out, unsigned int value, string_view spec);
-	void format_value(format_writer& out, unsigned long value, string_view spec);
-	void format_value(format_writer& out, unsigned short value, string_view spec);
-	void format_value(format_writer& out, unsigned long long value, string_view spec);
-	void format_value(format_writer& out, void* value, string_view spec);
-	void format_value(format_writer& out, void const* value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* value, string_view spec);
 
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>
-	auto format_value(format_writer& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
+	auto FORMATXX_API format_value(format_writer& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
 	{
 		format_value(out, std::underlying_type_t<EnumT>(value), spec);
 	}
 
 	template <typename PointerT>
-	auto format_value(format_writer& out, PointerT value, string_view spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
+	auto FORMATXX_API format_value(format_writer& out, PointerT value, string_view spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
 	{
 		format_value(out, static_cast<void const*>(value), spec);
 	}
 
 	/// Cause a friendlier error message on unknown type.
 	template <typename T>
-	auto format_value(format_writer& writer, T const& value, string_view spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
+	auto FORMATXX_API format_value(format_writer& writer, T const& value, string_view spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
 
 	/// @internal
 	namespace _detail
 	{
-		template <typename CharT> using BasicFormatterThunk = void(*)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
+		template <typename CharT> using BasicFormatterThunk = void(FORMATXX_API *)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
 		using FormatterParameter = void const*;
 
 		template <typename CharT, typename T>
-		void format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec)
+		void FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec)
 		{
 			format_value(out, *static_cast<T const*>(ptr), spec);
 		}
 
 		template <typename CharT>
-		basic_format_writer<CharT>& format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
 		template <typename CharT>
-		basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		FORMATXX_PUBLIC basic_format_writer<CharT>&  FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
 
-		extern template basic_format_writer<char>& format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-		extern template basic_format_writer<char>& printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+		extern template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+		extern template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 	}
 }
 

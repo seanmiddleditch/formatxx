@@ -35,7 +35,7 @@
 namespace formatxx {
 
 template <typename CharT>
-basic_format_spec<CharT> parse_format_spec(basic_string_view<CharT> spec)
+FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec)
 {
 	basic_format_spec<CharT> result;
 

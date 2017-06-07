@@ -36,7 +36,7 @@ namespace formatxx {
 namespace _detail {
 
 template <typename CharT>
-basic_format_writer<CharT>& printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
+FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
 {
 	unsigned next_index = 0;
 
