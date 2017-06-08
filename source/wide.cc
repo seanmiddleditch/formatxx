@@ -38,7 +38,7 @@
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
-#include <stdio.h>
+#include <cwchar>
 
 namespace formatxx {
 
@@ -107,12 +107,9 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value
 		break;
 	}
 
-	wchar_t buf[1048]; // not actually enough for every float, but...
-#if defined(_WIN32)
-	int len = _snwprintf_s(buf, sizeof(buf) / sizeof(wchar_t), fmt, value);
-#else
-	int len = snwprintf(buf, sizeof(buf), fmt, value);
-#endif
+	constexpr std::size_t buf_size = 1024;
+	wchar_t buf[buf_size]; // not actually enough for every float, but...
+	int const len = std::swprintf(buf, buf_size, fmt, value);
 	if (len > 0)
 		out.write({buf, std::size_t(len)});
 }
