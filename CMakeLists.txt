@@ -38,6 +38,7 @@ else()
 	target_compile_definitions(formatxx PUBLIC FORMATXX_STATIC)
 endif()
 target_include_directories(formatxx PUBLIC "include")
+source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
 
 add_executable(formatxx_tests ${FORMATXX_TESTS})
