@@ -46,17 +46,17 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 	CharT const* const end = spec.data() + spec.size();
 
 	// sign
-	if (*start == _detail::FormatTraits<CharT>::cSpecPlus)
+	if (*start == _detail::FormatTraits<CharT>::cPlus)
 	{
 		result.sign = basic_format_spec<CharT>::sign_always;
 		++start;
 	}
-	else if (*start == _detail::FormatTraits<CharT>::cSpecSpace)
+	else if (*start == _detail::FormatTraits<CharT>::cSpace)
 	{
 		result.sign = basic_format_spec<CharT>::sign_space;
 		++start;
 	}
-	else if (*start == _detail::FormatTraits<CharT>::cSpecMinus)
+	else if (*start == _detail::FormatTraits<CharT>::cMinus)
 	{
 		result.sign = basic_format_spec<CharT>::sign_default;
 		++start;
@@ -66,7 +66,7 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 		return result;
 
 	// print numeric prefix
-	if (*start == _detail::FormatTraits<CharT>::cSpecHash)
+	if (*start == _detail::FormatTraits<CharT>::cHash)
 	{
 		result.type_prefix = true;
 		

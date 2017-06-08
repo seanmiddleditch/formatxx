@@ -53,16 +53,16 @@ void write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec<Cha
 
 	// add sign
 	if (negative)
-		*(prefix++) = '-';
+		*(prefix++) = FormatTraits<CharT>::cMinus;
 	else if (spec.sign == format_spec::sign_always)
-		*(prefix++) = '+';
+		*(prefix++) = FormatTraits<CharT>::cPlus;
 	else if (spec.sign == format_spec::sign_space)
-		*(prefix++) = ' ';
+		*(prefix++) = FormatTraits<CharT>::cSpace;
 
 	// add numeric type prefix
 	if (spec.type_prefix)
 	{
-		*(prefix++) = '0';
+		*(prefix++) = FormatTraits<CharT>::to_digit(0);
 		*(prefix++) = spec.code ? spec.code : 'd';
 	}
 
@@ -110,7 +110,7 @@ void write_decimal(basic_format_writer<CharT>& out, T value)
 	else
 	{
 		// we have but a single digit left, so this is easy
-		*--end = '0' + static_cast<char>(value);
+		*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
 	}
 
 	out.write({end, buffer_size - (end - buffer)});
@@ -162,7 +162,7 @@ void write_binary(basic_format_writer<CharT>& out, T value)
 
 	do
 	{
-		*--end = '0' + (value & 1);
+		*--end = FormatTraits<CharT>::to_digit(value & 1);
 	}
 	while ((value >>= 1) != 0);
 

@@ -44,10 +44,12 @@ template <> struct FormatTraits<char>
 	static constexpr char cFormatEnd = '}';
 	static constexpr char cFormatSep = ':';
 
-	static constexpr char cSpecPlus = '+';
-	static constexpr char cSpecMinus = '-';
-	static constexpr char cSpecSpace = ' ';
-	static constexpr char cSpecHash = '#';
+	static constexpr char cPlus = '+';
+	static constexpr char cMinus = '-';
+	static constexpr char cSpace = ' ';
+	static constexpr char cHash = '#';
+
+	static constexpr char to_digit(char c) { return c + '0'; }
 
 	static constexpr char cPrintfSpec = '%';
 
@@ -92,10 +94,12 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wchar_t cFormatEnd = L'}';
 	static constexpr wchar_t cFormatSep = L':';
 
-	static constexpr char cSpecPlus = L'+';
-	static constexpr char cSpecMinus = L'-';
-	static constexpr char cSpecSpace = L' ';
-	static constexpr char cSpecHash = L'#';
+	static constexpr wchar_t cPlus = L'+';
+	static constexpr wchar_t cMinus = L'-';
+	static constexpr wchar_t cSpace = L' ';
+	static constexpr wchar_t cHash = L'#';
+
+	static constexpr wchar_t to_digit(wchar_t c) { return c + L'0'; }
 
 	static constexpr wchar_t cPrintfSpec = L'%';
 
