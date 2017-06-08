@@ -213,9 +213,10 @@ static void test_strings()
 static void test_wide_strings()
 {
 	CHECK_WFORMAT_VALUE(L"1234", 1234U, L"");
-	CHECK_WFORMAT_VALUE(L"-47", -47, L"");
+	CHECK_WFORMAT_VALUE(L"-17.500000", -17.5, L"");
+	CHECK_WFORMAT_VALUE(L"true", true, L"");
 
-	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}", L"ab", L'c', L'd', L"1234");
+	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}{}", L"ab", L'c', L'd', 12, 34UL);
 }
 
 static void test_bool()

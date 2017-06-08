@@ -50,9 +50,9 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, stri
 	out.write(string_view(&ch, 1));
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec)
 {
-	out.write(value ? "true" : "false");
+	format_value(out, value ? _detail::FormatTraits<char>::sTrue : _detail::FormatTraits<char>::sFalse, spec);
 }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec)

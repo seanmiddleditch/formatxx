@@ -45,6 +45,11 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t ch, 
 	out.write(wstring_view(&ch, 1));
 }
 
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, bool value, wstring_view spec)
+{
+	format_value(out, value ? _detail::FormatTraits<wchar_t>::sTrue : _detail::FormatTraits<wchar_t>::sFalse, spec);
+}
+
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec)
 {
 	format_value(out, wstring_view(zstr), spec);
@@ -71,6 +76,44 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned cha
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned short value, wstring_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
+
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, float value, wstring_view spec)
+{
+	format_value(out, static_cast<double>(value), spec);
+}
+
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value, wstring_view spec_string)
+{
+	wchar_t fmt[3] = L"%f";
+
+	wformat_spec const spec = parse_format_spec(spec_string);
+
+	switch (spec.code)
+	{
+	case L'a':
+	case L'A':
+	case L'e':
+	case L'E':
+	case L'f':
+	case L'F':
+	case L'g':
+	case L'G':
+		fmt[1] = spec.code;
+		break;
+	default:
+		// leave default
+		break;
+	}
+
+	wchar_t buf[1048]; // not actually enough for every float, but...
+#if defined(_WIN32)
+	int len = _snwprintf_s(buf, sizeof(buf) / sizeof(wchar_t), fmt, value);
+#else
+	int len = std::snwprintf(buf, sizeof(buf), fmt, value);
+#endif
+	if (len > 0)
+		out.write({buf, std::size_t(len)});
+}
 
 namespace _detail {
 
