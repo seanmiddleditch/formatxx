@@ -120,13 +120,8 @@ class formatxx::basic_format_spec
 {
 public:
 	CharT code = 0;
+	CharT sign = 0;
 	bool type_prefix = false; // print leading 0x or appropriate type
-	enum
-	{
-		sign_default, // print sign for negative numbers
-		sign_always, // print sign for all numbers
-		sign_space, // print for for negative numbers or a space for non-negative numbers
-	} sign = sign_default;
 	formatxx::basic_string_view<CharT> extra;
 };
 

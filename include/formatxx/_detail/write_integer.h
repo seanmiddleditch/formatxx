@@ -54,10 +54,8 @@ void write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec<Cha
 	// add sign
 	if (negative)
 		*(prefix++) = FormatTraits<CharT>::cMinus;
-	else if (spec.sign == format_spec::sign_always)
-		*(prefix++) = FormatTraits<CharT>::cPlus;
-	else if (spec.sign == format_spec::sign_space)
-		*(prefix++) = FormatTraits<CharT>::cSpace;
+	else if (spec.sign == FormatTraits<CharT>::cPlus || spec.sign == FormatTraits<CharT>::cSpace)
+		*(prefix++) = spec.sign;
 
 	// add numeric type prefix
 	if (spec.type_prefix)
