@@ -46,11 +46,11 @@ static auto formatxx_tostring(std::string&& str) { return std::move(str); }
 static auto formatxx_tostring(std::wstring&& str) { return std::move(str); }
 template <typename CharT> static std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
 
-template <typename T>
-static std::string format_value_to_string(T const& value, formatxx::string_view spec)
+template <typename CharT, typename T>
+static std::basic_string<CharT> format_value_to_string(T const& value, formatxx::basic_string_view<CharT> spec)
 {
 	using formatxx::format_value;
-	formatxx::string_writer buf;
+	formatxx::basic_string_writer<std::basic_string<CharT>> buf;
 	format_value(buf, value, spec);
 	return std::move(buf).str();
 }
@@ -97,7 +97,10 @@ static std::string format_value_to_string(T const& value, formatxx::string_view 
 	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
 
 #define CHECK_FORMAT_VALUE(expected, value, spec) \
-	CHECK_FORMAT_CALL((expected), format_value_to_string, (value), (spec))
+	CHECK_FORMAT_CALL((expected), format_value_to_string<char>, (value), (spec))
+
+#define CHECK_WFORMAT_VALUE(expected, value, spec) \
+	CHECK_WFORMAT_CALL((expected), format_value_to_string<wchar_t>, (value), (spec))
 
 #define CHECK_FORMAT_WRITER(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::format, arg0, __VA_ARGS__)
@@ -209,6 +212,9 @@ static void test_strings()
 
 static void test_wide_strings()
 {
+	CHECK_WFORMAT_VALUE(L"1234", 1234U, L"");
+	CHECK_WFORMAT_VALUE(L"-47", -47, L"");
+
 	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}", L"ab", L'c', L'd', L"1234");
 }
 

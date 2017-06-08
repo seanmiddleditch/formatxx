@@ -38,18 +38,18 @@ namespace formatxx {
 namespace _detail {
 namespace {
 
-void write_integer_prefix(format_writer& out, format_spec const& spec, bool negative);
-template <typename T> void write_decimal(format_writer& out, T value);
-template <typename T> void write_hexadecimal(format_writer& out, T value, bool lower);
-template <typename T> void write_octal(format_writer& out, T value);
-template <typename T> void write_binary(format_writer& out, T value);
-template <typename T> void write_integer(format_writer& out, T value, string_view spec);
+template <typename CharT> void write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec<CharT> const& spec, bool negative);
+template <typename CharT, typename T> void write_decimal(basic_format_writer<CharT>& out, T value);
+template <typename CharT, typename T> void write_hexadecimal(basic_format_writer<CharT>& out, T value, bool lower);
+template <typename CharT, typename T> void write_octal(basic_format_writer<CharT>& out, T value);
+template <typename CharT, typename T> void write_binary(basic_format_writer<CharT>& out, T value);
+template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_string_view<CharT> spec);
 
-
-void write_integer_prefix(format_writer& out, format_spec const& spec, bool negative)
+template <typename CharT>
+void write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec<CharT> const& spec, bool negative)
 {
-	char prefix_buffer[3]; // sign, type prefix
-	char* prefix = prefix_buffer;
+	CharT prefix_buffer[3]; // sign, type prefix
+	CharT* prefix = prefix_buffer;
 
 	// add sign
 	if (negative)
@@ -71,29 +71,20 @@ void write_integer_prefix(format_writer& out, format_spec const& spec, bool nega
 		out.write({prefix_buffer, prefix});
 }
 
-template <typename T>
-void write_decimal(format_writer& out, T value)
+template <typename CharT, typename T>
+void write_decimal(basic_format_writer<CharT>& out, T value)
 {
 	// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
-	constexpr char sDecimalTable[] =
-		"00010203040506070809"
-		"10111213141516171819"
-		"20212223242526272829"
-		"30313233343536373839"
-		"40414243444546474849"
-		"50515253545556575859"
-		"60616263646566676869"
-		"70717273747576777879"
-		"80818283848586878889"
-		"90919293949596979899";
+	CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
 
 	// buffer must be one larger than digits10, as that trait is the maximum number of 
 	// base-10 digits represented by the type in their entirety, e.g. 8-bits can store
 	// 99 but not 999, so its digits10 is 2, even though the value 255 could be stored
 	// and has 3 digits.
-	char buffer[std::numeric_limits<decltype(value)>::digits10 + 1];
-	char* end = buffer + sizeof(buffer);
+	constexpr std::size_t buffer_size = std::numeric_limits<decltype(value)>::digits10 + 1;
+	CharT buffer[buffer_size];
+	CharT* end = buffer + buffer_size;
 
 	// work on every two decimal digits (groups of 100). notes taken from cppformat,
 	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
@@ -105,16 +96,16 @@ void write_decimal(format_writer& out, T value)
 		value /= 100;
 
 		// write out both digits of the given index
-		*--end = sDecimalTable[digit + 1];
-		*--end = sDecimalTable[digit];
+		*--end = table[digit + 1];
+		*--end = table[digit];
 	}
 
 	if (value >= 10)
 	{
 		// we have two digits left; this is identical to the above loop, but without the division
 		unsigned const digit = static_cast<unsigned>(value << 1);
-		*--end = sDecimalTable[digit + 1];
-		*--end = sDecimalTable[digit];
+		*--end = table[digit + 1];
+		*--end = table[digit];
 	}
 	else
 	{
@@ -122,18 +113,18 @@ void write_decimal(format_writer& out, T value)
 		*--end = '0' + static_cast<char>(value);
 	}
 
-	out.write({end, sizeof(buffer) - (end - buffer)});
+	out.write({end, buffer_size - (end - buffer)});
 }
 
-template <typename T>
-void write_hexadecimal(format_writer& out, T value, bool lower)
+template <typename CharT, typename T>
+void write_hexadecimal(basic_format_writer<CharT>& out, T value, bool lower)
 {
-	char buffer[2 * sizeof(value)]; // 2 hex digits per octet
-	char* end = buffer + sizeof(buffer);
+	CharT buffer[2 * sizeof(value)]; // 2 hex digits per octet
+	CharT* end = buffer + sizeof(buffer);
 
-	char const* const alphabet = lower ?
-		"0123456789abcdef" :
-		"0123456789ABCDEF";
+	CharT const* const alphabet = lower ?
+		FormatTraits<CharT>::sHexadecimalLower :
+		FormatTraits<CharT>::sHexadecimalUpper;
 
 	do
 	{
@@ -144,13 +135,15 @@ void write_hexadecimal(format_writer& out, T value, bool lower)
 	out.write({end, sizeof(buffer) - (end - buffer)});
 }
 
-template <typename T>
-void write_octal(format_writer& out, T value)
+template <typename CharT, typename T>
+void write_octal(basic_format_writer<CharT>& out, T value)
 {
-	char buffer[3 * sizeof(value)]; // 3 octal digits per octet
-	char* end = buffer + sizeof(buffer);
+	CharT buffer[3 * sizeof(value)]; // 3 octal digits per octet
+	CharT* end = buffer + sizeof(buffer);
 
-	char const alphabet[] = "01234567";
+	// the octal alphabet is a subset of hexadecimal,
+	// and doesn't depend on casing.
+	CharT const* const alphabet = FormatTraits<CharT>::sHexadecimalLower;
 
 	do
 	{
@@ -161,11 +154,11 @@ void write_octal(format_writer& out, T value)
 	out.write({end, sizeof(buffer) - (end - buffer)});
 }
 
-template <typename T>
-void write_binary(format_writer& out, T value)
+template <typename CharT, typename T>
+void write_binary(basic_format_writer<CharT>& out, T value)
 {
-	char buffer[std::numeric_limits<unsigned char>::digits * sizeof(value)];
-	char* end = buffer + sizeof(buffer);
+	CharT buffer[std::numeric_limits<unsigned char>::digits * sizeof(value)];
+	CharT* end = buffer + sizeof(buffer);
 
 	do
 	{
@@ -176,13 +169,13 @@ void write_binary(format_writer& out, T value)
 	out.write({end, sizeof(buffer) - (end - buffer)});
 }
 
-template <typename T>
-void write_integer(format_writer& out, T raw, string_view spec_string)
+template <typename CharT, typename T>
+void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<CharT> spec_string)
 {
 	// subtract from 0 _after_ converting to deal with 2's complement format (abs(min) > abs(max))
 	std::make_unsigned_t<T> const value = raw >= 0 ? raw : 0 - static_cast<std::make_unsigned_t<T>>(raw);
 
-    format_spec const spec = parse_format_spec(spec_string);
+    basic_format_spec<CharT> const spec = parse_format_spec(spec_string);
 
 	// format any prefix onto the number
 	write_integer_prefix(out, spec, /*negative=*/raw < 0);

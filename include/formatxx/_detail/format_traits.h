@@ -60,6 +60,20 @@ template <> struct FormatTraits<char>
 	static constexpr string_view sFalse{"false", 5};
 
 	static constexpr string_view sPrintfSpecifiers{"bcsdioxXufFeEaAgGp", 18};
+
+	static constexpr char const sDecimalPairs[] =
+		"00010203040506070809"
+		"10111213141516171819"
+		"20212223242526272829"
+		"30313233343536373839"
+		"40414243444546474849"
+		"50515253545556575859"
+		"60616263646566676869"
+		"70717273747576777879"
+		"80818283848586878889"
+		"90919293949596979899";
+	static constexpr char const sHexadecimalLower[] = "0123456789abcdef";
+	static constexpr char const sHexadecimalUpper[] = "0123456789ABCDEF";
 };
 
 constexpr string_view FormatTraits<char>::sErrBadFormat;
@@ -68,6 +82,9 @@ constexpr string_view FormatTraits<char>::sErrOutOfRange;
 constexpr string_view FormatTraits<char>::sTrue;
 constexpr string_view FormatTraits<char>::sFalse;
 constexpr string_view FormatTraits<char>::sPrintfSpecifiers;
+constexpr char const FormatTraits<char>::sDecimalPairs[];
+constexpr char const FormatTraits<char>::sHexadecimalLower[];
+constexpr char const FormatTraits<char>::sHexadecimalUpper[];
 
 template <> struct FormatTraits<wchar_t>
 {
@@ -91,6 +108,20 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wstring_view sFalse{L"false", 5};
 
 	static constexpr wstring_view sPrintfSpecifiers{L"bcsdioxXufFeEaAgGp", 18};
+
+	static constexpr wchar_t const sDecimalPairs[] =
+		L"00010203040506070809"
+		L"10111213141516171819"
+		L"20212223242526272829"
+		L"30313233343536373839"
+		L"40414243444546474849"
+		L"50515253545556575859"
+		L"60616263646566676869"
+		L"70717273747576777879"
+		L"80818283848586878889"
+		L"90919293949596979899";
+	static constexpr wchar_t const sHexadecimalLower[] = L"0123456789abcdef";
+	static constexpr wchar_t const sHexadecimalUpper[] = L"0123456789ABCDEF";
 };
 
 constexpr wstring_view FormatTraits<wchar_t>::sErrBadFormat;
@@ -99,6 +130,9 @@ constexpr wstring_view FormatTraits<wchar_t>::sErrOutOfRange;
 constexpr wstring_view FormatTraits<wchar_t>::sTrue;
 constexpr wstring_view FormatTraits<wchar_t>::sFalse;
 constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;
+constexpr wchar_t const FormatTraits<wchar_t>::sDecimalPairs[];
+constexpr wchar_t const FormatTraits<wchar_t>::sHexadecimalLower[];
+constexpr wchar_t const FormatTraits<wchar_t>::sHexadecimalUpper[];
 
 } // anonymous namespace
 } // namespace _detail
