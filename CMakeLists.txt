@@ -26,14 +26,18 @@ set(FORMATXX_TESTS
 
 set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORMATXX_SOURCES})
 
-add_library(formatxx_static STATIC ${FORMATXX_FILES})
-target_include_directories(formatxx_static PUBLIC "include")
-target_compile_definitions(formatxx_static PUBLIC FORMATXX_STATIC)
-set_property(TARGET formatxx_static PROPERTY CXX_STANDARD 14)
+if(NOT DEFINED FORMATXX_BUILD_SHARED)
+	set(FORMATXX_BUILD_SHARED ${BUILD_SHARED_LIBRARIES})
+endif()
 
-add_library(formatxx SHARED ${FORMATXX_FILES})
+if(${FORMATXX_BUILD_SHARED})
+	add_library(formatxx SHARED ${FORMATXX_FILES})
+	target_compile_definitions(formatxx PRIVATE FORMATXX_EXPORT)
+else()
+	add_library(formatxx STATIC ${FORMATXX_FILES})
+	target_compile_definitions(formatxx PUBLIC FORMATXX_STATIC)
+endif()
 target_include_directories(formatxx PUBLIC "include")
-target_compile_definitions(formatxx PRIVATE FORMATXX_EXPORT)
 set_property(TARGET formatxx PROPERTY CXX_STANDARD 14)
 
 add_executable(formatxx_tests ${FORMATXX_TESTS})
@@ -45,7 +49,3 @@ add_custom_command(
     COMMAND formatxx_tests
 )
 add_test(formatxx_tests COMMAND formatxx_tests)
-
-add_executable(formatxx_static_tests ${FORMATXX_TESTS})
-set_property(TARGET formatxx_static_tests PROPERTY CXX_STANDARD 14)
-target_link_libraries(formatxx_static_tests formatxx_static)
