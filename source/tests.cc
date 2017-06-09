@@ -96,6 +96,9 @@ static std::basic_string<CharT> format_value_to_string(T const& value, formatxx:
 #define CHECK_PRINTF(expected, arg0, ...) \
 	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
 
+#define CHECK_WPRINTF(expected, arg0, ...) \
+	CHECK_WFORMAT_CALL((expected), formatxx::sprintf<std::wstring>, arg0, __VA_ARGS__)
+
 #define CHECK_FORMAT_VALUE(expected, value, spec) \
 	CHECK_FORMAT_CALL((expected), format_value_to_string<char>, (value), (spec))
 
@@ -221,6 +224,8 @@ static void test_wide_strings()
 	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}{}", L"ab", L'c', L'd', 12, 34UL);
 	CHECK_WFORMAT(L"the lazy fox", L"{} {} {}{}{}", L"the", "lazy", L'f', 'o', L'x');
 	CHECK_FORMAT("this is a test", "this {} a {}{}{}", L"is", 't', L'e', L"st");
+
+	CHECK_WPRINTF(L"12abcd34", L"%d%s%c%c%d", 12, L"ab", 'c', L'd', 34UL);
 }
 
 static void test_bool()

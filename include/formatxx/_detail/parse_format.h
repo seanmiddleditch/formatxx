@@ -38,9 +38,14 @@ template <typename CharT>
 FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec)
 {
 	basic_format_spec<CharT> result;
+	// if we early-out, this will ensure that the extra points to the end of th einput
+	// FIXME: this is terrible API requirement all around
+	result.extra = {spec.end(), spec.end()};
 
 	if (spec.empty())
+	{
 		return result;
+	}
 
 	CharT const* start = spec.data();
 	CharT const* const end = spec.data() + spec.size();
@@ -54,7 +59,9 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 		++start;
 
 		if (start == end)
+		{
 			return result;
+		}
 	}
 
 	// print numeric prefix
@@ -63,7 +70,9 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 		result.type_prefix = true;
 		
 		if (++start == end)
+		{
 			return result;
+		}
 	}
 
 	// generic code specified option allowed (required for printf)
@@ -75,7 +84,9 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 			result.code = code;
 
 			if (++start == end)
+			{
 				return result;
+			}
 		}
 	}
 
