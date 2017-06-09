@@ -203,6 +203,8 @@ static void test_wide_strings()
 	CHECK_WFORMAT_VALUE(L"true", true, L"");
 	CHECK_WFORMAT_VALUE(L"lorem ipsum", "lorem ipsum", L"");
 	CHECK_FORMAT_VALUE("lorem ipsum", L"lorem ipsum", "");
+	CHECK_WFORMAT_VALUE(L"lorem ipsum", std::string("lorem ipsum"), L"");
+	CHECK_FORMAT_VALUE("lorem ipsum", std::wstring(L"lorem ipsum"), "");
 
 	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}{}", L"ab", L'c', L'd', 12, 34UL);
 	CHECK_WFORMAT(L"the lazy fox", L"{} {} {}{}{}", L"the", "lazy", L'f', 'o', L'x');

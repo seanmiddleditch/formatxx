@@ -33,6 +33,7 @@
 #pragma once
 
 #include <formatxx/format.h>
+#include <formatxx/wide.h>
 #include <string>
 
 namespace formatxx {
@@ -53,10 +54,16 @@ StringT sformat(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args c
 template <typename StringT = std::string, typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
 StringT sprintf(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
 
-template <typename TraitsT, typename AllocatorT>
-void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, string_view spec)
+template <typename CharT, typename TraitsT, typename AllocatorT>
+void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
 {
-    format_value(out, string_view(string.c_str(), string.size()), spec);
+    format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
+}
+
+template <typename CharT, typename TraitsT, typename AllocatorT>
+void format_value(wformat_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, wstring_view spec)
+{
+    format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
 }
 
 } // namespace formatxx
