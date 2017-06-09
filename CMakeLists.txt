@@ -11,6 +11,7 @@ set(FORMATXX_PUBLIC_HEADERS
     include/formatxx/wide.h
 )
 set(FORMATXX_PRIVATE_HEADERS
+	include/formatxx/_detail/parse_format.h
 	include/formatxx/_detail/parse_unsigned.h
 	include/formatxx/_detail/format_impl.h
     include/formatxx/_detail/printf_impl.h
