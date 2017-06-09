@@ -33,6 +33,22 @@
 #pragma once
 
 namespace formatxx {
+namespace _detail {
+
+template <typename CharT>
+bool contains(basic_string_view<CharT> haystack, CharT needle)
+{
+	for (CharT const c : haystack)
+	{
+		if (c == needle)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+}
 
 template <typename CharT>
 FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec)
@@ -75,19 +91,20 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 		}
 	}
 
-	// generic code specified option allowed (required for printf)
-	CharT const code = *start;
-	for (CharT c : _detail::FormatTraits<CharT>::sPrintfSpecifiers)
+	// read in any of the modifiers like h or l that modify a type code (no effect in our system)
+	while (_detail::contains(_detail::FormatTraits<CharT>::sPrintfModifiers, *start))
 	{
-		if (code == c)
+		if (++start == end)
 		{
-			result.code = code;
-
-			if (++start == end)
-			{
-				return result;
-			}
+			return result;
 		}
+	}
+
+
+	// generic code specified option allowed (required for printf)
+	if (_detail::contains(_detail::FormatTraits<CharT>::sPrintfSpecifiers, *start))
+	{
+		result.code = *start++;
 	}
 
 	// store remaining format specifier
