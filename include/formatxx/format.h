@@ -109,9 +109,6 @@ public:
 	/// Write a string slice.
 	/// @param str The string to write.
 	virtual void write(basic_string_view<CharT> str) = 0;
-
-	/// Extract the current value of the writer.
-	virtual basic_string_view<CharT> view() const = 0;
 };
 
 /// Extra formatting specifications.

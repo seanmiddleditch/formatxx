@@ -66,7 +66,6 @@ public:
 	basic_buffered_writer& operator=(basic_buffered_writer const&) = delete;
 
 	void write(basic_string_view<CharT> str) override;
-	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_first, _last - _first); }
 
 	void clear() { _last = _first; }
 	std::size_t size() const { return _last - _first; }

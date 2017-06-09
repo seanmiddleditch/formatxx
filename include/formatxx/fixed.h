@@ -48,7 +48,6 @@ class formatxx::basic_fixed_writer : public basic_format_writer<CharT>
 {
 public:
 	void write(basic_string_view<CharT> str) override;
-	basic_string_view<CharT> view() const override { return basic_string_view<CharT>(_buffer, _last); }
 
 	void clear() { _last = _buffer; }
 	std::size_t size() const { return _last - _buffer; }

@@ -70,7 +70,6 @@ public:
     basic_string_writer(StringT init) : _string(std::move(init)) {}
 
 	void write(basic_string_view<typename StringT::value_type> str) override { _string.append(str.data(), str.size()); }
-	basic_string_view<typename StringT::value_type> view() const override { return {_string.c_str(), _string.size()}; }
 
 	StringT const& str() const& { return _string; }
 	StringT& str() & { return _string; }

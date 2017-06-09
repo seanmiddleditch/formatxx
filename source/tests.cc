@@ -42,71 +42,54 @@
 static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
-static auto formatxx_tostring(std::string&& str) { return std::move(str); }
-static auto formatxx_tostring(std::wstring&& str) { return std::move(str); }
-template <typename CharT> static std::basic_string<CharT, std::char_traits<CharT>, std::allocator<CharT>> formatxx_tostring(formatxx::basic_format_writer<CharT> const& writer) { return {writer.view().data(), writer.view().size()}; }
-
-template <typename CharT, typename T>
-static std::basic_string<CharT> format_value_to_string(T const& value, formatxx::basic_string_view<CharT> spec)
+template <typename CharT, typename WriterT, typename FormatT, typename... Args>
+static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& format, Args const&... args)
 {
-	using formatxx::format_value;
-	formatxx::basic_string_writer<std::basic_string<CharT>> buf;
-	format_value(buf, value, spec);
-	return std::move(buf).str();
+	formatxx::format(writer, format, args...);
+	return {writer.c_str(), writer.size()};
 }
 
-#define CHECK_FORMAT_HELPER(expr, expected) \
+template <typename CharT, typename ValueT>
+static std::basic_string<CharT> sformat_value(ValueT const& value, formatxx::basic_string_view<CharT> spec = {})
+{
+	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
+	format_value(writer, value, spec);
+	return std::move(writer).str();
+}
+
+#define CHECK_FORMAT_HELPER(out, expected, expr) \
 	do{ \
 		++formatxx_tests; \
-		auto const& result = formatxx_tostring((expr)); \
+		auto const& result = (expr); \
 		if (result == (expected)) {} else { \
-			std::cerr << __FILE__ << '(' << __LINE__ << "): TEST FAILED\n"; \
-			std::cerr << #expr << '\n'; \
-			std::cerr << "  Expected: " << (expected) << '\n'; \
-			std::cerr << "  Received: " << result << '\n'; \
+			out << __FILE__ << '(' << __LINE__ << "): TEST FAILED\n"; \
+			out << #expr << '\n'; \
+			out << "  Expected: " << (expected) << '\n'; \
+			out << "  Received: " << result << '\n'; \
 			++formatxx_failed; \
 		} \
 	}while(false)
 
-#define CHECK_WFORMAT_HELPER(expr, expected) \
-	do{ \
-		++formatxx_tests; \
-		auto const& result = formatxx_tostring((expr)); \
-		if (result == (expected)) {} else { \
-			std::wcerr << __FILE__ << L'(' << __LINE__ << L"): TEST FAILED\n"; \
-			std::wcerr << #expr << L'\n'; \
-			std::wcerr << L"  Expected: " << (expected) << L'\n'; \
-			std::wcerr << L"  Received: " << result << L'\n'; \
-			++formatxx_failed; \
-		} \
-	}while(false)
+#define CHECK_FORMAT(expected, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::sformat<std::string>(__VA_ARGS__))
 
-#define CHECK_FORMAT_CALL(expected, formatter, arg0, ...) \
-	CHECK_FORMAT_HELPER(formatter(arg0, __VA_ARGS__), (expected))
+#define CHECK_WFORMAT(expected, ...) \
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::sformat<std::wstring>(__VA_ARGS__))
 
-#define CHECK_WFORMAT_CALL(expected, formatter, arg0, ...) \
-	CHECK_WFORMAT_HELPER(formatter(arg0, __VA_ARGS__), (expected))
+#define CHECK_PRINTF(expected, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::sprintf<std::string>(__VA_ARGS__))
 
-#define CHECK_FORMAT(expected, arg0, ...) \
-	CHECK_FORMAT_CALL((expected), formatxx::sformat, arg0, __VA_ARGS__)
+#define CHECK_WPRINTF(expected, ...) \
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::sprintf<std::wstring>(__VA_ARGS__))
 
-#define CHECK_WFORMAT(expected, arg0, ...) \
-	CHECK_WFORMAT_CALL((expected), formatxx::sformat<std::wstring>, arg0, __VA_ARGS__)
+#define CHECK_FORMAT_VALUE(expected, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), sformat_value<char>(__VA_ARGS__))
 
-#define CHECK_PRINTF(expected, arg0, ...) \
-	CHECK_FORMAT_CALL((expected), formatxx::sprintf, arg0, __VA_ARGS__)
+#define CHECK_WFORMAT_VALUE(expected, ...) \
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), sformat_value<wchar_t>(__VA_ARGS__))
 
-#define CHECK_WPRINTF(expected, arg0, ...) \
-	CHECK_WFORMAT_CALL((expected), formatxx::sprintf<std::wstring>, arg0, __VA_ARGS__)
-
-#define CHECK_FORMAT_VALUE(expected, value, spec) \
-	CHECK_FORMAT_CALL((expected), format_value_to_string<char>, (value), (spec))
-
-#define CHECK_WFORMAT_VALUE(expected, value, spec) \
-	CHECK_WFORMAT_CALL((expected), format_value_to_string<wchar_t>, (value), (spec))
-
-#define CHECK_FORMAT_WRITER(expected, arg0, ...) \
-	CHECK_FORMAT_CALL((expected), formatxx::format, arg0, __VA_ARGS__)
+#define CHECK_FORMAT_WRITER(expected, writer, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), format_into<char>((writer), __VA_ARGS__))
 
 static void test_fixed()
 {
