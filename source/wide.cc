@@ -62,7 +62,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char* zstr, 
 	format_value(out, const_cast<char const*>(zstr), spec);
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view)
 {
 	if (zstr != nullptr)
 	{
@@ -126,7 +126,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr
 	format_value(out, const_cast<wchar_t const*>(zstr), spec);
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view)
 {
 	if (zstr != nullptr)
 	{
