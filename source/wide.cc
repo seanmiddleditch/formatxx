@@ -40,6 +40,7 @@
 
 #include <cwchar>
 #include <cstdlib>
+#include <climits>
 
 namespace formatxx {
 
