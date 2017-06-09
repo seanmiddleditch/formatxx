@@ -49,6 +49,10 @@ namespace formatxx
 namespace formatxx
 {
 	/// Default format helpers.
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char* zstr, wstring_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char ch, wstring_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wstring_view spec);
@@ -68,6 +72,11 @@ namespace formatxx
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long long value, wstring_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, void* value, wstring_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, void const* value, wstring_view spec);
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view spec);
 
 	/// Formatting for enumerations, using their numeric value.
 	template <typename EnumT>

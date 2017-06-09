@@ -215,8 +215,12 @@ static void test_wide_strings()
 	CHECK_WFORMAT_VALUE(L"1234", 1234U, L"");
 	CHECK_WFORMAT_VALUE(L"-17.500000", -17.5, L"");
 	CHECK_WFORMAT_VALUE(L"true", true, L"");
+	CHECK_WFORMAT_VALUE(L"lorem ipsum", "lorem ipsum", L"");
+	CHECK_FORMAT_VALUE("lorem ipsum", L"lorem ipsum", "");
 
 	CHECK_WFORMAT(L"abcd1234", L"{}{}{}{}{}", L"ab", L'c', L'd', 12, 34UL);
+	CHECK_WFORMAT(L"the lazy fox", L"{} {} {}{}{}", L"the", "lazy", L'f', 'o', L'x');
+	CHECK_FORMAT("this is a test", "this {} a {}{}{}", L"is", 't', L'e', L"st");
 }
 
 static void test_bool()
