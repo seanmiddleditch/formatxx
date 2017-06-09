@@ -49,7 +49,7 @@ namespace formatxx {
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char ch, wstring_view)
 {
-	std::mbstate_t state;
+	std::mbstate_t state{};
 	wchar_t wc;
 	std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
 	if (rs > 0 && rs < static_cast<std::size_t>(-2))
@@ -67,7 +67,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* 
 {
 	if (zstr != nullptr)
 	{
-		std::mbstate_t state;
+		std::mbstate_t state{};
 		while (*zstr != '\0')
 		{
 			wchar_t wc;
@@ -82,7 +82,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* 
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view)
 {
-	std::mbstate_t state;
+	std::mbstate_t state{};
 	for (auto const ch : str)
 	{
 		wchar_t wc;
@@ -116,10 +116,13 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view)
 {
-	std::mbstate_t state;
+	std::mbstate_t state{};
 	char mb[MB_LEN_MAX];
 	std::size_t const rs = std::wcrtomb(mb, ch, &state);
-	out.write({mb, rs});
+	if (rs != static_cast<std::size_t>(-1))
+	{
+		out.write({mb, rs});
+	}
 }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr, string_view spec)
@@ -131,24 +134,30 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const
 {
 	if (zstr != nullptr)
 	{
-		std::mbstate_t state;
+		std::mbstate_t state{};
 		char mb[MB_LEN_MAX];
 		while (*zstr != '\0')
 		{
 			std::size_t const rs = std::wcrtomb(mb, *zstr++, &state);
-			out.write({mb, rs});
+			if (rs != static_cast<std::size_t>(-1))
+			{
+				out.write({mb, rs});
+			}
 		}
 	}
 }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view)
 {
-	std::mbstate_t state;
+	std::mbstate_t state{};
 	char mb[MB_LEN_MAX];
 	for (auto const ch : str)
 	{
 		std::size_t const rs = std::wcrtomb(mb, ch, &state);
-		out.write({mb, rs});
+		if (rs != static_cast<std::size_t>(-1))
+		{
+			out.write({mb, rs});
+		}
 	}
 }
 

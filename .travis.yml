@@ -19,4 +19,4 @@ env:
   - TRAVIS_CXX=clang++ TRAVIS_CC=clang
 script:
   - export CXX=$TRAVIS_CXX CC=$TRAVIS_CC
-  - mkdir build && cd build && cmake .. && cmake --build .
+  - mkdir build && cd build && cmake .. && cmake --build . && ctest
