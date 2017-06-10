@@ -126,15 +126,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* p
 	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
 }
 
-namespace _detail {
-
-template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-
-template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-
-} // namespace _detail
-
+template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>);
-template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
-
 } // namespace formatxx

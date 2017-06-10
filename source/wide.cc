@@ -215,14 +215,8 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value
 		out.write({buf, std::size_t(len)});
 }
 
-namespace _detail {
-
-template basic_format_writer<wchar_t>& FORMATXX_API format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
-
-template basic_format_writer<wchar_t>& FORMATXX_API printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
-
-} // namespace _detail
-
-template basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
+template basic_format_writer<wchar_t>& FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template basic_format_writer<wchar_t>& FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
 
 } // namespace formatxx
