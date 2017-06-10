@@ -36,35 +36,36 @@
 #include <formatxx/wide.h>
 #include <string>
 
-namespace formatxx {
-
-template <typename StringT> class basic_string_writer;
-
-using string_writer = basic_string_writer<std::string>;
-
-template <typename StringT = std::string, typename... Args> StringT sformat(basic_string_view<typename StringT::value_type> format, Args const&... args);
-template <typename StringT = std::string, typename... Args> StringT sprintf(basic_string_view<typename StringT::value_type> format, Args const&... args);
-
-template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-format_writer& format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
-template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-format_writer& printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
-template <typename StringT = std::string, typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-StringT sformat(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
-template <typename StringT = std::string, typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
-StringT sprintf(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
-
-template <typename CharT, typename TraitsT, typename AllocatorT>
-void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
+namespace formatxx
 {
-    format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
-}
+	template <typename StringT> class basic_string_writer;
 
-template <typename CharT, typename TraitsT, typename AllocatorT>
-void format_value(wformat_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, wstring_view spec)
-{
-    format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
-}
+	using string_writer = basic_string_writer<std::string>;
+	using wstring_writer = basic_string_writer<std::wstring>;
+
+	template <typename StringT = std::string, typename... Args> StringT sformat(basic_string_view<typename StringT::value_type> format, Args const&... args);
+	template <typename StringT = std::string, typename... Args> StringT sprintf(basic_string_view<typename StringT::value_type> format, Args const&... args);
+
+	template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
+	format_writer& format(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
+	template <typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
+	format_writer& printf(format_writer& writer, std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
+	template <typename StringT = std::string, typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
+	StringT sformat(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
+	template <typename StringT = std::string, typename CharT, typename CharTraitsT, typename AllocatorT, typename... Args>
+	StringT sprintf(std::basic_string<CharT, CharTraitsT, AllocatorT> format, Args const&... args);
+
+	template <typename CharT, typename TraitsT, typename AllocatorT>
+	void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
+	{
+		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
+	}
+
+	template <typename CharT, typename TraitsT, typename AllocatorT>
+	void format_value(wformat_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, wstring_view spec)
+	{
+		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
+	}
 
 } // namespace formatxx
 
