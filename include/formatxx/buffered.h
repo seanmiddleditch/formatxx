@@ -35,22 +35,22 @@
 #include <formatxx/format.h>
 #include <cstring> // for std::memcpy
 
-namespace formatxx {
-
-namespace _detail {
-
-template <typename T>
-struct new_delete_allocator
+namespace formatxx
 {
-    T* allocate(std::size_t count) { return new T[count]; }
-    void deallocate(T* ptr, std::size_t) { delete[] ptr; }
-};
+	namespace _detail
+	{
+		template <typename T>
+		struct new_delete_allocator
+		{
+			T* allocate(std::size_t count) { return new T[count]; }
+			void deallocate(T* ptr, std::size_t) { delete[] ptr; }
+		};
 
-} // namespace _detail
+	} // namespace _detail
 
-template <typename CharT, std::size_t, typename = _detail::new_delete_allocator<CharT>> class basic_buffered_writer;
+	template <typename CharT, std::size_t Size, typename AllocatorT = _detail::new_delete_allocator<CharT>> class basic_buffered_writer;
 
-template <std::size_t Size = 512> using buffered_writer = basic_buffered_writer<char, Size>;
+	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<char>> using buffered_writer = basic_buffered_writer<char, Size, AllocatorT>;
 
 } // namespace formatxx
 
