@@ -35,6 +35,7 @@
 #include <formatxx/_detail/parse_unsigned.h>
 #include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/write_integer.h>
+#include <formatxx/_detail/write_string.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
@@ -58,21 +59,16 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char ch, wst
 	}
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char* zstr, wstring_view spec)
-{
-	format_value(out, const_cast<char const*>(zstr), spec);
-}
-
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view)
 {
 	if (zstr != nullptr)
 	{
 		std::mbstate_t state{};
-		while (*zstr != '\0')
+		while (*zstr != 0)
 		{
 			wchar_t wc;
 			std::size_t const rs = std::mbrtowc(&wc, zstr++, 1, &state);
-			if (rs != static_cast<std::size_t>(-2))
+			if (rs < static_cast<std::size_t>(-2))
 			{
 				out.write({&wc, 1});
 			}
@@ -87,32 +83,16 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view 
 	{
 		wchar_t wc;
 		std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
-		if (rs != static_cast<std::size_t>(-2))
+		if (rs < static_cast<std::size_t>(-2))
 		{
 			out.write({&wc, 1});
 		}
 	}
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t ch, wstring_view)
-{
-	out.write(wstring_view(&ch, 1));
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec)
-{
-	format_value(out, wstring_view(zstr), spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec)
-{
-	format_value(out, wstring_view(zstr), spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wstring_view)
-{
-	out.write(str);
-}
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) { _detail::write_char(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view)
 {
@@ -125,18 +105,13 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, s
 	}
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr, string_view spec)
-{
-	format_value(out, const_cast<wchar_t const*>(zstr), spec);
-}
-
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view)
 {
 	if (zstr != nullptr)
 	{
 		std::mbstate_t state{};
 		char mb[MB_LEN_MAX];
-		while (*zstr != '\0')
+		while (*zstr != 0)
 		{
 			std::size_t const rs = std::wcrtomb(mb, *zstr++, &state);
 			if (rs != static_cast<std::size_t>(-1))

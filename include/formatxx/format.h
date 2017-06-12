@@ -86,7 +86,7 @@ public:
 	constexpr basic_string_view() = default;
 	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
 	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
-	basic_string_view(CharT const* zstr) : _begin(zstr), _size(TraitsT::length(zstr)) {}
+	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? TraitsT::length(zstr) : 0) {}
 
 	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
@@ -126,7 +126,6 @@ public:
 namespace formatxx
 {
 	/// Default format helpers.
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view spec);
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view spec);

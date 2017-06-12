@@ -35,40 +35,17 @@
 #include <formatxx/_detail/parse_unsigned.h>
 #include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/write_integer.h>
+#include <formatxx/_detail/write_string.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
 #include <cstdio>
-#include <limits>
-#include <climits>
-#include <cinttypes>
 
 namespace formatxx {
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view)
-{
-	out.write(string_view(&ch, 1));
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec)
-{
-	format_value(out, value ? _detail::FormatTraits<char>::sTrue : _detail::FormatTraits<char>::sFalse, spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec)
-{
-	format_value(out, string_view(zstr), spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec)
-{
-	format_value(out, string_view(zstr), spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view)
-{
-	out.write(str);
-}
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char value, string_view spec) { _detail::write_char(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* value, string_view spec) { _detail::write_string<char>(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view value, string_view spec) { _detail::write_string<char>(out, value, spec); }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec) { _detail::write_integer(out, value, spec); }
@@ -81,6 +58,12 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec) { _detail::write_integer(out, value, spec); }
+
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec)
+{
+	format_value(out, value ? _detail::FormatTraits<char>::sTrue : _detail::FormatTraits<char>::sFalse, spec);
+}
+
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec)
 {
