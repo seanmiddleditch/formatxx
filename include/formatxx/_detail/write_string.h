@@ -37,15 +37,15 @@ namespace _detail {
 namespace {
 
 template <typename CharT>
-void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
-{
-	write_string(out, {&ch, 1}, spec);
-}
-
-template <typename CharT>
 void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT>)
 {
 	out.write(str);
+}
+
+template <typename CharT>
+void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
+{
+	write_string(out, {&ch, 1}, spec);
 }
 
 } // anonymous namespace
