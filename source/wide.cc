@@ -36,6 +36,7 @@
 #include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/write_integer.h>
 #include <formatxx/_detail/write_string.h>
+#include <formatxx/_detail/write_float.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
@@ -90,10 +91,6 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view 
 	}
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) { _detail::write_char(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
-
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view)
 {
 	std::mbstate_t state{};
@@ -136,12 +133,12 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view 
 	}
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, bool value, wstring_view spec)
-{
-	format_value(out, value ? _detail::FormatTraits<wchar_t>::sTrue : _detail::FormatTraits<wchar_t>::sFalse, spec);
-}
-
 #pragma warning(pop)
+
+
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) { _detail::write_char(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed int value, wstring_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed char value, wstring_view spec) { _detail::write_integer(out, value, spec); }
@@ -155,40 +152,13 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned lon
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned short value, wstring_view spec) { _detail::write_integer(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, float value, wstring_view spec)
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, bool value, wstring_view spec)
 {
-	format_value(out, static_cast<double>(value), spec);
+	format_value(out, value ? _detail::FormatTraits<wchar_t>::sTrue : _detail::FormatTraits<wchar_t>::sFalse, spec);
 }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value, wstring_view spec_string)
-{
-	wchar_t fmt[3] = L"%f";
-
-	wformat_spec const spec = parse_format_spec(spec_string);
-
-	switch (spec.code)
-	{
-	case L'a':
-	case L'A':
-	case L'e':
-	case L'E':
-	case L'f':
-	case L'F':
-	case L'g':
-	case L'G':
-		fmt[1] = spec.code;
-		break;
-	default:
-		// leave default
-		break;
-	}
-
-	constexpr std::size_t buf_size = 1024;
-	wchar_t buf[buf_size]; // not actually enough for every float, but...
-	int const len = std::swprintf(buf, buf_size, fmt, value);
-	if (len > 0)
-		out.write({buf, std::size_t(len)});
-}
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, float value, wstring_view spec) { _detail::write_float(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value, wstring_view spec) { _detail::write_float(out, value, spec); }
 
 template basic_format_writer<wchar_t>& FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
 template basic_format_writer<wchar_t>& FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);

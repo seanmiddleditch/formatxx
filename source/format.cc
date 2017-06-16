@@ -36,6 +36,7 @@
 #include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/write_integer.h>
 #include <formatxx/_detail/write_string.h>
+#include <formatxx/_detail/write_float.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
@@ -65,49 +66,11 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, s
 }
 
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec)
-{
-	format_value(out, static_cast<double>(value), spec);
-}
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec) { _detail::write_float(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec) { _detail::write_float(out, value, spec); }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec_string)
-{
-	char fmt[3] = "%f";
-
-	format_spec const spec = parse_format_spec(spec_string);
-
-	switch (spec.code)
-	{
-	case 'a':
-	case 'A':
-	case 'e':
-	case 'E':
-	case 'f':
-	case 'F':
-	case 'g':
-	case 'G':
-		fmt[1] = spec.code;
-		break;
-	default:
-		// leave default
-		break;
-	}
-
-	char buf[1048]; // not actually enough for every float, but...
-	int len = std::snprintf(buf, sizeof(buf), fmt, value);
-	if (len > 0)
-		out.write(string_view(buf, len));
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* ptr, string_view spec)
-{
-	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* ptr, string_view spec)
-{
-	_detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec);
-}
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* ptr, string_view spec) { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* ptr, string_view spec) { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
 
 template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
 template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
