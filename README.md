@@ -82,14 +82,14 @@ formatxx).
 ## History and Design Notes
 
 The library that motivated this author to write formatxx is the excellent
-[cppformat](https://cppformat.github.io/) by Victor Zverovich. cppformat does much of what this
-library does, has excellent runtime speed, and a responsive and talented author. Unfortunately,
-the library failed to meet a few needs that cppformat seeks to address: cppformat relies on
-some very heavy standard headers, its error handling mechanisms are limited to C++ exceptions
-(which cannot be used in some industries) or `abort`, the compilation time overhead of
-including its primary header is pretty large, and its support for formatting user-defined
-types relies on `std::ostream` wrappers (which are neither lightweight includes nor are they
-runtime efficient). For these reasons, research into formatxx began.
+[fmtlib](https://github.com/fmtlib/fmt) (previously cppformat) by Victor Zverovich and
+contributors. fmtlib does much of what this library does, has excellent runtime speed, and
+responsive and talented authors. Unfortunately at the time the cppformat library failed to
+meet a few needs that formatxx seeks to address: it had relied on some heavy standard headers,
+its error handling mechanisms were and are limited to C++ exceptions or `abort`, the
+compilation time overhead was large, and its support for formatting user-defined types relied
+on complicated and expensive mechanisms like `std::ostream` wrappers. For those reasons,
+research into formatxx began.
 
 The initial design did not use a `format_value` function for each type. Instead, an enumeration
 for the basic categories of primitives (`bool`, `signed long`, `double`, etc.) was computed via
