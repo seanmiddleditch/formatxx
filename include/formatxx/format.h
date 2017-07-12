@@ -117,8 +117,11 @@ template <typename CharT>
 class formatxx::basic_format_spec
 {
 public:
+	unsigned width = 0;
+	unsigned precision = 0;
 	CharT code = 0;
 	CharT sign = 0;
+	CharT pad = 0; // 0 means no padding
 	bool type_prefix = false; // print leading 0x or appropriate type
 	formatxx::basic_string_view<CharT> extra;
 };
