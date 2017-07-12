@@ -62,7 +62,7 @@ template <> struct FormatTraits<char>
 	static constexpr string_view sTrue{"true", 4};
 	static constexpr string_view sFalse{"false", 5};
 
-	static constexpr string_view sPrintfSpecifiers{"bcsdioxXufFeEaAgGp", 18};
+	static constexpr string_view sPrintfSpecifiers{"bcCsSdioxXufFeEaAgGp", 18};
 	static constexpr string_view sPrintfModifiers{"hljztL", 6};
 
 	static constexpr char const sDecimalPairs[] =
@@ -115,7 +115,7 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wstring_view sTrue{L"true", 4};
 	static constexpr wstring_view sFalse{L"false", 5};
 
-	static constexpr wstring_view sPrintfSpecifiers{L"bcsdioxXufFeEaAgGp", 18};
+	static constexpr wstring_view sPrintfSpecifiers{L"bcCsSdioxXufFeEaAgGp", 18};
 	static constexpr wstring_view sPrintfModifiers{L"hljztL", 6};
 
 	static constexpr wchar_t const sDecimalPairs[] =
