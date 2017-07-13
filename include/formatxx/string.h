@@ -41,8 +41,8 @@ namespace formatxx
 
 	using string_writer = basic_string_writer<std::string>;
 
-	template <typename StringT = std::string, typename FormatT, typename... Args> StringT sformat(FormatT const& format, Args const&... args);
-	template <typename StringT = std::string, typename FormatT, typename... Args> StringT sprintf(FormatT const& format, Args const&... args);
+	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const&... args);
+	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const&... args);
 
 	template <typename CharT, typename TraitsT, typename AllocatorT>
 	basic_string_view<CharT> make_string_view(std::basic_string<CharT, TraitsT, AllocatorT> const& str) { return {str.c_str(), str.size()}; }
@@ -88,7 +88,7 @@ private:
 /// @param args The arguments used by the formatting string.
 /// @returns a formatted string.
 template <typename StringT, typename FormatT, typename... Args>
-StringT formatxx::sformat(FormatT const& format, Args const&... args)
+StringT formatxx::format_string(FormatT const& format, Args const&... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::format(tmp, make_string_view(format), args...);
@@ -99,7 +99,7 @@ StringT formatxx::sformat(FormatT const& format, Args const&... args)
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename StringT, typename FormatT, typename... Args>
-StringT formatxx::sprintf(FormatT const& format, Args const&... args)
+StringT formatxx::printf_string(FormatT const& format, Args const&... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::printf(tmp, make_string_view(format), args...);

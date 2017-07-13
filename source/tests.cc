@@ -50,7 +50,7 @@ static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& form
 }
 
 template <typename CharT, typename ValueT>
-static std::basic_string<CharT> sformat_value(ValueT const& value, formatxx::basic_string_view<CharT> spec = {})
+static std::basic_string<CharT> format_value_string(ValueT const& value, formatxx::basic_string_view<CharT> spec = {})
 {
 	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
 	format_value(writer, value, spec);
@@ -71,22 +71,22 @@ static std::basic_string<CharT> sformat_value(ValueT const& value, formatxx::bas
 	}while(false)
 
 #define CHECK_FORMAT(expected, ...) \
-	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::sformat<std::string>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::format_string<std::string>(__VA_ARGS__))
 
 #define CHECK_WFORMAT(expected, ...) \
-	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::sformat<std::wstring>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::format_string<std::wstring>(__VA_ARGS__))
 
 #define CHECK_PRINTF(expected, ...) \
-	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::sprintf<std::string>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::printf_string<std::string>(__VA_ARGS__))
 
 #define CHECK_WPRINTF(expected, ...) \
-	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::sprintf<std::wstring>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::printf_string<std::wstring>(__VA_ARGS__))
 
 #define CHECK_FORMAT_VALUE(expected, ...) \
-	CHECK_FORMAT_HELPER(std::cerr, (expected), sformat_value<char>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::cerr, (expected), format_value_string<char>(__VA_ARGS__))
 
 #define CHECK_WFORMAT_VALUE(expected, ...) \
-	CHECK_FORMAT_HELPER(std::wcerr, (expected), sformat_value<wchar_t>(__VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::wcerr, (expected), format_value_string<wchar_t>(__VA_ARGS__))
 
 #define CHECK_FORMAT_WRITER(expected, writer, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), format_into<char>((writer), __VA_ARGS__))
