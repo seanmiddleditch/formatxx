@@ -186,7 +186,7 @@ template <typename CharT, typename T>
 void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<CharT> spec_string)
 {
 	// subtract from 0 _after_ converting to deal with 2's complement format (abs(min) > abs(max))
-	std::make_unsigned_t<T> const value = raw >= 0 ? raw : 0 - static_cast<std::make_unsigned_t<T>>(raw);
+	typename std::make_unsigned<T>::type const value = raw >= 0 ? raw : 0 - static_cast<typename std::make_unsigned<T>::type>(raw);
 
     basic_format_spec<CharT> const spec = parse_format_spec(spec_string);
 

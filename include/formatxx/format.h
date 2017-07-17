@@ -150,13 +150,13 @@ namespace formatxx
 
 	/// Formatting for enumerations, using their numeric value.
 	template <typename CharT, typename EnumT>
-	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, EnumT value, string_view spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, EnumT value, string_view spec) -> typename std::enable_if<std::is_enum<EnumT>::value>::type
 	{
-		format_value(out, std::underlying_type_t<EnumT>(value), spec);
+		format_value(out, typename std::underlying_type<EnumT>::type(value), spec);
 	}
 
 	template <typename CharT, typename PointerT>
-	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec) -> typename std::enable_if<std::is_pointer<PointerT>::value>::type
 	{
 		format_value(out, static_cast<void const*>(value), spec);
 	}
