@@ -53,6 +53,7 @@ template <> struct FormatTraits<char>
 	static constexpr char to_digit(char c) { return c + '0'; }
 
 	static constexpr char cPrintfSpec = '%';
+	static constexpr char cPrintfIndex = '$';
 
 	// string_view over string literals is safe on all platforms for which I'm aware
 	static constexpr string_view sErrBadFormat{"#BADF", 5};
@@ -106,6 +107,7 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wchar_t to_digit(wchar_t c) { return c + L'0'; }
 
 	static constexpr wchar_t cPrintfSpec = L'%';
+	static constexpr wchar_t cPrintfIndex = L'$';
 
 	// string_view over string literals is safe on all platforms for which I'm aware
 	static constexpr wstring_view sErrBadFormat{L"#BADF", 5};

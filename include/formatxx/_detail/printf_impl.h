@@ -54,9 +54,11 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
+			{
 				out.write({begin, iter});
+			}
 
-			++iter; // swallow the {
+			++iter; // swallow the %
 
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
@@ -72,37 +74,91 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 				begin = iter++;
 				continue;
 			}
-		
+
+			basic_string_view<CharT> spec_string;
+
+			// determine which argument we're going to format (optional in printf syntax)
+			unsigned index = 0;
+			CharT const* const start = iter;
+			iter = parse_unsigned(start, end, index);
+
+			// if we hit the end of the string, we have an incomplete format
+			if (iter == end)
+			{
+				out.write(FormatTraits<CharT>::sErrIncomplete);
+				break;
+			}
+
+			// if the format hits another % then this is the complete input, and it's just a position
+			if (*iter == FormatTraits<CharT>::cPrintfSpec)
+			{
+				--index; // printf format indices are 1-based
+				begin = ++iter;
+			}
+			else
+			{
+				// if we read nothing, we have a "next index" situation (or an error)
+				if (iter == start)
+				{
+					index = next_index;
+				}
+				else if (*iter == FormatTraits<CharT>::cPrintfIndex)
+				{
+					--index; // printf format indices are 1-based
+
+					// we have a position argument and a remainder of the printf input
+					++iter;
+
+					if (iter == end)
+					{
+						out.write(FormatTraits<CharT>::sErrIncomplete);
+						break;
+					}
+				}
+				else
+				{
+					// the decimal input had nothing to do with position; reset (FIXME: is that necessary?
+					// or does it cause us to just parse the format twice for no reason?)
+					iter = start;
+				}
+
+				// parse forward through the specification
+				// FIXME: we just want to find the end of the input, a full format parse may be overkill
+				CharT const* const spec_begin = iter;
+				basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
+				CharT const* const spec_end = spec.extra.begin();
+				spec_string = {spec_begin, spec_end};
+				if (spec.code == CharT(0))
+				{
+					// invalid spec
+					out.write(FormatTraits<CharT>::sErrBadFormat);
+					break;
+				}
+
+				// prepare for next round
+				begin = iter = spec_end;
+			}
+
 			// if the index is out of range, we have nothing to format
-			if (next_index >= count)
+			if (index >= count)
 			{
 				out.write(FormatTraits<CharT>::sErrOutOfRange);
 				continue;
 			}
 
-			// parse forward through the specification
-			CharT const* const spec_begin = iter;
-			basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
-			CharT const* const spec_end = spec.extra.data();
-			if (spec.code == CharT(0))
-			{
-				// invalid spec
-				out.write(FormatTraits<CharT>::sErrBadFormat);
-				break;
-			}
-
 			// magic!
-			funcs[next_index](out, values[next_index], {spec_begin, spec_end});
+			funcs[index](out, values[index], spec_string);
 
 			// prepare for next round
-			begin = iter = spec_end;
-			++next_index;
+			next_index = index + 1;
 		}
 	}
 
 	// write out tail end of format string
 	if (iter > begin)
+	{
 		out.write({begin, iter});
+	}
 
 	return out;
 }

@@ -54,7 +54,9 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 		{
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
+			{
 				out.write({begin, iter});
+			}
 
 			++iter; // swallow the {
 
@@ -78,15 +80,17 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			CharT const* const start = iter;
 			iter = parse_unsigned(start, end, index);
 
-			// if we read nothing, we have a "next index" situation (or an error)
-			if (iter == start)
-				index = next_index;
-
 			// if we hit the end of the string, we have an incomplete format
 			if (iter == end)
 			{
 				out.write(FormatTraits<CharT>::sErrIncomplete);
 				break;
+			}
+
+			// if we read nothing, we have a "next index" situation (or an error)
+			if (iter == start)
+			{
+				index = next_index;
 			}
 
 			basic_string_view<CharT> spec;
@@ -141,7 +145,9 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 
 	// write out tail end of format string
 	if (iter > begin)
+	{
 		out.write({begin, iter});
+	}
 
 	return out;
 }
