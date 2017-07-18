@@ -197,7 +197,9 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	
 	switch (spec.code)
 	{
+	default:
 	case 0:
+	case 'i':
 	case 'd':
 	case 'D':
 		write_decimal<CharT>(out, value, padding, spec.pad ? spec.pad : ' ');

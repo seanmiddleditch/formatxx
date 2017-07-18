@@ -191,6 +191,8 @@ static void test_buffered()
 static void test_printf()
 {
 	CHECK_PRINTF("abcd1234", "a%sd1%d4", "bc", 23);
+
+	CHECK_PRINTF("12 34", "%i %d", 12, 34);
 }
 
 static void test_strings()
