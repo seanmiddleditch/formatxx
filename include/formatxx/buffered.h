@@ -33,7 +33,7 @@
 #pragma once
 
 #include <formatxx/format.h>
-#include <cstring> // for std::memcpy
+#include <algorithm>
 
 namespace formatxx
 {
@@ -102,7 +102,7 @@ void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::_grow(std::size_
 			newCapacity = required;
 
 		char* newBuffer = this->allocate(newCapacity);
-		std::memcpy(newBuffer, _first, (size + 1) * sizeof(CharT));
+		std::copy(_first, _first + size + 1, newBuffer);
 
 		if (_first != _buffer)
 			this->deallocate(_first, capacity);
@@ -117,7 +117,7 @@ template <typename CharT, std::size_t SizeN, typename AllocatorT>
 void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::write(basic_string_view<CharT> str)
 {
 	_grow(str.size());
-	std::memcpy(_last, str.data(), str.size() * sizeof(CharT));
+	std::copy(str.data(), str.data() + str.size(), _last);
 	_last += str.size();
 	*_last = CharT(0);
 }
