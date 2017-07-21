@@ -33,250 +33,182 @@
 #pragma once
 
 #include <type_traits>
-#include <cstring>
-#include <memory>
+#include <string>
+
+#if !defined(FORMATXX_API)
+#	if defined(_WIN32)
+#		define FORMATXX_API __stdcall
+#	else
+#		define FORMATXX_API
+#	endif
+#endif
+
+#if defined(_WIN32) && !defined(FORMATXX_PUBLIC)
+#	if defined(FORMATXX_EXPORT)
+#		define FORMATXX_PUBLIC __declspec(dllexport)
+#	elif !defined(FORMATXX_STATIC)
+#		define FORMATXX_PUBLIC __declspec(dllimport)
+#	else
+#		define FORMATXX_PUBLIC
+#	endif
+#elif __GNUC__ >= 4 && !defined(FORMATXX_PUBLIC)
+#	if defined(FORMATXX_EXPORT)
+#		define FORMATXX_PUBLIC __attribute__((visibility("default")))
+#	else
+#		define FORMATXX_PUBLIC
+#	endif
+#endif
 
 namespace formatxx
 {
-	struct string_view;
-	struct format_spec;
+	template <typename CharT, typename TraitsT = std::char_traits<CharT>> class basic_string_view;
+	template <typename CharT> class basic_format_writer;
+	template <typename CharT> class basic_format_spec;
+	
+	using string_view = basic_string_view<char>;
+	using format_writer = basic_format_writer<char>;
+	using format_spec = basic_format_spec<char>;
 
-	class format_writer;
-	template <typename>	class string_writer;
-	template <std::size_t> class fixed_writer;
-	template <std::size_t, typename> class buffered_writer;
+	template <typename CharT, typename FormatT, typename... Args> basic_format_writer<CharT>& format(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args);
+	template <typename CharT, typename FormatT, typename... Args> basic_format_writer<CharT>& printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args);
 
-	template <typename... Args> void format(format_writer& out, string_view format, Args&&... args);
-	template <typename StringT, typename... Args> StringT format(string_view format, Args&&... args);
+	template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec);
 
-	//template <typename T> void format_value(format_writer&, T const&, format_spec const&);
+	template <typename CharT> basic_string_view<CharT> make_string_view(basic_string_view<CharT> str) { return str; }
+	template <typename CharT> basic_string_view<CharT> make_string_view(CharT const* zstr) { return zstr; }
 }
 
 /// Describes a format string.
-struct formatxx::string_view
+template <typename CharT, typename TraitsT>
+class formatxx::basic_string_view
 {
-	char const* begin = nullptr;
-	char const* end = nullptr;
+public:
+	constexpr basic_string_view() = default;
+	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
+	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
+	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? TraitsT::length(zstr) : 0) {}
 
-	string_view(char const* first, char const* last) : begin(first), end(last) {}
-	string_view(char const* nstr, std::size_t length) : string_view(nstr, nstr + length) {}
-	string_view(char const* zstr) : string_view(zstr, std::strlen(zstr)) {}
+	constexpr CharT const* data() const { return _begin; }
+	constexpr std::size_t size() const { return _size; }
+	constexpr bool empty() const { return _size == 0; }
 
-	// hmm, this may be a bad idea, it'll bind to over-long character buffers
-	template <size_t N> string_view(char (&str)[N]) : string_view(str, N) {}
+	constexpr CharT const* begin() const { return _begin; }
+	constexpr CharT const* end() const { return _begin + _size; }
+
+private:
+	CharT const* _begin = nullptr;
+	std::size_t _size = 0;
 };
 
 /// Interface for any buffer that the format library can write into.
-class formatxx::format_writer
+template <typename CharT>
+class formatxx::basic_format_writer
 {
 public:
-	virtual ~format_writer() = default;
+	virtual ~basic_format_writer() = default;
 
 	/// Write a string slice.
-	/// @param nstr A length-delimited string.
-	/// @param length The length of the string in nstr.
-	virtual void write(char const* nstr, std::size_t length) = 0;
-
-	/// Write a C-style string.
-	/// @param zstr A NUL-terminated string.
-	virtual void write(char const* zstr) { write(zstr, std::strlen(zstr)); }
-};
-
-/// A writer that generates a buffer (intended for std::string).
-template <typename StringT>
-class formatxx::string_writer : public format_writer
-{
-	StringT _string;
-
-public:
-	void write(char const* nstr, std::size_t length) override { _string.append(nstr, length); }
-	void write(char const* zstr) override { _string.append(zstr); }
-
-	StringT const& str() const& { return _string; }
-	StringT&& str() && { return std::move(_string); }
-
-	std::size_t size() const { return _string.size(); }
-	char const* c_str() const { return _string.c_str(); }
-};
-
-/// A writer with a fixed buffer that will never allocate.
-template <std::size_t SizeN = 512>
-class formatxx::fixed_writer : public format_writer
-{
-	std::size_t _length = 0;
-	char _buffer[SizeN] = {'\0',};
-
-public:
-	void write(char const* nstr, size_t length) override;
-	void write(char const* zstr) override;
-
-	std::size_t size() const { return _length; }
-	char const* c_str() const { return _buffer; }
-};
-
-/// A writer with a fixed buffer that will allocate when the buffer is exhausted.
-template <std::size_t SizeN, typename AllocatorT>
-class formatxx::buffered_writer : public format_writer, private AllocatorT
-{
-	std::size_t _length = 0;
-	std::size_t _capacity = SizeN;
-	char* _buffer = _fixed;
-	char _fixed[SizeN] = {'\0',};
-
-	void _grow(std::size_t amount);
-
-public:
-	buffered_writer() = default;
-	~buffered_writer();
-
-	buffered_writer(buffered_writer const&) = delete;
-	buffered_writer& operator=(buffered_writer const&) = delete;
-
-	void write(char const* nstr, size_t length) override;
-	using format_writer::write;
-
-	std::size_t size() const { return _length; }
-	char const* c_str() const { return _buffer; }
+	/// @param str The string to write.
+	virtual void write(basic_string_view<CharT> str) = 0;
 };
 
 /// Extra formatting specifications.
-struct formatxx::format_spec
+template <typename CharT>
+class formatxx::basic_format_spec
 {
+public:
 	unsigned width = 0;
 	unsigned precision = 0;
-	// #FIXME: alignment
-	// #FIXME: flags
-	// #FIXME: custom string part
+	CharT code = 0;
+	CharT sign = 0;
+	CharT pad = 0; // 0 means no padding
+	bool type_prefix = false; // print leading 0x or appropriate type
+	formatxx::basic_string_view<CharT> extra;
 };
 
 namespace formatxx
 {
 	/// Default format helpers.
-	void format_value(format_writer& out, char* zstr, format_spec const& spec);
-	void format_value(format_writer& out, char const* zstr, format_spec const& spec);
-	void format_value(format_writer& out, string_view str, format_spec const& spec);
-	void format_value(format_writer& out, char ch, format_spec const& spec);
-	void format_value(format_writer& out, bool value, format_spec const& spec);
-	void format_value(format_writer& out, float value, format_spec const& spec);
-	void format_value(format_writer& out, double value, format_spec const& spec);
-	void format_value(format_writer& out, signed int value, format_spec const& spec);
-	void format_value(format_writer& out, signed long value, format_spec const& spec);
-	void format_value(format_writer& out, signed short value, format_spec const& spec);
-	void format_value(format_writer& out, signed long long value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned int value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned long value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned short value, format_spec const& spec);
-	void format_value(format_writer& out, unsigned long long value, format_spec const& spec);
-	void format_value(format_writer& out, void* value, format_spec const& spec);
-	void format_value(format_writer& out, void const* value, format_spec const& spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* value, string_view spec);
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* value, string_view spec);
 
 	/// Formatting for enumerations, using their numeric value.
-	template <typename EnumT>
-	auto format_value(format_writer& out, EnumT value, format_spec const& spec) -> std::enable_if_t<std::is_enum<EnumT>::value>
+	template <typename CharT, typename EnumT>
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, EnumT value, string_view spec) -> typename std::enable_if<std::is_enum<EnumT>::value>::type
 	{
-		format_value(out, std::underlying_type_t<EnumT>(value), spec);
+		format_value(out, typename std::underlying_type<EnumT>::type(value), spec);
 	}
 
-	template <typename PointerT>
-	auto format_value(format_writer& out, PointerT value, format_spec const& spec) -> std::enable_if_t<std::is_pointer<PointerT>::value>
+	template <typename CharT, typename PointerT>
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec) -> typename std::enable_if<std::is_pointer<PointerT>::value>::type
 	{
 		format_value(out, static_cast<void const*>(value), spec);
 	}
 
-	/// Cause a friendlier error message on unknown type.
-	template <typename T>
-	auto format_value(format_writer& writer, T const& value, format_spec const& spec) -> std::enable_if_t<!std::is_enum<T>::value && !std::is_pointer<T>::value> = delete;
-
 	/// @internal
 	namespace _detail
 	{
-		using FormatFunc = void(*)(format_writer&, void const*, format_spec const&);
+		template <typename CharT> using BasicFormatterThunk = void(FORMATXX_API *)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
+		using FormatterParameter = void const*;
 
-		template <typename T> struct wrap { static void fwd(format_writer& out, void const* ptr, format_spec const& spec) { format_value(out, *static_cast<T const*>(ptr), spec); } };
-		// #FIXME: char[N] types will horribly do the wrong thing here.
+		template <typename CharT, typename T>
+		void FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec)
+		{
+			format_value(out, *static_cast<T const*>(ptr), spec);
+		}
 
-		void format_impl(format_writer& out, string_view format, std::size_t count, FormatFunc const* funcs, void const** values);
+		template <typename CharT>
+		FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		template <typename CharT>
+		FORMATXX_PUBLIC basic_format_writer<CharT>&  FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+
 	}
 }
+
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);	
+extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API formatxx::parse_format_spec(basic_string_view<char> spec);
 
 /// Write the string format using the given parameters into a buffer.
 /// @param writer The write buffer that will receive the formatted text.
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
-template <typename... Args>
-void formatxx::format(format_writer& out, string_view format, Args&&... args)
+template <typename CharT, typename FormatT, typename... Args>
+formatxx::basic_format_writer<CharT>& formatxx::format(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args)
 {
-	void const* values[] = {std::addressof(args)..., nullptr};
-	constexpr _detail::FormatFunc funcs[] = {&_detail::wrap<std::decay_t<Args>>::fwd..., nullptr};
+	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
+	_detail::BasicFormatterThunk<CharT> const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
 
-	_detail::format_impl(out, format, sizeof...(Args), funcs, values);
+	return _detail::format_impl(writer, make_string_view(format), sizeof...(args), funcs, values);
 }
 
-/// Write the string format using the given parameters into a buffer.
-/// @param format The primary text and formatting controls to be written.
+/// Write the printf format using the given parameters into a buffer.
+/// @param writer The write buffer that will receive the formatted text.
+/// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
-/// @returns a formatted string.
-template <typename StringT = std::string, typename... Args>
-StringT formatxx::format(string_view format, Args&&... args)
+template <typename CharT, typename FormatT, typename... Args>
+formatxx::basic_format_writer<CharT>& formatxx::printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args)
 {
-	string_writer<StringT> tmp;
-	formatxx::format(tmp, format, args...);
-	return std::move(tmp).str();
-}
+	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
+	_detail::BasicFormatterThunk<CharT> const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
 
-template <std::size_t SizeN>
-void formatxx::fixed_writer<SizeN>::write(char const* nstr, std::size_t length)
-{
-	char const* end = nstr + length;
-	while (nstr != end && _length < SizeN-1)
-		_buffer[_length++] = *(nstr++);
-	_buffer[_length] = '\0';
-}
-
-template <std::size_t SizeN>
-void formatxx::fixed_writer<SizeN>::write(char const* zstr)
-{
-	while (_length < SizeN-1 && *zstr != '\0')
-		_buffer[_length++] = *(zstr++);
-	_buffer[_length] = '\0';
-}
-
-template <std::size_t SizeN, typename AllocatorT>
-formatxx::buffered_writer<SizeN, AllocatorT>::~buffered_writer()
-{
-	if (_buffer != _fixed)
-		this->deallocate(_buffer, _capacity);
-}
-
-template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::_grow(std::size_t amount)
-{
-	size_t const required = _length + amount + 1;
-	if (required > _capacity) // need space for NUL byte
-	{
-		size_t newCapacity = _capacity;
-		newCapacity += newCapacity >> 1; // grow by 50%
-		if (newCapacity < required) // ensure we get the space we asked for
-			newCapacity = required;
-
-		char* newBuffer = this->allocate(newCapacity);
-		std::memcpy(newBuffer, _buffer, _length + 1);
-
-		if (_buffer != _fixed)
-			this->deallocate(_buffer, _capacity);
-
-		_buffer = newBuffer;
-		_capacity = newCapacity;
-	}
-}
-
-template <std::size_t SizeN, typename AllocatorT>
-void formatxx::buffered_writer<SizeN, AllocatorT>::write(char const* nstr, std::size_t length)
-{
-	_grow(length);
-	std::memcpy(_buffer + _length, nstr, length);
-	_length += length;
-	_buffer[_length] = '\0';
+	return _detail::printf_impl(writer, make_string_view(format), sizeof...(args), funcs, values);
 }
 
 #endif // !defined(_guard_FORMATXX_H)

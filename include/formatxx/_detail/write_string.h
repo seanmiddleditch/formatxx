@@ -28,36 +28,28 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_STDFMT_H)
-#define _guard_STDFMT_H
+#if !defined(_guard_FORMATXX_DETAIL_WRITE_STRING_H)
+#define _guard_FORMATXX_DETAIL_WRITE_STRING_H
 #pragma once
 
-#include <string>
-#include <memory>
+namespace formatxx {
+namespace _detail {
+namespace {
 
-namespace formatxx
+template <typename CharT>
+void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT>)
 {
-	template <typename TraitsT, typename AllocatorT>
-	string_view make_view(std::basic_string<char, TraitsT, AllocatorT> const& string);
-
-	template <typename TraitsT, typename AllocatorT>
-	void format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec);
-
-	template <typename = std::string> class string_writer;
-	template <std::size_t, typename = std::allocator> class buffered_writer;
+	out.write(str);
 }
 
-template <typename TraitsT, typename AllocatorT>
-auto formatxx::make_view(std::basic_string<char, TraitsT, AllocatorT> const& string) -> string_view
+template <typename CharT>
+void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
 {
-	return string_view(string.c_str(), string.size());
+	write_string(out, {&ch, 1}, spec);
 }
 
-template <typename TraitsT, typename AllocatorT>
-void formatxx::format_value(format_writer& out, std::basic_string<char, TraitsT, AllocatorT> const& string, format_spec const& spec)
-{
-	format_value(out, string_view(string.c_str(), string.size()), spec);
-}
+} // anonymous namespace
+} // namespace _detail
+} // namespace formatxx
 
-
-#endif // defined(_guard_STDFMT_H)
+#endif // _guard_FORMATXX_DETAIL_WRITE_STRING_H

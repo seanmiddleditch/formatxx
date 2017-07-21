@@ -10,18 +10,19 @@ Sean Middleditch <sean@middleditch.us>
 
 formatxx is a modern C++ string formatting library. Its intended goals are to offer fast compilation
 times, minimal binary bloat, and reasonable speed. Final measurements of these goals are not yet
-available; the library is still in very early development.
+available; the library is still in preliminary development.
 
 The library supports writing primitive types as well as user-defined types into string formatting
 buffers. The libray has as little dependence on the C++ standard library as possible, which is
 intended to make it a very light header to include throughout a larger C++ project.
 
-The included string buffers allow for formatting into a `std::string`-compatible type, a fixed-
+
+The included string writers allow for formatting into a `std::string`-compatible type, a fixed-
 size buffer with guaranteed no allocations, or a buffer that initially has a fixed-size buffer
 but can grow to accomodate larger strings. The combination of these buffers allow for easy use
 in three major cases: quick creation of `std::string` values, use in assert handlers that
 cannot allocate, and use in log systems where allocation should be avoided but is allowed when
-necessary.
+necessary. Users can easily write their own buffer systems as well.
 
 The underlying method of operation of formatxx is to collect a list of arguments via variadic
 templates, lookup a `format_value` function for each of those arguments, and then pass the format
@@ -40,7 +41,7 @@ the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_s
 ```C++
 struct Foo { int value };
 	
-void format_value(formatxx::writer& out, Foo foo, formatxx::format_spec const& unused)
+void format_value(formatxx::writer& out, Foo foo, formatxx::string_view spec)
 {
 	format(out, "Foo({})", foo.value);
 }
@@ -52,6 +53,12 @@ int main()
 ```
 
 The above will print `testing Foo(123)` to standard output.
+
+The `spec` argument are additional options passed to the formatter. These can be
+interpreted by the `format_value` function anyway it sees fit. The
+`formatxx::parse_format_spec` function will return a `formatxx::format_spec` structure
+with various printf-style flags and options parsed, which are used by default for built-in
+format types like integers, floats, and strings.
 
 The `formatxx::format<StringT = std::string>(string_view, ...)` template can be used
 for formatting a series of arguments into a `std::string` or any compatible string type.
@@ -75,14 +82,14 @@ formatxx).
 ## History and Design Notes
 
 The library that motivated this author to write formatxx is the excellent
-[cppformat](https://cppformat.github.io/) by Victor Zverovich. cppformat does much of what this
-library does, has excellent runtime speed, and a responsive and talented author. Unfortunately,
-the library failed to meet a few needs that cppformat seeks to address: cppformat relies on
-some very heavy standard headers, its error handling mechanisms are limited to C++ exceptions
-(which cannot be used in some industries) or `abort`, the compilation time overhead of
-including its primary header is pretty large, and its support for formatting user-defined
-types relies on `std::ostream` wrappers (which are neither lightweight includes nor are they
-runtime efficient). For these reasons, research into formatxx began.
+[fmtlib](https://github.com/fmtlib/fmt) (previously cppformat) by Victor Zverovich and
+contributors. fmtlib does much of what this library does, has excellent runtime speed, and
+responsive and talented authors. Unfortunately at the time the cppformat library failed to
+meet a few needs that formatxx seeks to address: it had relied on some heavy standard headers,
+its error handling mechanisms were and are limited to C++ exceptions or `abort`, the
+compilation time overhead was large, and its support for formatting user-defined types relied
+on complicated and expensive mechanisms like `std::ostream` wrappers. For those reasons,
+research into formatxx began.
 
 The initial design did not use a `format_value` function for each type. Instead, an enumeration
 for the basic categories of primitives (`bool`, `signed long`, `double`, etc.) was computed via
@@ -91,11 +98,6 @@ be passed into the format function. Unfortunately, this added a lot of heavy tem
 to the header: the enum selection, a `std::tuple` for storing the converted inputs, etc. It
 also proved to be difficult to get good support for `format_value` functions for user-defined
 types with clean and concise error messages.
-
-The current internal implementation supports a home-grown format lightly modeled after than in
-cppformat. The intended syntax will allow positional and non-positional arguments, "standard"
-format specifiers (width, precision, alignment, etc.), and custom format specifiers for
-user-defined types.
 
 The current header relies on a function template wrapper around the real formatting functions.
 This is one template more than is desired that will lead to object file bloat, and for
@@ -107,20 +109,42 @@ formatters for those types and then make `format_value` be the template wrapper 
 expected to be more rarely used; it mostly exists to keep the same API between primitives and
 user-defined types for generic user code).
 
+Each `format_value` is responsible currently for its own formatting and even its own format
+specifier parsing. This is not necessarily ideal and may change in the long run to standardize
+better for at least things like alignment and padding.
+
+A particular limitation with `printf`-like features right now is that the argument array
+abstracts away integral arguments such that argument precision (e.g. `%.*s`) cannot be
+supported. A fix for this may be to bind a set of simple types instead of binding format
+functions directly to instead form a simple struct with unique identifiers for primitive types
+and only bind the format functions for user-provided types. This would allow the format code
+to parse out integral types efficiently, and possibly also better-optimize primitive formatting.
+
+To the point possible, we use modern C++ and only work with recent compilers. In some cases,
+we're held back to slightly older compilers. We currently target primarily Visual C++ 19.0 (2015)
+and Clang 3.9, and also test against GCC 6.3. The biggest feature lacking from the common
+denominator here that I'd like to use is `string_view`. For now, we have a custom one in the
+formatxx codebase, but it'd be great to switch to the standard one for compatibility once the
+compiler versions can be bumped in the project that drives formatxx.
+
+A final note is that floating point formatting currently bounces through `snprintf` which
+necessarily means that our floating point performance is slower and more complicated than
+calling the CRT directly. Writing a correct floating point formatter is incredibly complex. C++
+now includes helpers like `to_chars` but those might not expose as much functionality as we'd
+like.
+
 ## To Do
 
-- The remaining primitive types.
-- Basic format specifier support.
-- Custom format specifier support.
-- Detectable errors
+- Remaining primitive types
+- Remaining format specifiers and support, particularly for better `printf` syntax compatibility
+- Observable errors
   - Throw by default, with option/`std::nothrow` to disable?
-  - Return value to indicate if an error happened?
-- `printf` syntax option.
+  - Return value or error code?
 - Performance pass
-  - Remove `std::strlen` calls for C-style strings where not strictly needed.
-  - Efficient formatters in place of `snprintf` for most basic types.
-  - noexcept(true) where appropriate.
-- wchar/u8/u16/u32 string support? maybe.
+  - noexcept(true) where appropriate?
+  - Benchmarks
+- Unicode support
+  - u8/u16/u32?
 
 ## Copying
 

@@ -1,16 +1,22 @@
 language: cpp
 os:
   - linux
-sudo: required
+sudo: false
 dist: trusty
-before_install:
-  - sudo apt-get install software-properties-common --yes
-  - sudo add-apt-repository ppa:george-edison55/cmake-3.x --yes
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test --yes
-  - sudo apt-get update --yes
-install:
-  - sudo apt-get install gcc-5 g++-5 --yes
-  - sudo apt-get install cmake cmake-data --yes
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:adrozdoff/cmake'
+    - sourceline: 'ppa:ubuntu-toolchain-r/test'
+    packages:
+    - gcc-6
+    - g++-6
+    - cmake
+    - cmake-data
+    - clang
+env:
+  - TRAVIS_CXX=g++-6 TRAVIS_CC=gcc-6
+  - TRAVIS_CXX=clang++ TRAVIS_CC=clang
 script:
-  - export CXX=g++-5
-  - mkdir build && cd build && cmake .. && cmake --build .
+  - export CXX=$TRAVIS_CXX CC=$TRAVIS_CC
+  - mkdir build && cd build && cmake .. && cmake --build . && ctest
