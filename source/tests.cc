@@ -196,6 +196,8 @@ static void test_printf()
 
 	CHECK_PRINTF("123 abc", "%2$d %1$s", "abc", 123);
 	CHECK_PRINTF("def 456", "%2% %1%", 456, "def");
+
+	CHECK_PRINTF("  12", "%4i", 12);
 }
 
 static void test_strings()

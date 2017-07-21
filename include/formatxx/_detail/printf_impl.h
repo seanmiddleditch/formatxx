@@ -117,6 +117,8 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 				}
 				else
 				{
+					index = next_index;
+
 					// the decimal input had nothing to do with position; reset (FIXME: is that necessary?
 					// or does it cause us to just parse the format twice for no reason?)
 					iter = start;
