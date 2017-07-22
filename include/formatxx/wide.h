@@ -82,8 +82,8 @@ namespace formatxx
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view spec);
 }
 
-extern template FORMATXX_PUBLIC formatxx::basic_format_writer<wchar_t>& FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
-extern template FORMATXX_PUBLIC formatxx::basic_format_writer<wchar_t>& FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<wchar_t>& FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_args<wchar_t> args);
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<wchar_t>& FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_args<wchar_t> args);
 extern template FORMATXX_PUBLIC formatxx::basic_format_spec<wchar_t> FORMATXX_API formatxx::parse_format_spec(basic_string_view<wchar_t> spec);
 
 #endif // !defined(_guard_FORMATXX_WIDE_H)

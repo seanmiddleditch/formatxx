@@ -36,7 +36,7 @@ namespace formatxx {
 namespace _detail {
 
 template <typename CharT>
-FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
+FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 {
 	unsigned next_index = 0;
 
@@ -125,18 +125,10 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 				continue;
 			}
 
+			args.format_arg(out, index, spec);
+
 			// the iterrent text begin begins with the next character following the format directive's end
 			begin = iter = iter + 1;
-
-			// if the index is out of range, we have nothing to format
-			if (index >= count)
-			{
-				out.write(FormatTraits<CharT>::sErrOutOfRange);
-				continue;
-			}
-
-			// magic!
-			funcs[index](out, values[index], spec);
 
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;

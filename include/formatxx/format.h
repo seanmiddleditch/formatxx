@@ -64,6 +64,7 @@ namespace formatxx
 	template <typename CharT, typename TraitsT = std::char_traits<CharT>> class basic_string_view;
 	template <typename CharT> class basic_format_writer;
 	template <typename CharT> class basic_format_spec;
+	template <typename CharT> class basic_format_args;
 	
 	using string_view = basic_string_view<char>;
 	using format_writer = basic_format_writer<char>;
@@ -126,6 +127,31 @@ public:
 	formatxx::basic_string_view<CharT> extra;
 };
 
+/// Abstraction for a set of format arguments.
+template <typename CharT>
+class formatxx::basic_format_args
+{
+public:
+	using thunk_type = void(FORMATXX_API *)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
+	using size_type = std::size_t;
+
+	basic_format_args() = default;
+	explicit basic_format_args(size_type count, thunk_type const* thunks, void const* const* args) : _thunks(thunks), _args(args), _count(count) {}
+
+	void format_arg(basic_format_writer<CharT>& output, size_type index, basic_string_view<CharT> spec) const
+	{
+		if (index < _count)
+		{
+			_thunks[index](output, _args[index], spec);
+		}
+	}
+
+private:
+	thunk_type const* _thunks = nullptr;
+	void const* const* _args = nullptr;
+	size_type _count = 0;
+};
+
 namespace formatxx
 {
 	/// Default format helpers.
@@ -164,9 +190,6 @@ namespace formatxx
 	/// @internal
 	namespace _detail
 	{
-		template <typename CharT> using BasicFormatterThunk = void(FORMATXX_API *)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
-		using FormatterParameter = void const*;
-
 		template <typename CharT, typename T>
 		void FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec)
 		{
@@ -174,15 +197,15 @@ namespace formatxx
 		}
 
 		template <typename CharT>
-		FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
 		template <typename CharT>
-		FORMATXX_PUBLIC basic_format_writer<CharT>&  FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values);
+		FORMATXX_PUBLIC basic_format_writer<CharT>&  FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
 
 	}
 }
 
-extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);
-extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, std::size_t count, BasicFormatterThunk<char> const* funcs, FormatterParameter const* values);	
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+extern template FORMATXX_PUBLIC formatxx::basic_format_writer<char>& FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);	
 extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API formatxx::parse_format_spec(basic_string_view<char> spec);
 
 /// Write the string format using the given parameters into a buffer.
@@ -192,10 +215,10 @@ extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API f
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::basic_format_writer<CharT>& formatxx::format(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args)
 {
-	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
-	_detail::BasicFormatterThunk<CharT> const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
+	void const* const values[] = {std::addressof(args)..., nullptr};
+	typename basic_format_args<CharT>::thunk_type const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
 
-	return _detail::format_impl(writer, make_string_view(format), sizeof...(args), funcs, values);
+	return _detail::format_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -205,10 +228,10 @@ formatxx::basic_format_writer<CharT>& formatxx::format(basic_format_writer<CharT
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::basic_format_writer<CharT>& formatxx::printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const&... args)
 {
-	_detail::FormatterParameter const values[] = {std::addressof(args)..., nullptr};
-	_detail::BasicFormatterThunk<CharT> const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
+	void const* const values[] = {std::addressof(args)..., nullptr};
+	typename basic_format_args<CharT>::thunk_type const funcs[] = {&_detail::format_value_thunk<CharT, Args>..., nullptr};
 
-	return _detail::printf_impl(writer, make_string_view(format), sizeof...(args), funcs, values);
+	return _detail::printf_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
 }
 
 #endif // !defined(_guard_FORMATXX_H)
