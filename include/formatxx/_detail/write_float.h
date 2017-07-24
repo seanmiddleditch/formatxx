@@ -43,28 +43,37 @@ void write_float_helper(basic_format_writer<CharT>& out, double value, basic_str
 {
 	auto const spec = parse_format_spec(spec_string);
 
-	CharT fmt_buf[9];
+	CharT fmt_buf[10];
 	CharT* fmt_ptr = fmt_buf;
 
 	*fmt_ptr++ = '%';
 
-	if (spec.sign)
+	if (spec.prepend_sign)
 	{
-		*fmt_ptr++ = spec.sign;
+		*fmt_ptr++ = FormatTraits<CharT>::cPlus;
 	}
-	if (spec.pad == '0')
+	else if (spec.prepend_space)
 	{
-		*fmt_ptr++ = spec.pad;
+		*fmt_ptr++ = FormatTraits<CharT>::cSpace;
 	}
-	if (spec.type_prefix)
+
+	if (spec.left_justify)
+	{
+		*fmt_ptr++ = '-';
+	}
+	if (spec.leading_zeroes)
+	{
+		*fmt_ptr++ = '0';
+	}
+	if (spec.alternate_form)
 	{
 		*fmt_ptr++ = FormatTraits<CharT>::cHash;
 	}
-	if (spec.width)
+	if (spec.has_width)
 	{
 		*fmt_ptr++ = '*';
 	}
-	if (spec.precision)
+	if (spec.has_precision)
 	{
 		*fmt_ptr++ = '.';
 		*fmt_ptr++ = '*';
@@ -92,15 +101,15 @@ void write_float_helper(basic_format_writer<CharT>& out, double value, basic_str
 	CharT buf[1078];
 	int len = 0;
 	
-	if (spec.width && spec.precision)
+	if (spec.has_width && spec.has_precision)
 	{
 		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, spec.precision, value);
 	}
-	else if (spec.width)
+	else if (spec.has_width)
 	{
 		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, value);
 	}
-	else if (spec.precision)
+	else if (spec.has_precision)
 	{
 		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.precision, value);
 	}

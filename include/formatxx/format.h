@@ -128,13 +128,17 @@ template <typename CharT>
 class formatxx::basic_format_spec
 {
 public:
+	CharT const* remaining = nullptr;
 	unsigned width = 0;
 	unsigned precision = 0;
 	CharT code = 0;
-	CharT sign = 0;
-	CharT pad = 0; // 0 means no padding
-	bool type_prefix = false; // print leading 0x or appropriate type
-	formatxx::basic_string_view<CharT> extra;
+	bool has_width = false;
+	bool has_precision = false;
+	bool left_justify = false;
+	bool prepend_sign = false;
+	bool prepend_space = false;
+	bool alternate_form = false;
+	bool leading_zeroes = false;
 };
 
 /// Abstraction for a set of format arguments.

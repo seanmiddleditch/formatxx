@@ -32,6 +32,7 @@
 #define _guard_FORMATXX_DETAIL_WRITE_INTEGER_H
 #pragma once
 
+#include "format_util.h"
 #include <limits>
 
 namespace formatxx {
@@ -53,39 +54,38 @@ unsigned write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec
 
 	// add sign
 	if (negative)
+	{
 		*(prefix++) = FormatTraits<CharT>::cMinus;
-	else if (spec.sign == FormatTraits<CharT>::cPlus || spec.sign == FormatTraits<CharT>::cSpace)
-		*(prefix++) = spec.sign;
+	}
+	else if (spec.prepend_sign)
+	{
+		*(prefix++) = FormatTraits<CharT>::cPlus;
+	}
+	else if (spec.prepend_space)
+	{
+		*(prefix++) = FormatTraits<CharT>::cSpace;
+	}
 
 	// add numeric type prefix
-	if (spec.type_prefix)
+	if (spec.alternate_form)
 	{
 		*(prefix++) = FormatTraits<CharT>::to_digit(0);
+		// FIXME: misbehaves for code 'i'
 		*(prefix++) = spec.code ? spec.code : 'd';
 	}
 
 	// write the prefix out, if any
 	if (prefix != prefix_buffer)
+	{
 		out.write({prefix_buffer, prefix});
+	}
 
 	// returns length of prefix written
 	return static_cast<unsigned>(prefix - prefix_buffer);
 }
 
-template <typename CharT>
-void write_padded(basic_format_writer<CharT>& out, basic_string_view<CharT> digits, unsigned padding, CharT pad)
-{
-	if (padding > digits.size())
-	{
-		// FIXME: not at all efficient
-		for (std::size_t i = digits.size(); i < padding; ++i)
-			out.write({&pad, 1});
-	}
-	out.write(digits);
-}
-
 template <typename CharT, typename T>
-void write_decimal(basic_format_writer<CharT>& out, T value, unsigned padding, CharT pad)
+void write_decimal(basic_format_writer<CharT>& out, T value, std::size_t padding, CharT pad)
 {
 	// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
@@ -126,7 +126,7 @@ void write_decimal(basic_format_writer<CharT>& out, T value, unsigned padding, C
 		*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
 	}
 
-	write_padded(out, {end, buffer_size - (end - buffer)}, padding, pad);
+	write_padded_align_right(out, {end, buffer_size - (end - buffer)}, pad, padding);
 }
 
 template <typename CharT, typename T>
@@ -193,7 +193,7 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	// format any prefix onto the number
 	unsigned const prefix_len = write_integer_prefix(out, spec, /*negative=*/raw < 0);
 
-	unsigned const padding = spec.width != 0 ? spec.width : spec.precision > prefix_len ? spec.precision - prefix_len : 0;
+	std::size_t const padding = spec.has_width ? spec.width : (spec.has_precision && spec.precision > prefix_len) ? (spec.precision - prefix_len) : 0;
 	
 	switch (spec.code)
 	{
@@ -202,7 +202,7 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	case 'i':
 	case 'd':
 	case 'D':
-		write_decimal<CharT>(out, value, padding, spec.pad ? spec.pad : ' ');
+		write_decimal<CharT>(out, value, padding, spec.leading_zeroes ? '0' : ' ');
 		break;
 	case 'x':
 		write_hexadecimal(out, value, /*lower=*/true);

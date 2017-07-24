@@ -28,48 +28,65 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_FORMATXX_DETAIL_WRITE_STRING_H)
-#define _guard_FORMATXX_DETAIL_WRITE_STRING_H
+#if !defined(_guard_FORMATXX_DETAIL_FORMAT_UTIL_H)
+#define _guard_FORMATXX_DETAIL_FORMAT_UTIL_H
 #pragma once
-
-#include "format_util.h"
 
 namespace formatxx {
 namespace _detail {
-namespace {
 
 template <typename CharT>
-void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT> spec_string)
+void write_padding(basic_format_writer<CharT>& out, CharT pad_char, std::size_t count)
 {
-	auto const spec = parse_format_spec(spec_string);
-
-	if (spec.has_precision)
-	{
-		str = trim_string(str, spec.precision);
-	}
-
-	if (!spec.has_width && !spec.left_justify)
-	{
-		out.write(str);
-	}
-	else if (spec.has_width && !spec.left_justify)
-	{
-		write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
-	}
-	else
-	{
-		write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
-	}
+    // FIXME: this is not even remotely the most efficient way to do this
+    for (std::size_t i = 0; i != count; ++i)
+    {
+        out.write({&pad_char, 1});
+    }
 }
 
 template <typename CharT>
-void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
+void write_padded_align_right(basic_format_writer<CharT>& out, basic_string_view<CharT> string, CharT pad_char, std::size_t count)
 {
-	write_string(out, {&ch, 1}, spec);
+    if (count > string.size())
+    {
+        write_padding(out, pad_char, count - string.size());
+    }
+
+    out.write(string);
 }
 
-} // anonymous namespace
+template <typename CharT>
+void write_padded_align_left(basic_format_writer<CharT>& out, basic_string_view<CharT> string, CharT pad_char, std::size_t count)
+{
+    out.write(string);
+
+    if (count > string.size())
+    {
+        write_padding(out, pad_char, count - string.size());
+    }
+}
+
+template <typename CharT>
+auto trim_string(basic_string_view<CharT> string, std::size_t max_size) -> basic_string_view<CharT>
+{
+    return string.size() < max_size ? string : basic_string_view<CharT>(string.data(), max_size);
+}
+
+template <typename CharT>
+bool string_contains(basic_string_view<CharT> haystack, CharT needle)
+{
+	for (CharT const c : haystack)
+	{
+		if (c == needle)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+      
 } // namespace _detail
 } // namespace formatxx
 
-#endif // _guard_FORMATXX_DETAIL_WRITE_STRING_H
+#endif // _guard_FORMATXX_DETAIL_FORMAT_UTIL_H

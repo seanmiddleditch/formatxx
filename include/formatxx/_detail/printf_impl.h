@@ -128,9 +128,8 @@ FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>&
 				// parse forward through the specification
 				// FIXME: we just want to find the end of the input, a full format parse may be overkill
 				CharT const* const spec_begin = iter;
-				basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
-				CharT const* const spec_end = spec.extra.begin();
-				spec_string = {spec_begin, spec_end};
+				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
+				spec_string = {spec_begin, spec.remaining};
 				if (spec.code == CharT(0))
 				{
 					// invalid spec
@@ -139,7 +138,7 @@ FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>&
 				}
 
 				// prepare for next round
-				begin = iter = spec_end;
+				begin = iter = spec.remaining;
 			}
 
 			result_code const arg_result = args.format_arg(out, index, spec_string);
