@@ -32,16 +32,43 @@
 #define _guard_FORMATXX_DETAIL_WRITE_FLOAT_H
 #pragma once
 
+#include <cstdarg>
+
 namespace formatxx {
 namespace _detail {
 namespace {
 
-template <typename CharT, typename ValueT, typename FormatFuncT>
-void write_float_helper(basic_format_writer<CharT>& out, ValueT value, basic_string_view<CharT> spec_string, FormatFuncT const& formatter)
+template <typename CharT, typename FormatFuncT>
+void write_float_helper(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string, FormatFuncT const& formatter)
 {
-	CharT fmt[3] = {'%', 'f', 0};
-
 	auto const spec = parse_format_spec(spec_string);
+
+	CharT fmt_buf[9];
+	CharT* fmt_ptr = fmt_buf;
+
+	*fmt_ptr++ = '%';
+
+	if (spec.sign)
+	{
+		*fmt_ptr++ = spec.sign;
+	}
+	if (spec.pad == '0')
+	{
+		*fmt_ptr++ = spec.pad;
+	}
+	if (spec.type_prefix)
+	{
+		*fmt_ptr++ = FormatTraits<CharT>::cHash;
+	}
+	if (spec.width)
+	{
+		*fmt_ptr++ = '*';
+	}
+	if (spec.precision)
+	{
+		*fmt_ptr++ = '.';
+		*fmt_ptr++ = '*';
+	}
 
 	switch (spec.code)
 	{
@@ -53,29 +80,65 @@ void write_float_helper(basic_format_writer<CharT>& out, ValueT value, basic_str
 	case 'F':
 	case 'g':
 	case 'G':
-		fmt[1] = spec.code;
+		*fmt_ptr++ = spec.code;
 		break;
 	default:
-		// leave default
+		*fmt_ptr++ = 'f';
 		break;
 	}
 
+	*fmt_ptr = 0; // NUL terminate format buffer
+
 	CharT buf[1078];
-	int len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt, value);
+	int len = 0;
+	
+	if (spec.width && spec.precision)
+	{
+		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, spec.precision, value);
+	}
+	else if (spec.width)
+	{
+		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, value);
+	}
+	else if (spec.precision)
+	{
+		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.precision, value);
+	}
+	else
+	{
+		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, value);
+	}
+
 	if (len > 0)
+	{
 		out.write({buf, std::size_t(len)});
+	}
 }
 
 template <typename ValueT>
 void write_float(basic_format_writer<char>& out, ValueT value, basic_string_view<char> spec)
 {
-	write_float_helper(out, value, spec, [](char* buf, int len, char const* fmt, ValueT value){ return std::snprintf(buf, len, fmt, value); });
+	write_float_helper(out, value, spec, [](char* buf, int len, char const* fmt, ...)
+	{
+		va_list va;
+		va_start(va, fmt);
+		int const rs = std::vsnprintf(buf, len, fmt, va);
+		va_end(va);
+		return rs;
+	});
 }
 
 template <typename ValueT>
 void write_float(basic_format_writer<wchar_t>& out, ValueT value, basic_string_view<wchar_t> spec)
 {
-	write_float_helper(out, value, spec, [](wchar_t* buf, int len, wchar_t const* fmt, ValueT value){ return std::swprintf(buf, len, fmt, value); });
+	write_float_helper(out, value, spec, [](wchar_t* buf, int len, wchar_t const* fmt, ...)
+	{
+		va_list va;
+		va_start(va, fmt);
+		int const rs = std::vswprintf(buf, len, fmt, va);
+		va_end(va);
+		return rs;
+	});
 }
 
 
