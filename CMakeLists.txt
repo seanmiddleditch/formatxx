@@ -16,7 +16,9 @@ set(FORMATXX_PRIVATE_HEADERS
 	include/formatxx/_detail/format_impl.h
     include/formatxx/_detail/printf_impl.h
     include/formatxx/_detail/format_traits.h
-    include/formatxx/_detail/write_integer.h
+	include/formatxx/_detail/write_integer.h
+	include/formatxx/_detail/write_float.h
+	include/formatxx/_detail/write_string.h
 )
 set(FORMATXX_SOURCES
 	source/format.cc
