@@ -232,6 +232,9 @@ static void test_strings()
 	CHECK_FORMAT("abcdef", "{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef");
 
 	CHECK_FORMAT("abc", std::string("a{}c"), "b");
+
+	CHECK_FORMAT("    test", "{:8s}", "test");
+	CHECK_FORMAT("test    ;", "{:-8s};", "test");
 }
 
 static void test_wide_strings()

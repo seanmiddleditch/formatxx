@@ -37,9 +37,34 @@ namespace _detail {
 namespace {
 
 template <typename CharT>
-void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT>)
+void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT> spec_string)
 {
+	auto const spec = parse_format_spec(spec_string);
+
+	if (spec.precision && str.size() > spec.precision)
+	{
+		str = basic_string_view<CharT>(str.data(), spec.precision);
+	}
+
+	if (spec.sign != FormatTraits<CharT>::cMinus && spec.width > str.size())
+	{
+		CharT const space = FormatTraits<CharT>::cSpace;
+		for (unsigned i = str.size(); i < spec.width; ++i)
+		{
+			out.write({&space, 1});
+		}
+	}
+
 	out.write(str);
+
+	if (spec.sign == FormatTraits<CharT>::cMinus && spec.width > str.size())
+	{
+		CharT const space = FormatTraits<CharT>::cSpace;
+		for (unsigned i = str.size(); i < spec.width; ++i)
+		{
+			out.write({&space, 1});
+		}
+	}
 }
 
 template <typename CharT>
