@@ -36,9 +36,10 @@ namespace formatxx {
 namespace _detail {
 
 template <typename CharT>
-FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
+FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 {
 	unsigned next_index = 0;
+	result_code result = result_code::success;
 
 	CharT const* begin = format.data();
 	CharT const* const end = begin + format.size();
@@ -63,7 +64,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -83,7 +84,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			// if we hit the end of the string, we have an incomplete format
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -109,7 +110,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 				if (iter == end)
 				{
 					// invalid spec
-					out.write(FormatTraits<CharT>::sErrBadFormat);
+					result = result_code::malformed_input;
 					break;
 				}
 
@@ -120,12 +121,16 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			if (*iter != FormatTraits<CharT>::cFormatEnd)
 			{
 				// we have something besides a number, no bueno
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				begin = iter; // make sure we're set up for the next begin, which starts at this unknown character
 				continue;
 			}
 
-			args.format_arg(out, index, spec);
+			result_code const arg_result = args.format_arg(out, index, spec);
+			if (arg_result != result_code::success)
+			{
+				result = arg_result;
+			}
 
 			// the iterrent text begin begins with the next character following the format directive's end
 			begin = iter = iter + 1;
@@ -141,7 +146,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 		out.write({begin, iter});
 	}
 
-	return out;
+	return result;
 }
 
 } // namespace _detail

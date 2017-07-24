@@ -55,11 +55,6 @@ template <> struct FormatTraits<char>
 	static constexpr char cPrintfSpec = '%';
 	static constexpr char cPrintfIndex = '$';
 
-	// string_view over string literals is safe on all platforms for which I'm aware
-	static constexpr string_view sErrBadFormat{"#BADF", 5};
-	static constexpr string_view sErrIncomplete{"#INCL", 5};
-	static constexpr string_view sErrOutOfRange{"#RNGE", 5};
-
 	static constexpr string_view sTrue{"true", 4};
 	static constexpr string_view sFalse{"false", 5};
 
@@ -81,9 +76,6 @@ template <> struct FormatTraits<char>
 	static constexpr char const sHexadecimalUpper[] = "0123456789ABCDEF";
 };
 
-constexpr string_view FormatTraits<char>::sErrBadFormat;
-constexpr string_view FormatTraits<char>::sErrIncomplete;
-constexpr string_view FormatTraits<char>::sErrOutOfRange;
 constexpr string_view FormatTraits<char>::sTrue;
 constexpr string_view FormatTraits<char>::sFalse;
 constexpr string_view FormatTraits<char>::sPrintfSpecifiers;
@@ -109,11 +101,6 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wchar_t cPrintfSpec = L'%';
 	static constexpr wchar_t cPrintfIndex = L'$';
 
-	// string_view over string literals is safe on all platforms for which I'm aware
-	static constexpr wstring_view sErrBadFormat{L"#BADF", 5};
-	static constexpr wstring_view sErrIncomplete{L"#INCL", 5};
-	static constexpr wstring_view sErrOutOfRange{L"#RNGE", 5};
-
 	static constexpr wstring_view sTrue{L"true", 4};
 	static constexpr wstring_view sFalse{L"false", 5};
 
@@ -135,9 +122,6 @@ template <> struct FormatTraits<wchar_t>
 	static constexpr wchar_t const sHexadecimalUpper[] = L"0123456789ABCDEF";
 };
 
-constexpr wstring_view FormatTraits<wchar_t>::sErrBadFormat;
-constexpr wstring_view FormatTraits<wchar_t>::sErrIncomplete;
-constexpr wstring_view FormatTraits<wchar_t>::sErrOutOfRange;
 constexpr wstring_view FormatTraits<wchar_t>::sTrue;
 constexpr wstring_view FormatTraits<wchar_t>::sFalse;
 constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;

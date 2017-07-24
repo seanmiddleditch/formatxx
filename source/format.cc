@@ -72,7 +72,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value,
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* ptr, string_view spec) { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* ptr, string_view spec) { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
 
-template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
-template FORMATXX_PUBLIC basic_format_writer<char>& FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
 template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>);
 } // namespace formatxx

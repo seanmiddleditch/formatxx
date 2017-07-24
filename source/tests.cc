@@ -57,6 +57,19 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 	return std::move(writer).str();
 }
 
+static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
+{
+	switch (result)
+	{
+	case formatxx::result_code::success: os << "success"; break;
+	case formatxx::result_code::out_of_range: os << "out_of_range"; break;
+	case formatxx::result_code::malformed_input: os << "malformed_input"; break;
+	case formatxx::result_code::out_of_space: os << "out_of_space"; break;
+	default: os << "unknown"; break;
+	}
+	return os;
+}
+
 #define CHECK_FORMAT_HELPER(out, expected, expr) \
 	do{ \
 		++formatxx_tests; \
@@ -75,6 +88,9 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 
 #define CHECK_WFORMAT(expected, ...) \
 	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::format_string<std::wstring>(__VA_ARGS__))
+
+#define CHECK_FORMAT_RESULT(expected, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::format(formatxx::string_writer(), __VA_ARGS__))
 
 #define CHECK_PRINTF(expected, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::printf_string<std::string>(__VA_ARGS__))
@@ -243,6 +259,14 @@ static void test_pointers()
 	CHECK_FORMAT("fefefefe", "{:x}", iptr);
 }
 
+static void test_errors()
+{
+	CHECK_FORMAT_RESULT(formatxx::result_code::success, "{} {:4d} {:3.5f}", "abc", 9, 12.57);
+	CHECK_FORMAT_RESULT(formatxx::result_code::malformed_input, "{} {:4d", "abc", 9);
+	CHECK_FORMAT_RESULT(formatxx::result_code::success, "{0} {1}", "abc", 9);
+	CHECK_FORMAT_RESULT(formatxx::result_code::out_of_range, "{0} {1} {5}", "abc", 9, 12.57);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -263,6 +287,7 @@ int FORMATXX_MAIN_DECL main()
 	test_wide_strings();
 	test_bool();
 	test_pointers();
+	test_errors();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;
