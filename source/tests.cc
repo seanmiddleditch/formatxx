@@ -188,7 +188,6 @@ static void test_integers()
 	CHECK_FORMAT("+0001234", "{:+.7d}", 1234);
 }
 
-// FIXME: currently platform-dependent due to sprintf dependence
 static void test_floats()
 {
 	CHECK_FORMAT("123987.456000", "{}", 123987.456);
@@ -204,6 +203,7 @@ static void test_floats()
 	CHECK_FORMAT("+12.34", "{:+06.2}", 12.34);
 	CHECK_FORMAT("12.34 ;", "{:-6.2};", 12.34);
 
+	// assumes IEEE754 single- and double-precision types
 	CHECK_FORMAT("340282346638528859811704183484516925440.000000", "{}", std::numeric_limits<float>::max());
 	CHECK_FORMAT("17976931348623157081452742373170435679807056752584499659891747680315"
 		"72607800285387605895586327668781715404589535143824642343213268894641827684675"
