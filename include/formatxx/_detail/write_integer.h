@@ -55,8 +55,7 @@ struct prefix_helper
 		// add numeric type prefix (2)
 		if (spec.alternate_form)
 		{
-			// FIXME: misbehaves for code 'i', or any non-standard one
-			*--ptr = spec.code ? spec.code : 'd';
+			*--ptr = spec.code;
 			*--ptr = FormatTraits<CharT>::to_digit(0);
 		}
 
@@ -229,7 +228,7 @@ void write_integer_helper(basic_format_writer<CharT>& out, ValueT raw_value, bas
 	else
 	{
 		std::size_t const output_length = prefix.size() + result.size();
-		std::size_t const padding = spec.has_width && spec.width > output_length ? spec.width - output_length : 0;
+		std::size_t const padding = spec.width > output_length ? spec.width - output_length : 0;
 
 		if (spec.left_justify)
 		{
@@ -262,6 +261,8 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	default:
 	case 0:
 	case 'i':
+		spec.code = 'd'; // code is used literally in alt-form, and 'd' is decimal code
+		return write_integer_helper<decimal_helper>(out, raw, spec);
 	case 'd':
 	case 'D':
 		return write_integer_helper<decimal_helper>(out, raw, spec);
