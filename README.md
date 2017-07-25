@@ -41,7 +41,7 @@ the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_s
 ```C++
 struct Foo { int value };
 	
-void format_value(formatxx::writer& out, Foo foo, formatxx::string_view spec)
+void format_value(formatxx::writer& out, Foo const& foo, formatxx::string_view spec)
 {
 	format(out, "Foo({})", foo.value);
 }
@@ -135,16 +135,12 @@ like.
 
 ## To Do
 
-- Remaining primitive types
-- Remaining format specifiers and support, particularly for better `printf` syntax compatibility
-- Observable errors
-  - Throw by default, with option/`std::nothrow` to disable?
-  - Return value or error code?
 - Performance pass
   - noexcept(true) where appropriate?
   - Benchmarks
-- Unicode support
+- Correctness to wide/unicode char support
   - u8/u16/u32?
+  - maybe just remove?
 
 ## Copying
 
