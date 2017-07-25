@@ -57,6 +57,23 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 	return std::move(writer).str();
 }
 
+template <typename... Args>
+static std::string printf_string(char const* format, Args const&... args)
+{
+	char buffer[2014];
+	int const len = std::snprintf(buffer, sizeof(buffer), format, args...);
+	return std::string(buffer, len);
+}
+
+template <typename... Args>
+static std::wstring wprintf_string(wchar_t const* format, Args const&... args)
+{
+	wchar_t buffer[2014];
+	int const len = std::wsprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, args...);
+	return std::wstring(buffer, len);
+}
+
+
 static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
 {
 	switch (result)
@@ -107,6 +124,9 @@ static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
 #define CHECK_FORMAT_WRITER(expected, writer, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), format_into<char>((writer), __VA_ARGS__))
 
+#define CHECK_PRINTF_EQUAL(...) \
+	CHECK_FORMAT_HELPER(std::cerr, printf_string(__VA_ARGS__), formatxx::printf_string<std::string>(__VA_ARGS__))
+
 static void test_fixed()
 {
 	// can hold 9 characters and a NUL byte
@@ -151,7 +171,7 @@ static void test_integers()
 	CHECK_FORMAT("0xff", "{:#x}", 255);
 	CHECK_FORMAT("0x100", "{:#x}", 256);
 	CHECK_FORMAT("0X11", "{:#X}", 17);
-	CHECK_FORMAT("-0X11", "{:-#X}", -17);
+	CHECK_FORMAT("0XFFFFFFEF", "{:-#X}", -17);
 
 	CHECK_FORMAT("101", "{:b}", 5);
 	CHECK_FORMAT("-10", "{:b}", -2);
@@ -165,9 +185,9 @@ static void test_integers()
 	CHECK_FORMAT("1234   ;", "{:-7d};", 1234);
 	CHECK_FORMAT("0001234", "{:07d}", 1234);
 	CHECK_FORMAT("1234", "{:2d}", 1234);
-	CHECK_FORMAT("+   1234", "{:+7d}", 1234);
-	CHECK_FORMAT("+0001234", "{:+07d}", 1234);
-	CHECK_FORMAT("+001234", "{:+.7d}", 1234);
+	CHECK_FORMAT("  +1234", "{:+7d}", 1234);
+	CHECK_FORMAT("+001234", "{:+07d}", 1234);
+	CHECK_FORMAT("+0001234", "{:+.7d}", 1234);
 }
 
 // FIXME: currently platform-dependent due to sprintf dependence
@@ -230,6 +250,38 @@ static void test_printf()
 	CHECK_PRINTF("def 456", "%2% %1%", 456, "def");
 
 	CHECK_PRINTF("  12", "%4i", 12);
+
+	CHECK_PRINTF_EQUAL("%7d", 1234);
+	CHECK_PRINTF_EQUAL("%-7d", 1234);
+	CHECK_PRINTF_EQUAL("%+7d", 1234);
+	CHECK_PRINTF_EQUAL("%+07d", 1234);
+	CHECK_PRINTF_EQUAL("%-07d", 1234);
+	CHECK_PRINTF_EQUAL("% 7d", 1234);
+	CHECK_PRINTF_EQUAL("% +7d", 1234);
+	CHECK_PRINTF_EQUAL("% +-7d;", 1234);
+	CHECK_PRINTF_EQUAL("%.7d", 1234);
+	CHECK_PRINTF_EQUAL("%-.7d;", 1234);
+	CHECK_PRINTF_EQUAL("%#7x", 1234);
+	CHECK_PRINTF_EQUAL("%#+7x", 1234);
+	CHECK_PRINTF_EQUAL("%#07x", 1234);
+	CHECK_PRINTF_EQUAL("%-#07x;", 1234);
+	CHECK_PRINTF_EQUAL("%+#07x", 1234);
+
+	CHECK_PRINTF_EQUAL("%7d", -1234);
+	CHECK_PRINTF_EQUAL("%-7d", -1234);
+	CHECK_PRINTF_EQUAL("%+7d", -1234);
+	CHECK_PRINTF_EQUAL("%+07d", -1234);
+	CHECK_PRINTF_EQUAL("%-07d", -1234);
+	CHECK_PRINTF_EQUAL("% 7d", -1234);
+	CHECK_PRINTF_EQUAL("% +7d", -1234);
+	CHECK_PRINTF_EQUAL("% +-7d;", -1234);
+	CHECK_PRINTF_EQUAL("%.7d", -1234);
+	CHECK_PRINTF_EQUAL("%-.7d;", -1234);
+	CHECK_PRINTF_EQUAL("%#7x", -1234);
+	CHECK_PRINTF_EQUAL("%#+7x", -1234);
+	CHECK_PRINTF_EQUAL("%#07x", -1234);
+	CHECK_PRINTF_EQUAL("%-#07x;", -1234);
+	CHECK_PRINTF_EQUAL("%+#07x", -1234);
 }
 
 static void test_strings()
