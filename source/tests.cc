@@ -129,6 +129,11 @@ static void test_integers()
 	CHECK_FORMAT("+1", "{:+}", +1);
 	CHECK_FORMAT(" 1", "{: }", +1);
 
+	// should all be identical - https://stackoverflow.com/questions/15333023/are-zero-padded-width-and-precision-the-same-for-integer-arguments-to-printf
+	CHECK_FORMAT("000004D2", "{:08X}", 1234);
+	CHECK_FORMAT("000004D2", "{:.8X}", 1234);
+	CHECK_FORMAT("000004D2", "{:.08X}", 1234);
+
 	CHECK_FORMAT("127", "{}", std::numeric_limits<std::int8_t>::max());
 	CHECK_FORMAT("32767", "{}", std::numeric_limits<std::int16_t>::max());
 	CHECK_FORMAT("2147483647", "{}", std::numeric_limits<std::int32_t>::max());
@@ -152,16 +157,17 @@ static void test_integers()
 	CHECK_FORMAT("-10", "{:b}", -2);
 	CHECK_FORMAT("-0b10", "{:#b}", -2);
 
+	CHECK_FORMAT("11", "{:o}", 9);
+	CHECK_FORMAT("-33", "{:o}", -27);
+	CHECK_FORMAT("-0o10", "{:#o}", -8);
+
 	CHECK_FORMAT("   1234", "{:7d}", 1234);
 	CHECK_FORMAT("1234   ;", "{:-7d};", 1234);
 	CHECK_FORMAT("0001234", "{:07d}", 1234);
 	CHECK_FORMAT("1234", "{:2d}", 1234);
 	CHECK_FORMAT("+   1234", "{:+7d}", 1234);
 	CHECK_FORMAT("+0001234", "{:+07d}", 1234);
-	CHECK_FORMAT("+  1234", "{:+.7d}", 1234);
-
-	// leading zeroes are is ignored if precision is specified
-	CHECK_FORMAT("   1234", "{:0.7d}", 1234);
+	CHECK_FORMAT("+001234", "{:+.7d}", 1234);
 }
 
 // FIXME: currently platform-dependent due to sprintf dependence
@@ -238,6 +244,8 @@ static void test_strings()
 
 	CHECK_FORMAT("    test", "{:8s}", "test");
 	CHECK_FORMAT("test    ;", "{:-8s};", "test");
+
+	CHECK_FORMAT("value   00042", "{:-8}{:05}", "value", 42);
 }
 
 static void test_wide_strings()

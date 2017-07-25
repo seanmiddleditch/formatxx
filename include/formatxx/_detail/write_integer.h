@@ -37,7 +37,6 @@
 
 namespace formatxx {
 namespace _detail {
-namespace {
 
 template <typename CharT> unsigned write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec<CharT> const& spec, bool negative);
 template <typename CharT, typename T> void write_decimal(basic_format_writer<CharT>& out, T value, unsigned padding, CharT pad);
@@ -84,23 +83,23 @@ unsigned write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec
 	return static_cast<unsigned>(prefix - prefix_buffer);
 }
 
-template <typename CharT, typename T>
 struct decimal_helper
 {
 	// buffer must be one larger than digits10, as that trait is the maximum number of 
 	// base-10 digits represented by the type in their entirety, e.g. 8-bits can store
 	// 99 but not 999, so its digits10 is 2, even though the value 255 could be stored
 	// and has 3 digits.
-	static constexpr std::size_t buffer_size = std::numeric_limits<T>::digits10 + 1;
-	using buffer_t = CharT[buffer_size];
+	template <typename UnsignedT>
+	static constexpr std::size_t buffer_size = std::numeric_limits<UnsignedT>::digits10 + 1;
 
-	static basic_string_view<CharT> write(buffer_t& buffer, T value)
+	template <typename CharT, typename UnsignedT>
+	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
 		// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
 		CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
 
-		CharT* end = buffer + buffer_size;
+		CharT* end = buffer + buffer_size<UnsignedT>;
 
 		// work on every two decimal digits (groups of 100). notes taken from cppformat,
 		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
@@ -129,78 +128,109 @@ struct decimal_helper
 			*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
 		}
 
-		return {end, buffer_size - (end - buffer)};
+		return {end, buffer_size<UnsignedT> - (end - buffer)};
 	}
 };
 
-template <typename CharT, typename T>
-void write_hexadecimal(basic_format_writer<CharT>& out, T value, bool lower)
+template <bool LowerCase>
+struct hexadecimal_helper
 {
-	CharT buffer[2 * sizeof(value)]; // 2 hex digits per octet
-	CharT* end = buffer + sizeof(buffer);
+ 	// 2 hex digits per octet
+	template <typename UnsignedT>
+	static constexpr std::size_t buffer_size = 2 * sizeof(UnsignedT);
 
-	CharT const* const alphabet = lower ?
-		FormatTraits<CharT>::sHexadecimalLower :
-		FormatTraits<CharT>::sHexadecimalUpper;
-
-	do
+	template <typename CharT, typename UnsignedT>
+	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		*--end = alphabet[value & 0xF];
+		CharT* end = buffer + buffer_size<UnsignedT>;
+
+		CharT const* const alphabet = LowerCase ?
+			FormatTraits<CharT>::sHexadecimalLower :
+			FormatTraits<CharT>::sHexadecimalUpper;
+
+		do
+		{
+			*--end = alphabet[value & 0xF];
+		}
+		while ((value >>= 4) != 0);
+
+		return {end, buffer_size<UnsignedT> - (end - buffer)};
 	}
-	while ((value >>= 4) != 0);
+};
 
-	out.write({end, sizeof(buffer) - (end - buffer)});
-}
-
-template <typename CharT, typename T>
-void write_octal(basic_format_writer<CharT>& out, T value)
+struct octal_helper
 {
-	CharT buffer[3 * sizeof(value)]; // 3 octal digits per octet
-	CharT* end = buffer + sizeof(buffer);
+ 	// up to three 3 octal digits per octet - FIXME is that right? I don't think that's right
+	template <typename UnsignedT>
+	static constexpr std::size_t buffer_size = 3 * sizeof(UnsignedT);
 
-	// the octal alphabet is a subset of hexadecimal,
-	// and doesn't depend on casing.
-	CharT const* const alphabet = FormatTraits<CharT>::sHexadecimalLower;
-
-	do
+	template <typename CharT, typename UnsignedT>
+	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		*--end = alphabet[value & 0x7];
+		CharT* end = buffer + buffer_size<UnsignedT>;
+
+		// the octal alphabet is a subset of hexadecimal,
+		// and doesn't depend on casing.
+		CharT const* const alphabet = FormatTraits<CharT>::sHexadecimalLower;
+
+		do
+		{
+			*--end = alphabet[value & 0x7];
+		}
+		while ((value >>= 3) != 0);
+
+		return {end, buffer_size<UnsignedT> - (end - buffer)};
 	}
-	while ((value >>= 3) != 0);
+};
 
-	out.write({end, sizeof(buffer) - (end - buffer)});
-}
-
-template <typename CharT, typename T>
-void write_binary(basic_format_writer<CharT>& out, T value)
+struct binary_helper
 {
-	CharT buffer[std::numeric_limits<unsigned char>::digits * sizeof(value)];
-	CharT* end = buffer + sizeof(buffer);
+	// one digit per bit of the input
+	template <typename UnsignedT>
+ 	static constexpr std::size_t buffer_size = sizeof(UnsignedT) * CHAR_BIT;
 
-	do
+	template <typename CharT, typename UnsignedT>
+	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		*--end = FormatTraits<CharT>::to_digit(value & 1);
-	}
-	while ((value >>= 1) != 0);
+		CharT* end = buffer + buffer_size<UnsignedT>;
 
-	out.write({end, sizeof(buffer) - (end - buffer)});
+		do
+		{
+			*--end = FormatTraits<CharT>::to_digit(value & 1);
+		}
+		while ((value >>= 1) != 0);
+
+		return {end, buffer_size<UnsignedT> - (end - buffer)};
+	}
+};
+
+template <typename HelperT, typename CharT, typename ValueT>
+void write_integer_helper(basic_format_writer<CharT>& out, ValueT raw_value, basic_format_spec<CharT> const& spec)
+{
+	// convert to an unsigned value to make the formatting easier; note that must
+	// subtract from 0 _after_ converting to deal with 2's complement format
+	// where (abs(min) > abs(max)), otherwise we'd not be able to format -min<T>
+	using unsigned_type = typename std::make_unsigned<ValueT>::type;
+	unsigned_type const unsigned_value = raw_value >= 0 ? raw_value : 0 - static_cast<unsigned_type>(raw_value);
+
+	// format any prefix onto the number
+	unsigned const prefix_len = write_integer_prefix(out, spec, /*negative=*/raw_value < 0);
+
+	std::size_t const padding = spec.has_width ? spec.width : (spec.has_precision && spec.precision > prefix_len) ? (spec.precision - prefix_len) : 0;
+	CharT const pad_char = (spec.leading_zeroes || spec.has_precision) && !spec.left_justify ? '0' : ' ';
+
+	constexpr std::size_t buffer_size = HelperT::buffer_size<typename unsigned_type>;
+	CharT buffer[buffer_size];
+	auto const result = HelperT::write(buffer, unsigned_value);
+
+	write_padded_aligned(out, result, pad_char, padding, spec.left_justify);
 }
 
 template <typename CharT, typename T>
 void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<CharT> spec_string)
 {
-	// subtract from 0 _after_ converting to deal with 2's complement format (abs(min) > abs(max))
-	using unsigned_type = typename std::make_unsigned<T>::type;
-	unsigned_type const value = raw >= 0 ? raw : 0 - static_cast<unsigned_type>(raw);
+	basic_format_spec<CharT> const spec = parse_format_spec(spec_string);
 
-    basic_format_spec<CharT> const spec = parse_format_spec(spec_string);
-
-	// format any prefix onto the number
-	unsigned const prefix_len = write_integer_prefix(out, spec, /*negative=*/raw < 0);
-
-	std::size_t const padding = spec.has_width ? spec.width : (spec.has_precision && spec.precision > prefix_len) ? (spec.precision - prefix_len) : 0;
-	CharT const pad_char = spec.leading_zeroes && !spec.has_precision && !spec.left_justify ? '0' : ' ';
-	
 	switch (spec.code)
 	{
 	default:
@@ -208,30 +238,22 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	case 'i':
 	case 'd':
 	case 'D':
-	{
-		typename decimal_helper<CharT, unsigned_type>::buffer_t buffer;
-		basic_string_view<CharT> result = decimal_helper<CharT, unsigned_type>::write(buffer, value);
-		write_padded_aligned(out, result, pad_char, padding, spec.left_justify);
-		break;
-	}
-	case 'x':
-		write_hexadecimal(out, value, /*lower=*/true);
-		break;
-	case 'X':
-		write_hexadecimal(out, value, /*lower=*/false);
-		break;
+		return write_integer_helper<decimal_helper>(out, raw, spec);
+ 	case 'x':
+	 	return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, raw, spec);
+ 	case 'X':
+	 	return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, raw, spec);
 	case 'o':
 	case 'O':
-		write_octal(out, value);
+		return write_integer_helper<octal_helper>(out, raw, spec);
 		break;
 	case 'b':
 	case 'B':
-		write_binary(out, value);
+		return write_integer_helper<binary_helper>(out, raw, spec);
 		break;
 	}
 }
 
-} // anonymous namespace
 } // namespace _detail
 } // namespace formatxx
 
