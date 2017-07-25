@@ -49,31 +49,32 @@ struct prefix_helper
 	template <typename CharT>
 	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size], basic_format_spec<CharT> const& spec, bool negative)
 	{
-		CharT* prefix = buffer;
+		CharT* const end = buffer + buffer_size;
+		CharT* ptr = end;
 
-		// add sign
+		// add numeric type prefix (2)
+		if (spec.alternate_form)
+		{
+			// FIXME: misbehaves for code 'i', or any non-standard one
+			*--ptr = spec.code ? spec.code : 'd';
+			*--ptr = FormatTraits<CharT>::to_digit(0);
+		}
+
+		// add sign (1)
 		if (negative)
 		{
-			*(prefix++) = FormatTraits<CharT>::cMinus;
+			*--ptr = FormatTraits<CharT>::cMinus;
 		}
 		else if (spec.prepend_sign)
 		{
-			*(prefix++) = FormatTraits<CharT>::cPlus;
+			*--ptr = FormatTraits<CharT>::cPlus;
 		}
 		else if (spec.prepend_space)
 		{
-			*(prefix++) = FormatTraits<CharT>::cSpace;
+			*--ptr = FormatTraits<CharT>::cSpace;
 		}
 
-		// add numeric type prefix
-		if (spec.alternate_form)
-		{
-			*(prefix++) = FormatTraits<CharT>::to_digit(0);
-			// FIXME: misbehaves for code 'i'
-			*(prefix++) = spec.code ? spec.code : 'd';
-		}
-
-		return {buffer, static_cast<std::size_t>(prefix - buffer)};
+		return {ptr, end};
 	}
 };
 
@@ -93,7 +94,8 @@ struct decimal_helper
 		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
 		CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
 
-		CharT* end = buffer + buffer_size<UnsignedT>;
+		CharT* const end = buffer + buffer_size<UnsignedT>;
+		CharT* ptr = end;
 
 		// work on every two decimal digits (groups of 100). notes taken from cppformat,
 		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
@@ -105,24 +107,24 @@ struct decimal_helper
 			value /= 100;
 
 			// write out both digits of the given index
-			*--end = table[digit + 1];
-			*--end = table[digit];
+			*--ptr = table[digit + 1];
+			*--ptr = table[digit];
 		}
 
 		if (value >= 10)
 		{
 			// we have two digits left; this is identical to the above loop, but without the division
 			unsigned const digit = static_cast<unsigned>(value << 1);
-			*--end = table[digit + 1];
-			*--end = table[digit];
+			*--ptr = table[digit + 1];
+			*--ptr = table[digit];
 		}
 		else
 		{
 			// we have but a single digit left, so this is easy
-			*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
+			*--ptr = FormatTraits<CharT>::to_digit(static_cast<char>(value));
 		}
 
-		return {end, buffer_size<UnsignedT> - (end - buffer)};
+		return {ptr, end};
 	}
 };
 
@@ -136,7 +138,8 @@ struct hexadecimal_helper
 	template <typename CharT, typename UnsignedT>
 	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		CharT* end = buffer + buffer_size<UnsignedT>;
+		CharT* const end = buffer + buffer_size<UnsignedT>;
+		CharT* ptr = end;
 
 		CharT const* const alphabet = LowerCase ?
 			FormatTraits<CharT>::sHexadecimalLower :
@@ -144,11 +147,11 @@ struct hexadecimal_helper
 
 		do
 		{
-			*--end = alphabet[value & 0xF];
+			*--ptr = alphabet[value & 0xF];
 		}
 		while ((value >>= 4) != 0);
 
-		return {end, buffer_size<UnsignedT> - (end - buffer)};
+		return {ptr, end};
 	}
 };
 
@@ -161,7 +164,8 @@ struct octal_helper
 	template <typename CharT, typename UnsignedT>
 	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		CharT* end = buffer + buffer_size<UnsignedT>;
+		CharT* const end = buffer + buffer_size<UnsignedT>;
+		CharT* ptr = end;
 
 		// the octal alphabet is a subset of hexadecimal,
 		// and doesn't depend on casing.
@@ -169,11 +173,11 @@ struct octal_helper
 
 		do
 		{
-			*--end = alphabet[value & 0x7];
+			*--ptr = alphabet[value & 0x7];
 		}
 		while ((value >>= 3) != 0);
 
-		return {end, buffer_size<UnsignedT> - (end - buffer)};
+		return {ptr, end};
 	}
 };
 
@@ -181,78 +185,70 @@ struct binary_helper
 {
 	// one digit per bit of the input
 	template <typename UnsignedT>
- 	static constexpr std::size_t buffer_size = sizeof(UnsignedT) * CHAR_BIT;
+ 	static constexpr std::size_t buffer_size = std::numeric_limits<UnsignedT>::digits;
 
 	template <typename CharT, typename UnsignedT>
 	static basic_string_view<CharT> write(CharT(&buffer)[buffer_size<UnsignedT>], UnsignedT value)
 	{
-		CharT* end = buffer + buffer_size<UnsignedT>;
+		CharT* const end = buffer + buffer_size<UnsignedT>;
+		CharT* ptr = end;
 
 		do
 		{
-			*--end = FormatTraits<CharT>::to_digit(value & 1);
+			*--ptr = FormatTraits<CharT>::to_digit(value & 1);
 		}
 		while ((value >>= 1) != 0);
 
-		return {end, buffer_size<UnsignedT> - (end - buffer)};
+		return {ptr, end};
 	}
 };
 
 template <typename HelperT, typename CharT, typename ValueT>
 void write_integer_helper(basic_format_writer<CharT>& out, ValueT raw_value, basic_format_spec<CharT> const& spec)
 {
+	using unsigned_type = typename std::make_unsigned<ValueT>::type;
+	
 	// convert to an unsigned value to make the formatting easier; note that must
 	// subtract from 0 _after_ converting to deal with 2's complement format
 	// where (abs(min) > abs(max)), otherwise we'd not be able to format -min<T>
-	using unsigned_type = typename std::make_unsigned<ValueT>::type;
-	const bool negative = !(raw_value >= 0);
-	unsigned_type const unsigned_value = !negative ? raw_value : 0 - static_cast<unsigned_type>(raw_value);
+	unsigned_type const unsigned_value = raw_value >= 0 ? raw_value : 0 - static_cast<unsigned_type>(raw_value);
 
 	// calculate prefixes like signs
 	CharT prefix_buffer[prefix_helper::buffer_size];
-	auto const prefix = prefix_helper::write(prefix_buffer, spec, negative);
+	auto const prefix = prefix_helper::write(prefix_buffer, spec, raw_value < 0);
 
 	// generate the actual number
-	constexpr std::size_t buffer_size = HelperT::buffer_size<unsigned_type>;
-	CharT value_buffer[buffer_size];
+	CharT value_buffer[HelperT::template buffer_size<unsigned_type>];
 	auto const result = HelperT::write(value_buffer, unsigned_value);
 
-	// calculate the padding we need around the number
-	bool const fill_zeroes = (spec.leading_zeroes && !spec.left_justify) || spec.has_precision;
-	bool const left_justify = spec.left_justify && !spec.has_precision;
-	bool const has_sign = negative || spec.prepend_sign || spec.prepend_space;
-	CharT const pad_char = !fill_zeroes ? FormatTraits<CharT>::cSpace : FormatTraits<CharT>::to_digit(0);
-
-	std::size_t padding = 0;
-	if (spec.has_width && spec.width > prefix.size() + result.size())
-	{
-		padding = spec.width - prefix.size() - result.size();
-	}
-	else if (spec.has_precision && spec.precision > result.size())
-	{
-		padding = spec.precision - result.size();
-	}
-
-	if (!left_justify && !fill_zeroes)
-	{
-		write_padding(out, pad_char, padding);
-		out.write(prefix);
-	}
-	else if (!left_justify)
+	if (spec.has_precision)
 	{
 		out.write(prefix);
-		write_padding(out, pad_char, padding);
+		write_padded_align_right(out, result, FormatTraits<CharT>::to_digit(0), spec.precision);
 	}
 	else
 	{
-		out.write(prefix);
-	}
+		std::size_t const output_length = prefix.size() + result.size();
+		std::size_t const padding = spec.has_width && spec.width > output_length ? spec.width - output_length : 0;
 
-	out.write(result);
-
-	if (left_justify)
-	{
-		write_padding(out, pad_char, padding);
+		if (spec.left_justify)
+		{
+			out.write(prefix);
+			out.write(result);
+			write_padding(out, FormatTraits<CharT>::cSpace, padding);
+		}
+		else if (spec.leading_zeroes)
+		{
+			out.write(prefix);
+			write_padding(out, FormatTraits<CharT>::to_digit(0), padding);
+			out.write(result);
+		}
+		else
+		{
+			write_padding(out, FormatTraits<CharT>::cSpace, padding);
+			out.write(prefix);
+			out.write(result);
+		}
 	}
 }
 
