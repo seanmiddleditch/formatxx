@@ -47,7 +47,12 @@ source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 set_property(TARGET formatxx PROPERTY CXX_STANDARD 11)
 
 add_executable(formatxx_tests ${FORMATXX_TESTS})
-set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 11)
+# variable templates are in VC 15, but Clang/GCC require -std=c++14
+if(MSVC)
+	set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 11)
+else()
+	set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 14)
+endif()
 target_link_libraries(formatxx_tests formatxx)
 add_test(formatxx_tests formatxx_tests)
 

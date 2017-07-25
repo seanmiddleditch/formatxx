@@ -34,6 +34,7 @@
 
 #include "format_util.h"
 #include <limits>
+#include <climits>
 
 namespace formatxx {
 namespace _detail {
@@ -212,7 +213,7 @@ void write_integer_helper(basic_format_writer<CharT>& out, ValueT raw_value, bas
 	auto const prefix = prefix_helper::write(prefix_buffer, spec, negative);
 
 	// generate the actual number
-	constexpr std::size_t buffer_size = HelperT::buffer_size<typename unsigned_type>;
+	constexpr std::size_t buffer_size = HelperT::buffer_size<unsigned_type>;
 	CharT value_buffer[buffer_size];
 	auto const result = HelperT::write(value_buffer, unsigned_value);
 
