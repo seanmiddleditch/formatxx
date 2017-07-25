@@ -120,13 +120,13 @@ FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>&
 				{
 					index = next_index;
 
-					// the decimal input had nothing to do with position; reset (FIXME: is that necessary?
-					// or does it cause us to just parse the format twice for no reason?)
+					// the decimal input had nothing to do with position; reset so the call to
+					// parse_format_spec ensures we have a valid spec, not something like 1#2.3
 					iter = start;
 				}
 
-				// parse forward through the specification
-				// FIXME: we just want to find the end of the input, a full format parse may be overkill
+				// parse forward through the specification and verify that it's correct and will
+				// properly decode in parse_format_spec later.
 				CharT const* const spec_begin = iter;
 				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
 				spec_string = {spec_begin, spec.remaining};
