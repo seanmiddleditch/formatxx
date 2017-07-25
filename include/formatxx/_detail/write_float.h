@@ -32,53 +32,41 @@
 #define _guard_FORMATXX_DETAIL_WRITE_FLOAT_H
 #pragma once
 
-#include <cstdarg>
-
 namespace formatxx {
 namespace _detail {
-namespace {
 
-template <typename CharT, typename FormatFuncT>
-void write_float_helper(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string, FormatFuncT const& formatter)
+template <typename CharT>
+struct sprintf_helper
+{
+	template <typename... Args>
+	int operator()(char* buf, int result, char const* fmt, Args const&... args) const
+	{
+		return std::snprintf(buf, result, fmt, args...);
+	}
+};
+
+template <>
+struct sprintf_helper<wchar_t>
+{
+	template <typename... Args>
+	int operator()(wchar_t* buf, int result, wchar_t const* fmt, Args const&... args) const
+	{
+		return std::swprintf(buf, result, fmt, args...);
+	}
+};
+
+template <typename CharT>
+void write_float(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string)
 {
 	auto const spec = parse_format_spec(spec_string);
 
-	CharT fmt_buf[10];
-	CharT* fmt_ptr = fmt_buf;
+	constexpr std::size_t fmt_buf_size = 10;
+	CharT fmt_buf[fmt_buf_size];
+	CharT* fmt_ptr = fmt_buf + fmt_buf_size;
 
-	*fmt_ptr++ = '%';
+	*--fmt_ptr = 0;
 
-	if (spec.prepend_sign)
-	{
-		*fmt_ptr++ = FormatTraits<CharT>::cPlus;
-	}
-	else if (spec.prepend_space)
-	{
-		*fmt_ptr++ = FormatTraits<CharT>::cSpace;
-	}
-
-	if (spec.left_justify)
-	{
-		*fmt_ptr++ = '-';
-	}
-	if (spec.leading_zeroes)
-	{
-		*fmt_ptr++ = '0';
-	}
-	if (spec.alternate_form)
-	{
-		*fmt_ptr++ = FormatTraits<CharT>::cHash;
-	}
-	if (spec.has_width)
-	{
-		*fmt_ptr++ = '*';
-	}
-	if (spec.has_precision)
-	{
-		*fmt_ptr++ = '.';
-		*fmt_ptr++ = '*';
-	}
-
+	// every sprint call must have a valid code (1)
 	switch (spec.code)
 	{
 	case 'a':
@@ -89,69 +77,81 @@ void write_float_helper(basic_format_writer<CharT>& out, double value, basic_str
 	case 'F':
 	case 'g':
 	case 'G':
-		*fmt_ptr++ = spec.code;
+		*--fmt_ptr = spec.code;
 		break;
 	default:
-		*fmt_ptr++ = 'f';
+		*--fmt_ptr = 'f';
 		break;
 	}
 
-	*fmt_ptr = 0; // NUL terminate format buffer
+	// this flag is independent of any other (2)
+	if (spec.has_precision)
+	{
+		*--fmt_ptr = '*';
+		*--fmt_ptr = '.';
+	}
 
-	CharT buf[1078];
-	int len = 0;
+	// this flag is independent of any other (1)
+	if (spec.has_width)
+	{
+		*--fmt_ptr = '*';
+	}
+
+	// these flags are mutually exclusive within themselves (1)
+	if (spec.prepend_sign)
+	{
+		*--fmt_ptr = FormatTraits<CharT>::cPlus;
+	}
+	else if (spec.prepend_space)
+	{
+		*--fmt_ptr = FormatTraits<CharT>::cSpace;
+	}
+
+	// these flags may all be set together (3)
+	if (spec.left_justify)
+	{
+		*--fmt_ptr = '-';
+	}
+	if (spec.leading_zeroes)
+	{
+		*--fmt_ptr = '0';
+	}
+	if (spec.alternate_form)
+	{
+		*--fmt_ptr = FormatTraits<CharT>::cHash;
+	}
+
+	// every format must start with this (1)
+	*--fmt_ptr = '%';
+
+	constexpr std::size_t buf_size = 1078;
+	CharT buf[buf_size];
+	auto const helper = sprintf_helper<CharT>();
 	
+	int result = 0;
 	if (spec.has_width && spec.has_precision)
 	{
-		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, spec.precision, value);
+		result = helper(buf, buf_size, fmt_ptr, spec.width, spec.precision, value);
 	}
 	else if (spec.has_width)
 	{
-		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.width, value);
+		result = helper(buf, buf_size, fmt_ptr, spec.width, value);
 	}
 	else if (spec.has_precision)
 	{
-		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, spec.precision, value);
+		result = helper(buf, buf_size, fmt_ptr, spec.precision, value);
 	}
 	else
 	{
-		len = formatter(buf, sizeof(buf) / sizeof(buf[0]), fmt_buf, value);
+		result = helper(buf, buf_size, fmt_ptr, value);
 	}
 
-	if (len > 0)
+	if (result > 0)
 	{
-		out.write({buf, std::size_t(len)});
+		out.write({buf, result < buf_size ? std::size_t(result) : buf_size});
 	}
 }
 
-template <typename ValueT>
-void write_float(basic_format_writer<char>& out, ValueT value, basic_string_view<char> spec)
-{
-	write_float_helper(out, value, spec, [](char* buf, int len, char const* fmt, ...)
-	{
-		va_list va;
-		va_start(va, fmt);
-		int const rs = std::vsnprintf(buf, len, fmt, va);
-		va_end(va);
-		return rs;
-	});
-}
-
-template <typename ValueT>
-void write_float(basic_format_writer<wchar_t>& out, ValueT value, basic_string_view<wchar_t> spec)
-{
-	write_float_helper(out, value, spec, [](wchar_t* buf, int len, wchar_t const* fmt, ...)
-	{
-		va_list va;
-		va_start(va, fmt);
-		int const rs = std::vswprintf(buf, len, fmt, va);
-		va_end(va);
-		return rs;
-	});
-}
-
-
-} // anonymous namespace
 } // namespace _detail
 } // namespace formatxx
 
