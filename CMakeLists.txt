@@ -15,7 +15,8 @@ set(FORMATXX_PRIVATE_HEADERS
 	include/formatxx/_detail/parse_unsigned.h
 	include/formatxx/_detail/format_impl.h
     include/formatxx/_detail/printf_impl.h
-    include/formatxx/_detail/format_traits.h
+	include/formatxx/_detail/format_traits.h
+	include/formatxx/_detail/format_util.h
 	include/formatxx/_detail/write_integer.h
 	include/formatxx/_detail/write_float.h
 	include/formatxx/_detail/write_string.h
@@ -44,6 +45,14 @@ endif()
 target_include_directories(formatxx PUBLIC "include")
 source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 set_property(TARGET formatxx PROPERTY CXX_STANDARD 11)
+
+# Visual Studio warns about copy_n, even though it's used correctly
+# while this affects users, we don't want to indiscriminately disable
+# warnings on their prorjects, so we keep this private
+# FIXME - can this just be done around the offending lines?
+if(MSVC)
+	target_compile_definitions(formatxx PRIVATE /D_SCL_SECURE_NO_WARNINGS)
+endif()
 
 add_executable(formatxx_tests ${FORMATXX_TESTS})
 set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 11)

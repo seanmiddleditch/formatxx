@@ -68,6 +68,19 @@ void write_padded_align_left(basic_format_writer<CharT>& out, basic_string_view<
 }
 
 template <typename CharT>
+void write_padded_aligned(basic_format_writer<CharT>& out, basic_string_view<CharT> string, CharT pad_char, std::size_t count, bool align_left)
+{
+    if (!align_left)
+    {
+        write_padded_align_right(out, string, pad_char, count);
+    }
+    else
+    {
+        write_padded_align_left(out, string, pad_char, count);
+    }
+}
+
+template <typename CharT>
 auto trim_string(basic_string_view<CharT> string, std::size_t max_size) -> basic_string_view<CharT>
 {
     return string.size() < max_size ? string : basic_string_view<CharT>(string.data(), max_size);

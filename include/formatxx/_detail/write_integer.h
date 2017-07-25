@@ -85,49 +85,53 @@ unsigned write_integer_prefix(basic_format_writer<CharT>& out, basic_format_spec
 }
 
 template <typename CharT, typename T>
-void write_decimal(basic_format_writer<CharT>& out, T value, std::size_t padding, CharT pad)
+struct decimal_helper
 {
-	// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
-	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
-	CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
-
 	// buffer must be one larger than digits10, as that trait is the maximum number of 
 	// base-10 digits represented by the type in their entirety, e.g. 8-bits can store
 	// 99 but not 999, so its digits10 is 2, even though the value 255 could be stored
 	// and has 3 digits.
-	constexpr std::size_t buffer_size = std::numeric_limits<decltype(value)>::digits10 + 1;
-	CharT buffer[buffer_size];
-	CharT* end = buffer + buffer_size;
+	static constexpr std::size_t buffer_size = std::numeric_limits<T>::digits10 + 1;
+	using buffer_t = CharT[buffer_size];
 
-	// work on every two decimal digits (groups of 100). notes taken from cppformat,
-	// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
-	while (value >= 100)
+	static basic_string_view<CharT> write(buffer_t& buffer, T value)
 	{
-		// I feel like we could do the % and / better... somehow
-		// we multiply the index by two to find the pair of digits to index
-		unsigned const digit = (value % 100) << 1;
-		value /= 100;
+		// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
+		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
+		CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
 
-		// write out both digits of the given index
-		*--end = table[digit + 1];
-		*--end = table[digit];
-	}
+		CharT* end = buffer + buffer_size;
 
-	if (value >= 10)
-	{
-		// we have two digits left; this is identical to the above loop, but without the division
-		unsigned const digit = static_cast<unsigned>(value << 1);
-		*--end = table[digit + 1];
-		*--end = table[digit];
-	}
-	else
-	{
-		// we have but a single digit left, so this is easy
-		*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
-	}
+		// work on every two decimal digits (groups of 100). notes taken from cppformat,
+		// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
+		while (value >= 100)
+		{
+			// I feel like we could do the % and / better... somehow
+			// we multiply the index by two to find the pair of digits to index
+			unsigned const digit = (value % 100) << 1;
+			value /= 100;
 
-	write_padded_align_right(out, {end, buffer_size - (end - buffer)}, pad, padding);
-}
+			// write out both digits of the given index
+			*--end = table[digit + 1];
+			*--end = table[digit];
+		}
+
+		if (value >= 10)
+		{
+			// we have two digits left; this is identical to the above loop, but without the division
+			unsigned const digit = static_cast<unsigned>(value << 1);
+			*--end = table[digit + 1];
+			*--end = table[digit];
+		}
+		else
+		{
+			// we have but a single digit left, so this is easy
+			*--end = FormatTraits<CharT>::to_digit(static_cast<char>(value));
+		}
+
+		return {end, buffer_size - (end - buffer)};
+	}
+};
 
 template <typename CharT, typename T>
 void write_hexadecimal(basic_format_writer<CharT>& out, T value, bool lower)
@@ -186,7 +190,8 @@ template <typename CharT, typename T>
 void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<CharT> spec_string)
 {
 	// subtract from 0 _after_ converting to deal with 2's complement format (abs(min) > abs(max))
-	typename std::make_unsigned<T>::type const value = raw >= 0 ? raw : 0 - static_cast<typename std::make_unsigned<T>::type>(raw);
+	using unsigned_type = typename std::make_unsigned<T>::type;
+	unsigned_type const value = raw >= 0 ? raw : 0 - static_cast<unsigned_type>(raw);
 
     basic_format_spec<CharT> const spec = parse_format_spec(spec_string);
 
@@ -194,6 +199,7 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	unsigned const prefix_len = write_integer_prefix(out, spec, /*negative=*/raw < 0);
 
 	std::size_t const padding = spec.has_width ? spec.width : (spec.has_precision && spec.precision > prefix_len) ? (spec.precision - prefix_len) : 0;
+	CharT const pad_char = spec.leading_zeroes && !spec.has_precision && !spec.left_justify ? '0' : ' ';
 	
 	switch (spec.code)
 	{
@@ -202,8 +208,12 @@ void write_integer(basic_format_writer<CharT>& out, T raw, basic_string_view<Cha
 	case 'i':
 	case 'd':
 	case 'D':
-		write_decimal<CharT>(out, value, padding, spec.leading_zeroes ? '0' : ' ');
+	{
+		typename decimal_helper<CharT, unsigned_type>::buffer_t buffer;
+		basic_string_view<CharT> result = decimal_helper<CharT, unsigned_type>::write(buffer, value);
+		write_padded_aligned(out, result, pad_char, padding, spec.left_justify);
 		break;
+	}
 	case 'x':
 		write_hexadecimal(out, value, /*lower=*/true);
 		break;

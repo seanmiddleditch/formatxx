@@ -153,12 +153,15 @@ static void test_integers()
 	CHECK_FORMAT("-0b10", "{:#b}", -2);
 
 	CHECK_FORMAT("   1234", "{:7d}", 1234);
+	CHECK_FORMAT("1234   ;", "{:-7d};", 1234);
 	CHECK_FORMAT("0001234", "{:07d}", 1234);
 	CHECK_FORMAT("1234", "{:2d}", 1234);
 	CHECK_FORMAT("+   1234", "{:+7d}", 1234);
-	CHECK_FORMAT("+001234", "{:+0.7d}", 1234);
+	CHECK_FORMAT("+0001234", "{:+07d}", 1234);
+	CHECK_FORMAT("+  1234", "{:+.7d}", 1234);
 
-	CHECK_FORMAT("0001234", "{:-0.7d}", 1234);
+	// leading zeroes are is ignored if precision is specified
+	CHECK_FORMAT("   1234", "{:0.7d}", 1234);
 }
 
 // FIXME: currently platform-dependent due to sprintf dependence
