@@ -57,6 +57,13 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 	return std::move(writer).str();
 }
 
+template <typename CharT, typename FormatT, typename... Args>
+static formatxx::result_code format_result(FormatT const& format, Args const&... args)
+{
+	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
+	return formatxx::format(writer, format, args...);
+}
+
 template <typename... Args>
 static std::string printf_string(char const* format, Args const&... args)
 {
@@ -64,15 +71,6 @@ static std::string printf_string(char const* format, Args const&... args)
 	int const len = std::snprintf(buffer, sizeof(buffer), format, args...);
 	return std::string(buffer, len);
 }
-
-template <typename... Args>
-static std::wstring wprintf_string(wchar_t const* format, Args const&... args)
-{
-	wchar_t buffer[2014];
-	int const len = std::wsprintf(buffer, sizeof(buffer) / sizeof(buffer[0]), format, args...);
-	return std::wstring(buffer, len);
-}
-
 
 static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
 {
@@ -107,7 +105,7 @@ static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
 	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::format_string<std::wstring>(__VA_ARGS__))
 
 #define CHECK_FORMAT_RESULT(expected, ...) \
-	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::format(formatxx::string_writer(), __VA_ARGS__))
+	CHECK_FORMAT_HELPER(std::cerr, (expected), format_result<char>(__VA_ARGS__))
 
 #define CHECK_PRINTF(expected, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::printf_string<std::string>(__VA_ARGS__))
