@@ -46,6 +46,7 @@ namespace formatxx {
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char value, string_view spec) { _detail::write_char(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* value, string_view spec) { _detail::write_string<char>(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* value, string_view spec) { _detail::write_string<char>(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view value, string_view spec) { _detail::write_string<char>(out, value, spec); }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec) { _detail::write_integer(out, value, spec); }

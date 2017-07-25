@@ -77,6 +77,11 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* 
 	}
 }
 
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char* zstr, wstring_view spec)
+{
+	format_value(out, (char const*)zstr, spec);
+}
+
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view)
 {
 	std::mbstate_t state{};
@@ -119,6 +124,11 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const
 	}
 }
 
+FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr, string_view spec)
+{
+	format_value(out, (wchar_t const*)zstr, spec);
+}
+
 FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view)
 {
 	std::mbstate_t state{};
@@ -138,6 +148,7 @@ FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view 
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) { _detail::write_char(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
+FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
 
 FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed int value, wstring_view spec) { _detail::write_integer(out, value, spec); }
