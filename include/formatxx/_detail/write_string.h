@@ -48,20 +48,13 @@ void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str,
 		str = trim_string(str, spec.precision);
 	}
 
-	if (!spec.has_width)
+	if (!spec.left_justify)
 	{
-		out.write(str);
+		write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
 	}
-	else if (spec.has_width)
+	else
 	{
-		if (!spec.left_justify)
-		{
-			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
-		}
-		else
-		{
-			write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
-		}
+		write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
 	}
 }
 
