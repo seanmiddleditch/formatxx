@@ -35,25 +35,15 @@
 namespace formatxx {
 namespace _detail {
 
-template <typename CharT>
-struct sprintf_helper
+inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value)
 {
-	template <typename... Args>
-	int operator()(char* buf, int result, char const* fmt, Args const&... args) const
-	{
-		return std::snprintf(buf, result, fmt, args...);
-	}
-};
+	return std::snprintf(buf, result, fmt, width, precision, value);
+}
 
-template <>
-struct sprintf_helper<wchar_t>
+inline int float_helper(wchar_t* buf, int result, wchar_t const* fmt, int width, int precision, double value)
 {
-	template <typename... Args>
-	int operator()(wchar_t* buf, int result, wchar_t const* fmt, Args const&... args) const
-	{
-		return std::swprintf(buf, result, fmt, args...);
-	}
-};
+	return std::swprintf(buf, result, fmt, width, precision, value);
+}
 
 template <typename CharT>
 void write_float(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string)
@@ -64,6 +54,7 @@ void write_float(basic_format_writer<CharT>& out, double value, basic_string_vie
 	CharT fmt_buf[fmt_buf_size];
 	CharT* fmt_ptr = fmt_buf + fmt_buf_size;
 
+	// required NUL terminator for sprintf formats (1)
 	*--fmt_ptr = 0;
 
 	// every sprint call must have a valid code (1)
@@ -84,18 +75,11 @@ void write_float(basic_format_writer<CharT>& out, double value, basic_string_vie
 		break;
 	}
 
-	// this flag is independent of any other (2)
-	if (spec.has_precision)
-	{
-		*--fmt_ptr = '*';
-		*--fmt_ptr = '.';
-	}
-
-	// this flag is independent of any other (1)
-	if (spec.has_width)
-	{
-		*--fmt_ptr = '*';
-	}
+	// we always pass in a width and precision, defaulting to 0 which has no effect
+	// as width, and -1 which is a guaranteed "ignore" (3)
+	*--fmt_ptr = '*';
+	*--fmt_ptr = '.';
+	*--fmt_ptr = '*';
 
 	// these flags are mutually exclusive within themselves (1)
 	if (spec.prepend_sign)
@@ -126,26 +110,8 @@ void write_float(basic_format_writer<CharT>& out, double value, basic_string_vie
 
 	constexpr std::size_t buf_size = 1078;
 	CharT buf[buf_size];
-	auto const helper = sprintf_helper<CharT>();
-	
-	int result = 0;
-	if (spec.has_width && spec.has_precision)
-	{
-		result = helper(buf, buf_size, fmt_ptr, spec.width, spec.precision, value);
-	}
-	else if (spec.has_width)
-	{
-		result = helper(buf, buf_size, fmt_ptr, spec.width, value);
-	}
-	else if (spec.has_precision)
-	{
-		result = helper(buf, buf_size, fmt_ptr, spec.precision, value);
-	}
-	else
-	{
-		result = helper(buf, buf_size, fmt_ptr, value);
-	}
 
+	int const result = float_helper(buf, buf_size, fmt_ptr, spec.width, spec.has_precision ? spec.precision : -1, value);
 	if (result > 0)
 	{
 		out.write({buf, result < buf_size ? std::size_t(result) : buf_size});
