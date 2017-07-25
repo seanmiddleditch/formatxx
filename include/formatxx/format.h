@@ -132,7 +132,6 @@ public:
 	unsigned width = 0;
 	unsigned precision = 0;
 	CharT code = 0;
-	bool has_width = false;
 	bool has_precision = false;
 	bool left_justify = false;
 	bool prepend_sign = false;

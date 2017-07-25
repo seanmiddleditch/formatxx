@@ -79,22 +79,13 @@ FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_st
 	}
 
 	// read in width
-	CharT const* pre_width = start;
-	start = _detail::parse_unsigned(pre_width, end, result.width);
-	if (start != pre_width)
-	{
-		result.has_width = true;
-	}
+	start = _detail::parse_unsigned(start, end, result.width);
 
 	// read in precision, if present
 	if (start != end && *start == Traits::cDot)
 	{
-		CharT const* pre_precision = start + 1;
-		start = _detail::parse_unsigned(pre_precision, end, result.precision);
-		if (start != pre_precision)
-		{
-			result.has_precision = true;
-		}
+		result.has_precision = true;
+		start = _detail::parse_unsigned(start + 1, end, result.precision);
 	}
 
 	// read in any of the modifiers like h or l that modify a type code (no effect in our system)
