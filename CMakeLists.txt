@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.6)
 
 project(formatxx)
 enable_testing()
@@ -35,22 +35,19 @@ if(NOT DEFINED FORMATXX_BUILD_SHARED)
 	set(FORMATXX_BUILD_SHARED ${BUILD_SHARED_LIBRARIES})
 endif()
 
-if(${FORMATXX_BUILD_SHARED})
-	add_library(formatxx SHARED ${FORMATXX_FILES})
-	target_compile_definitions(formatxx PRIVATE FORMATXX_EXPORT)
-else()
-	add_library(formatxx STATIC ${FORMATXX_FILES})
-	target_compile_definitions(formatxx PUBLIC FORMATXX_STATIC)
-endif()
+add_library(formatxx ${FORMATXX_FILES})
+target_compile_features(formatxx INTERFACE cxx_std_11)
 target_include_directories(formatxx PUBLIC "include")
-set_property(TARGET formatxx PROPERTY CXX_STANDARD 11)
+set_target_properties(formatxx PROPERTIES
+    DEFINE_SYMBOL FORMATXX_EXPORT
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
 source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 
 add_executable(formatxx_tests ${FORMATXX_TESTS})
 target_link_libraries(formatxx_tests formatxx)
-set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 11)
 add_test(formatxx_tests formatxx_tests)
-
 
 # Visual Studio warns about copy_n, even though it's used correctly
 # while this affects users, we don't want to indiscriminately disable
