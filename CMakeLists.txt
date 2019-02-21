@@ -48,12 +48,3 @@ source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 add_executable(formatxx_tests ${FORMATXX_TESTS})
 target_link_libraries(formatxx_tests formatxx)
 add_test(formatxx_tests formatxx_tests)
-
-# Visual Studio warns about copy_n, even though it's used correctly
-# while this affects users, we don't want to indiscriminately disable
-# warnings on their prorjects, so we keep this private
-# FIXME - can this just be done around the offending lines?
-if(MSVC)
-	target_compile_definitions(formatxx PRIVATE -D_SCL_SECURE_NO_WARNINGS)
-	target_compile_definitions(formatxx_tests PRIVATE -D_SCL_SECURE_NO_WARNINGS)
-endif()
