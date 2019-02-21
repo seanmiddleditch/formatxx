@@ -33,7 +33,15 @@
 #pragma once
 
 #include <type_traits>
-#include <string>
+
+#if !defined(FORMATXX_USE_BUILTIN_STRLEN)
+#	if (defined(_MSC) && _MSC >= 1700) || (defined(__clang__) || __clang__ >= 4) || (defined __GNUC__ && __GNUC__ >= 5)
+#		define FORMATXX_USE_BUILTIN_STRLEN
+#	endif
+#endif
+#if !defined(FORMATXX_USE_BUILTIN_STRLEN)
+#	include <string>
+#endif
 
 #if !defined(FORMATXX_API)
 #	if defined(_WIN32)
@@ -61,7 +69,7 @@
 
 namespace formatxx
 {
-	template <typename CharT, typename TraitsT = std::char_traits<CharT>> class basic_string_view;
+	template <typename CharT> class basic_string_view;
 	template <typename CharT> class basic_format_writer;
 	template <typename CharT> class basic_format_spec;
 	template <typename CharT> class basic_format_args;
@@ -90,14 +98,18 @@ enum class formatxx::result_code
 };
 
 /// Describes a format string.
-template <typename CharT, typename TraitsT>
+template <typename CharT>
 class formatxx::basic_string_view
 {
 public:
 	constexpr basic_string_view() = default;
 	constexpr basic_string_view(CharT const* first, CharT const* last) : _begin(first), _size(last - first) {}
 	constexpr basic_string_view(CharT const* nstr, std::size_t size) : _begin(nstr), _size(size) {}
-	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? TraitsT::length(zstr) : 0) {}
+#if defined(FORMATXX_USE_BUILTIN_STRLEN)
+	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? __builtin_strlen(zstr) : 0) {}
+#else
+	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? std::char_traits<CharT>::length(zstr) : 0) {}
+#endif
 
 	constexpr CharT const* data() const { return _begin; }
 	constexpr std::size_t size() const { return _size; }
