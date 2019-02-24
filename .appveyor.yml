@@ -2,14 +2,10 @@ skip_tags: true
 shallow_clone: true
 image:
   - Visual Studio 2015
-  - Visual Studio 2017
   - Ubuntu
-  - Ubuntu 1804
 platform:
-  - x86
   - x64
 configuration:
-  - Release
   - Debug
 environment:
   matrix:
