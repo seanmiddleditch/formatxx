@@ -1,7 +1,8 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.8)
 
 project(formatxx)
-enable_testing()
+
+option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
 
 set(FORMATXX_PUBLIC_HEADERS
 	include/formatxx/buffered.h
@@ -45,6 +46,9 @@ set_target_properties(formatxx PROPERTIES
 )
 source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 
-add_executable(formatxx_tests ${FORMATXX_TESTS})
-target_link_libraries(formatxx_tests formatxx)
-add_test(formatxx_tests formatxx_tests)
+if(FORMATXX_BUILD_TESTS)
+	enable_testing()
+	add_executable(formatxx_tests ${FORMATXX_TESTS})
+	target_link_libraries(formatxx_tests formatxx)
+	add_test(formatxx_tests formatxx_tests)
+endif()
