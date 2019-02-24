@@ -236,7 +236,9 @@ extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API f
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::format(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
 {
-	void const* const values[] = { std::addressof(args)..., nullptr };
+	// NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that.
+	// using addressof requires us to pull in <memory> which is a very heaver header on some implementations.
+	void const* const values[] = { &args..., nullptr };
 	typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
 	return _detail::format_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
@@ -249,7 +251,9 @@ formatxx::result_code formatxx::format(basic_format_writer<CharT>& writer, Forma
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
 {
-	void const* const values[] = { std::addressof(args)..., nullptr };
+	// NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that
+	// using addressof requires us to pull in <memory> which is a very heaver header on some implementations.
+	void const* const values[] = { &args..., nullptr };
 	typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
 	return _detail::printf_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
