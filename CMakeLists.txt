@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(formatxx)
+project(formatxx
+	VERSION 0.9.0
+	LANGUAGES CXX
+)
 
 option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
 
@@ -31,10 +34,6 @@ set(FORMATXX_TESTS
 )
 
 set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORMATXX_SOURCES})
-
-if(NOT DEFINED FORMATXX_BUILD_SHARED)
-	set(FORMATXX_BUILD_SHARED ${BUILD_SHARED_LIBRARIES})
-endif()
 
 add_library(formatxx ${FORMATXX_FILES})
 target_compile_features(formatxx PUBLIC cxx_std_17)
