@@ -71,9 +71,8 @@ public:
 
 	void write(basic_string_view<typename StringT::value_type> str) override { _string.append(str.data(), str.size()); }
 
-	StringT const& str() const & { return _string; }
-	StringT& str() & { return _string; }
-	StringT&& str() && { return std::move(_string); }
+	StringT const& str() { return _string; }
+	StringT move_str() { return static_cast<StringT&&>(_string); }
 
 	void clear() { _string.clear(); }
 	std::size_t size() const { return _string.size(); }
@@ -92,7 +91,7 @@ StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::format(tmp, make_string_view(format), args...);
-	return static_cast<StringT&&>(tmp.str());
+	return tmp.move_str();
 }
 
 /// Write the printf format using the given parameters and return a string with the result.
@@ -103,7 +102,7 @@ StringT formatxx::printf_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::printf(tmp, make_string_view(format), args...);
-	return static_cast<StringT&&>(tmp.str());
+	return tmp.move_str();
 }
 
 #endif // !defined(_guard_FORMATXX_STRING_H)
