@@ -140,7 +140,6 @@ library implementations for us to rely on exclusively.
 ## To Do
 
 - Performance pass
-  - noexcept(true) where appropriate?
   - Benchmarks
 - Correctness to wide/unicode char support
   - u8/u16/u32?
