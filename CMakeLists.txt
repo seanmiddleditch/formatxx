@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.12)
 
 project(formatxx)
 enable_testing()
@@ -36,7 +36,7 @@ if(NOT DEFINED FORMATXX_BUILD_SHARED)
 endif()
 
 add_library(formatxx ${FORMATXX_FILES})
-target_compile_features(formatxx INTERFACE cxx_std_11)
+target_compile_features(formatxx PUBLIC cxx_std_17)
 target_include_directories(formatxx PUBLIC "include")
 set_target_properties(formatxx PROPERTIES
     DEFINE_SYMBOL FORMATXX_EXPORT
