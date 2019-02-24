@@ -39,6 +39,8 @@ namespace formatxx
 	template <typename CharT, std::size_t> class basic_fixed_writer;
 
 	template <std::size_t Size = 512> using fixed_writer = basic_fixed_writer<char, Size>;
+	template <std::size_t Size = 512> using wfixed_writer = basic_fixed_writer<wchar_t, Size>;
+
 }
 
 /// A writer with a fixed buffer that will never allocate.
@@ -54,7 +56,7 @@ public:
 
 private:
 	CharT* _last = _buffer;
-	CharT _buffer[SizeN] = {CharT(0),};
+	CharT _buffer[SizeN] = { CharT(0), };
 };
 
 template <typename CharT, std::size_t SizeN>

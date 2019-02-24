@@ -32,31 +32,29 @@
 #define _guard_FORMATXX_DETAIL_FORMAT_IMPL_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
+namespace formatxx::_detail {
 
-template <typename CharT>
-FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
-{
-	unsigned next_index = 0;
-	result_code result = result_code::success;
-
-	CharT const* begin = format.data();
-	CharT const* const end = begin + format.size();
-	CharT const* iter = begin;
-
-	while (iter < end)
+	template <typename CharT>
+	FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 	{
-		if (*iter != FormatTraits<CharT>::cFormatBegin)
+		unsigned next_index = 0;
+		result_code result = result_code::success;
+
+		CharT const* begin = format.data();
+		CharT const* const end = begin + format.size();
+		CharT const* iter = begin;
+
+		while (iter < end)
 		{
-			++iter;
-		}
-		else
-		{
+			if (*iter != FormatTraits<CharT>::cFormatBegin)
+			{
+				++iter;
+				continue;
+			}
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 			{
-				out.write({begin, iter});
+				out.write({ begin, iter });
 			}
 
 			++iter; // swallow the {
@@ -138,18 +136,16 @@ FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>&
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;
 		}
+
+		// write out tail end of format string
+		if (iter > begin)
+		{
+			out.write({ begin, iter });
+		}
+
+		return result;
 	}
 
-	// write out tail end of format string
-	if (iter > begin)
-	{
-		out.write({begin, iter});
-	}
-
-	return result;
-}
-
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_FORMAT_IMPL_H

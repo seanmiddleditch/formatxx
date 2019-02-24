@@ -77,7 +77,7 @@ private:
 	CharT* _first = _buffer;
 	CharT* _last = _buffer;
 	CharT* _sentinel = _buffer + SizeN;
-	CharT _buffer[SizeN] = {CharT(0),};
+	CharT _buffer[SizeN] = { CharT(0), };
 };
 
 template <typename CharT, std::size_t SizeN, typename AllocatorT>

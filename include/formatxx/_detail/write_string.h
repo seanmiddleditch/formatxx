@@ -34,38 +34,34 @@
 
 #include "format_util.h"
 
-namespace formatxx {
-namespace _detail {
-namespace {
+namespace formatxx::_detail {
 
-template <typename CharT>
-void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT> spec_string)
-{
-	auto const spec = parse_format_spec(spec_string);
-
-	if (spec.has_precision)
+	template <typename CharT>
+	void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT> spec_string)
 	{
-		str = trim_string(str, spec.precision);
+		auto const spec = parse_format_spec(spec_string);
+
+		if (spec.has_precision)
+		{
+			str = trim_string(str, spec.precision);
+		}
+
+		if (!spec.left_justify)
+		{
+			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		}
+		else
+		{
+			write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		}
 	}
 
-	if (!spec.left_justify)
+	template <typename CharT>
+	void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
 	{
-		write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		write_string(out, { &ch, 1 }, spec);
 	}
-	else
-	{
-		write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
-	}
-}
 
-template <typename CharT>
-void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
-{
-	write_string(out, {&ch, 1}, spec);
-}
-
-} // anonymous namespace
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_WRITE_STRING_H

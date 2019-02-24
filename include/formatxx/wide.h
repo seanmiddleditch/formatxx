@@ -45,8 +45,6 @@ namespace formatxx
 	using wformat_writer = basic_format_writer<wchar_t>;
 	using wformat_spec = basic_format_spec<wchar_t>;
 	using wstring_writer = basic_string_writer<std::wstring>;
-	template <std::size_t Size = 512> using wfixed_writer = basic_fixed_writer<wchar_t, Size>;
-	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<wchar_t>> using wbuffered_writer = basic_buffered_writer<wchar_t, Size, AllocatorT>;
 }
 
 namespace formatxx

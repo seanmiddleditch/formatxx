@@ -32,31 +32,30 @@
 #define _guard_FORMATXX_DETAIL_PRINTF_IMPL_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
+namespace formatxx::_detail {
 
-template <typename CharT>
-FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
-{
-	unsigned next_index = 0;
-	result_code result = result_code::success;
-
-	CharT const* begin = format.data();
-	CharT const* const end = begin + format.size();
-	CharT const* iter = begin;
-
-	while (iter < end)
+	template <typename CharT>
+	FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 	{
-		if (*iter != FormatTraits<CharT>::cPrintfSpec)
+		unsigned next_index = 0;
+		result_code result = result_code::success;
+
+		CharT const* begin = format.data();
+		CharT const* const end = begin + format.size();
+		CharT const* iter = begin;
+
+		while (iter < end)
 		{
-			++iter;
-		}
-		else
-		{
+			if (*iter != FormatTraits<CharT>::cPrintfSpec)
+			{
+				++iter;
+				continue;
+			}
+
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 			{
-				out.write({begin, iter});
+				out.write({ begin, iter });
 			}
 
 			++iter; // swallow the %
@@ -129,7 +128,7 @@ FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>&
 				// properly decode in parse_format_spec later.
 				CharT const* const spec_begin = iter;
 				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
-				spec_string = {spec_begin, spec.remaining};
+				spec_string = { spec_begin, spec.remaining };
 				if (spec.code == CharT(0))
 				{
 					// invalid spec
@@ -150,18 +149,16 @@ FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>&
 			// prepare for next round
 			next_index = index + 1;
 		}
+
+		// write out tail end of format string
+		if (iter > begin)
+		{
+			out.write({ begin, iter });
+		}
+
+		return result;
 	}
 
-	// write out tail end of format string
-	if (iter > begin)
-	{
-		out.write({begin, iter});
-	}
-
-	return result;
-}
-
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_PRINTF_IMPL_H

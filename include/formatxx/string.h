@@ -41,11 +41,11 @@ namespace formatxx
 
 	using string_writer = basic_string_writer<std::string>;
 
-	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const&... args);
-	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const&... args);
+	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args);
+	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args);
 
 	template <typename CharT, typename TraitsT, typename AllocatorT>
-	basic_string_view<CharT> make_string_view(std::basic_string<CharT, TraitsT, AllocatorT> const& str) { return {str.c_str(), str.size()}; }
+	basic_string_view<CharT> make_string_view(std::basic_string<CharT, TraitsT, AllocatorT> const& str) { return { str.c_str(), str.size() }; }
 
 	template <typename CharT, typename TraitsT, typename AllocatorT>
 	void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
@@ -64,16 +64,16 @@ namespace formatxx
 /// A writer that generates a buffer (intended for std::string).
 template <typename StringT>
 class formatxx::basic_string_writer : public basic_format_writer<typename StringT::value_type>
-{   
+{
 public:
-    basic_string_writer() = default;
-    basic_string_writer(StringT init) : _string(std::move(init)) {}
+	basic_string_writer() = default;
+	basic_string_writer(StringT init) : _string(std::move(init)) {}
 
 	void write(basic_string_view<typename StringT::value_type> str) override { _string.append(str.data(), str.size()); }
 
-	StringT const& str() const& { return _string; }
+	StringT const& str() const & { return _string; }
 	StringT& str() & { return _string; }
-    StringT&& str() && { return std::move(_string); }
+	StringT&& str() && { return std::move(_string); }
 
 	void clear() { _string.clear(); }
 	std::size_t size() const { return _string.size(); }
@@ -88,7 +88,7 @@ private:
 /// @param args The arguments used by the formatting string.
 /// @returns a formatted string.
 template <typename StringT, typename FormatT, typename... Args>
-StringT formatxx::format_string(FormatT const& format, Args const&... args)
+StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::format(tmp, make_string_view(format), args...);
@@ -99,7 +99,7 @@ StringT formatxx::format_string(FormatT const& format, Args const&... args)
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename StringT, typename FormatT, typename... Args>
-StringT formatxx::printf_string(FormatT const& format, Args const&... args)
+StringT formatxx::printf_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
 	formatxx::printf(tmp, make_string_view(format), args...);

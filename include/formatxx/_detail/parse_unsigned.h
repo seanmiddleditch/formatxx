@@ -32,25 +32,21 @@
 #define _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
-namespace {
+namespace formatxx::_detail {
 
-template <typename CharT>
-static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result)
-{
-	result = 0;
-	while (start != end && *start >= CharT('0') && *start <= CharT('9'))
+	template <typename CharT>
+	static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result)
 	{
-		result *= 10;
-		result += *start - CharT('0');
-		++start;
+		result = 0;
+		while (start != end && *start >= CharT('0') && *start <= CharT('9'))
+		{
+			result *= 10;
+			result += *start - CharT('0');
+			++start;
+		}
+		return start;
 	}
-	return start;
-}
 
-} // anonymous namespace
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_PARSE_UNSIGNED_H
