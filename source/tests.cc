@@ -29,10 +29,10 @@
 //   Sean Middleditch <sean@middleditch.us>
 
 #include <formatxx/format.h>
-#include <formatxx/fixed.h>
-#include <formatxx/buffered.h>
+#include <formatxx/fixed_writer.h>
+#include <formatxx/buffered_writer.h>
 #include <formatxx/wide.h>
-#include <formatxx/string.h>
+#include <formatxx/std_string.h>
 
 #include <iostream>
 #include <string>
@@ -43,10 +43,10 @@ static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
 template <typename CharT, typename WriterT, typename FormatT, typename... Args>
-static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& format, Args const&... args)
+static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& format, Args const& ... args)
 {
 	formatxx::format(writer, format, args...);
-	return {writer.c_str(), writer.size()};
+	return { writer.c_str(), writer.size() };
 }
 
 template <typename CharT, typename ValueT>
@@ -58,14 +58,14 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 }
 
 template <typename CharT, typename FormatT, typename... Args>
-static formatxx::result_code format_result(FormatT const& format, Args const&... args)
+static formatxx::result_code format_result(FormatT const& format, Args const& ... args)
 {
 	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
 	return formatxx::format(writer, format, args...);
 }
 
 template <typename... Args>
-static std::string printf_string(char const* format, Args const&... args)
+static std::string printf_string(char const* format, Args const& ... args)
 {
 	char buffer[2014];
 	int const len = std::snprintf(buffer, sizeof(buffer), format, args...);

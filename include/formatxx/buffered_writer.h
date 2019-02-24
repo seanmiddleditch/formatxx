@@ -51,6 +51,7 @@ namespace formatxx
 	template <typename CharT, std::size_t Size, typename AllocatorT = _detail::new_delete_allocator<CharT>> class basic_buffered_writer;
 
 	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<char>> using buffered_writer = basic_buffered_writer<char, Size, AllocatorT>;
+	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<wchar_t>> using wbuffered_writer = basic_buffered_writer<wchar_t, Size, AllocatorT>;
 
 } // namespace formatxx
 

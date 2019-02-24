@@ -5,10 +5,10 @@ project(formatxx)
 option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
 
 set(FORMATXX_PUBLIC_HEADERS
-	include/formatxx/buffered.h
-    include/formatxx/fixed.h
+	include/formatxx/buffered_writer.h
+    include/formatxx/fixed_writer.h
     include/formatxx/format.h
-    include/formatxx/string.h
+    include/formatxx/std_string.h
     include/formatxx/wide.h
 )
 set(FORMATXX_PRIVATE_HEADERS
