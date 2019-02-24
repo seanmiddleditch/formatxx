@@ -1,13 +1,25 @@
 skip_tags: true
 shallow_clone: true
 image:
+  - Visual Studio 2015
   - Visual Studio 2017
+  - Ubuntu
+  - Ubuntu 1804
 platform:
   - x86
   - x64
 configuration:
   - Release
+  - Debug
+environment:
+  matrix:
+    - shared: ON
+    - shared: OFF
 matrix:
   fast_finish: true
 build_script:
-  - cmake -Bbuild -H. && cmake --build build
+  - ps: |
+      mkdir build
+      cd build
+      cmake .. -DBUILD_SHARED_LIBS:BOOL=$env:shared -DCMAKE_BUILD_TYPE:STRING=$env:CONFIGURATION --no-warn-unused-cli
+      cmake --build . --config $env:CONFIGURATION
