@@ -6,6 +6,7 @@ project(formatxx
 )
 
 option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 set(FORMATXX_PUBLIC_HEADERS
 	include/formatxx/buffered_writer.h
@@ -37,13 +38,26 @@ set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORM
 
 add_library(formatxx ${FORMATXX_FILES})
 target_compile_features(formatxx PUBLIC cxx_std_17)
-target_include_directories(formatxx PUBLIC "include")
+target_include_directories(formatxx PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:include/formatxx>
+)
 set_target_properties(formatxx PROPERTIES
     DEFINE_SYMBOL FORMATXX_EXPORT
     CXX_VISIBILITY_PRESET hidden
     VISIBILITY_INLINES_HIDDEN ON
 )
 source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
+
+install(TARGETS formatxx EXPORT formatxx-targets
+    ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(EXPORT formatxx-targets DESTINATION share/formatxx/cmake)
+
+export(TARGETS formatxx FILE formatxx-exports.cmake)
 
 if(FORMATXX_BUILD_TESTS)
 	enable_testing()
