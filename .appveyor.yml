@@ -17,6 +17,6 @@ build_script:
   - ps: |
       mkdir build
       cd build
-      cmake .. -A $env:PLATFORM -DBUILD_SHARED_LIBS:BOOL=$env:shared -DCMAKE_BUILD_TYPE:STRING=$env:CONFIGURATION --no-warn-unused-cli
+      cmake .. -DBUILD_SHARED_LIBS:BOOL=$env:shared -DCMAKE_BUILD_TYPE:STRING=$env:CONFIGURATION --no-warn-unused-cli
       cmake --build . --config $env:CONFIGURATION
       ctest
