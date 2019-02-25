@@ -35,7 +35,7 @@
 #include <type_traits>
 
 #if !defined(FORMATXX_USE_BUILTIN_STRLEN)
-#	if (defined(_MSC) && _MSC >= 1700) || (defined(__clang__) || __clang__ >= 4) || (defined __GNUC__ && __GNUC__ >= 5)
+#	if defined(_MSC) && _MSC >= 1700
 #		define FORMATXX_USE_BUILTIN_STRLEN
 #	endif
 #endif
