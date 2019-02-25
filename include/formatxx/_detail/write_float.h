@@ -32,6 +32,9 @@
 #define _guard_FORMATXX_DETAIL_WRITE_FLOAT_H
 #pragma once
 
+#include <cstdio>
+#include <cwchar>
+
 namespace formatxx::_detail {
 
 	inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value)

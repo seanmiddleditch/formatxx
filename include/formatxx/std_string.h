@@ -40,6 +40,7 @@ namespace formatxx
 	template <typename StringT> class basic_string_writer;
 
 	using string_writer = basic_string_writer<std::string>;
+	using wstring_writer = basic_string_writer<std::wstring>;
 
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args);
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args);

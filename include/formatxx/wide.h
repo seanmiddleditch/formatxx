@@ -44,7 +44,6 @@ namespace formatxx
 	using wstring_view = basic_string_view<wchar_t>;
 	using wformat_writer = basic_format_writer<wchar_t>;
 	using wformat_spec = basic_format_spec<wchar_t>;
-	using wstring_writer = basic_string_writer<std::wstring>;
 }
 
 namespace formatxx

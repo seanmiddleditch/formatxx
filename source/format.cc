@@ -40,7 +40,7 @@
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
-#include <cstdio>
+#include <cstdint>
 
 namespace formatxx {
 
