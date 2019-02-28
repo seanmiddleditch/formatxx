@@ -49,119 +49,130 @@ namespace formatxx {
 #pragma warning(push)
 #pragma warning(disable: 4996)
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char ch, wstring_view)
-{
-	std::mbstate_t state{};
-	wchar_t wc;
-	std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
-	if (rs > 0 && rs < static_cast<std::size_t>(-2))
-	{
-		out.write({&wc, 1});
-	}
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view)
-{
-	if (zstr != nullptr)
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char ch, wstring_view) noexcept
 	{
 		std::mbstate_t state{};
-		while (*zstr != 0)
+		wchar_t wc;
+		std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
+		if (rs > 0 && rs < static_cast<std::size_t>(-2))
 		{
-			wchar_t wc;
-			std::size_t const rs = std::mbrtowc(&wc, zstr++, 1, &state);
-			if (rs < static_cast<std::size_t>(-2))
+			out.write({ &wc, 1 });
+		}
+	}
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char const* zstr, wstring_view) noexcept
+	{
+		if (zstr != nullptr)
+		{
+			std::mbstate_t state{};
+			while (*zstr != 0)
 			{
-				out.write({&wc, 1});
+				wchar_t wc;
+				std::size_t const rs = std::mbrtowc(&wc, zstr++, 1, &state);
+				if (rs < static_cast<std::size_t>(-2))
+				{
+					out.write({ &wc, 1 });
+				}
 			}
 		}
 	}
-}
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view)
-{
-	std::mbstate_t state{};
-	for (auto const ch : str)
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, char* zstr, wstring_view spec) noexcept
 	{
-		wchar_t wc;
-		std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
-		if (rs < static_cast<std::size_t>(-2))
+		format_value(out, (char const*)zstr, spec);
+	}
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view) noexcept
+	{
+		std::mbstate_t state{};
+		for (auto const ch : str)
 		{
-			out.write({&wc, 1});
+			wchar_t wc;
+			std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
+			if (rs < static_cast<std::size_t>(-2))
+			{
+				out.write({ &wc, 1 });
+			}
 		}
 	}
-}
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view)
-{
-	std::mbstate_t state{};
-	char mb[MB_LEN_MAX];
-	std::size_t const rs = std::wcrtomb(mb, ch, &state);
-	if (rs != static_cast<std::size_t>(-1))
-	{
-		out.write({mb, rs});
-	}
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view)
-{
-	if (zstr != nullptr)
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t ch, string_view) noexcept
 	{
 		std::mbstate_t state{};
 		char mb[MB_LEN_MAX];
-		while (*zstr != 0)
-		{
-			std::size_t const rs = std::wcrtomb(mb, *zstr++, &state);
-			if (rs != static_cast<std::size_t>(-1))
-			{
-				out.write({mb, rs});
-			}
-		}
-	}
-}
-
-FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view)
-{
-	std::mbstate_t state{};
-	char mb[MB_LEN_MAX];
-	for (auto const ch : str)
-	{
 		std::size_t const rs = std::wcrtomb(mb, ch, &state);
 		if (rs != static_cast<std::size_t>(-1))
 		{
-			out.write({mb, rs});
+			out.write({ mb, rs });
 		}
 	}
-}
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t const* zstr, string_view) noexcept
+	{
+		if (zstr != nullptr)
+		{
+			std::mbstate_t state{};
+			char mb[MB_LEN_MAX];
+			while (*zstr != 0)
+			{
+				std::size_t const rs = std::wcrtomb(mb, *zstr++, &state);
+				if (rs != static_cast<std::size_t>(-1))
+				{
+					out.write({ mb, rs });
+				}
+			}
+		}
+	}
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wchar_t* zstr, string_view spec) noexcept
+	{
+		format_value(out, (wchar_t const*)zstr, spec);
+	}
+
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view) noexcept
+	{
+		std::mbstate_t state{};
+		char mb[MB_LEN_MAX];
+		for (auto const ch : str)
+		{
+			std::size_t const rs = std::wcrtomb(mb, ch, &state);
+			if (rs != static_cast<std::size_t>(-1))
+			{
+				out.write({ mb, rs });
+			}
+		}
+	}
 
 #pragma warning(pop)
 
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) { _detail::write_char(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) { _detail::write_string<wchar_t>(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t value, wstring_view spec) noexcept { _detail::write_char(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* value, wstring_view spec) noexcept { _detail::write_string<wchar_t>(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* value, wstring_view spec) noexcept { _detail::write_string<wchar_t>(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view value, wstring_view spec) noexcept { _detail::write_string<wchar_t>(out, value, spec); }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed int value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed char value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed short value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed long long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed int value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed char value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed long value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed short value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, signed long long value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned int value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned char value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned short value, wstring_view spec) { _detail::write_integer(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long long value, wstring_view spec) { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned int value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned char value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned short value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, unsigned long long value, wstring_view spec) noexcept { _detail::write_integer(out, value, spec); }
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, bool value, wstring_view spec)
-{
-	format_value(out, value ? _detail::FormatTraits<wchar_t>::sTrue : _detail::FormatTraits<wchar_t>::sFalse, spec);
-}
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, bool value, wstring_view spec) noexcept
+	{
+		format_value(out, value ? _detail::FormatTraits<wchar_t>::sTrue : _detail::FormatTraits<wchar_t>::sFalse, spec);
+	}
 
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, float value, wstring_view spec) { _detail::write_float(out, value, spec); }
-FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value, wstring_view spec) { _detail::write_float(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, float value, wstring_view spec) noexcept { _detail::write_float(out, value, spec); }
+	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, double value, wstring_view spec) noexcept { _detail::write_float(out, value, spec); }
 
-template basic_format_writer<wchar_t>& FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
-template basic_format_writer<wchar_t>& FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, std::size_t count, BasicFormatterThunk<wchar_t> const* funcs, FormatterParameter const* values);
-template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>);
+	template result_code FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_args<wchar_t> args);
+	template result_code FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_args<wchar_t> args);
+	template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>) noexcept;
 
 } // namespace formatxx

@@ -33,114 +33,75 @@
 #pragma once
 
 #include "parse_unsigned.h"
+#include "format_util.h"
 
 namespace formatxx {
-namespace _detail {
 
-template <typename CharT>
-bool contains(basic_string_view<CharT> haystack, CharT needle)
-{
-	for (CharT const c : haystack)
+	template <typename CharT>
+	FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept
 	{
-		if (c == needle)
+		using Traits = _detail::FormatTraits<CharT>;
+
+		basic_format_spec<CharT> result;
+
+		result.remaining = spec.data();
+		CharT const*& start = result.remaining;
+		CharT const* const end = spec.data() + spec.size();
+
+		// flags
+		while (start != end)
 		{
-			return true;
+			if (*start == Traits::cPlus)
+			{
+				result.prepend_sign = true;
+			}
+			else if (*start == Traits::cMinus)
+			{
+				result.left_justify = true;
+			}
+			else if (*start == Traits::to_digit(0))
+			{
+				result.leading_zeroes = true;
+			}
+			else if (*start == Traits::cSpace)
+			{
+				result.prepend_space = true;
+			}
+			else if (*start == Traits::cHash)
+			{
+				result.alternate_form = true;
+			}
+			else
+			{
+				break;
+			}
+			++start;
 		}
-	}
-	return false;
-}
 
-}
+		// read in width
+		start = _detail::parse_unsigned(start, end, result.width);
 
-template <typename CharT>
-FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec)
-{
-	using Traits = _detail::FormatTraits<CharT>;
+		// read in precision, if present
+		if (start != end && *start == Traits::cDot)
+		{
+			result.has_precision = true;
+			start = _detail::parse_unsigned(start + 1, end, result.precision);
+		}
 
-	basic_format_spec<CharT> result;
-	// if we early-out, this will ensure that the extra points to the end of th einput
-	// FIXME: this is terrible API requirement all around
-	result.extra = {spec.end(), spec.end()};
+		// read in any of the modifiers like h or l that modify a type code (no effect in our system)
+		while (start != end && _detail::string_contains(Traits::sPrintfModifiers, *start))
+		{
+			++start;
+		}
 
-	if (spec.empty())
-	{
+		// generic code specified option allowed (required for printf)
+		if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start))
+		{
+			result.code = *start++;
+		}
+
 		return result;
 	}
-
-	CharT const* start = spec.data();
-	CharT const* const end = spec.data() + spec.size();
-
-	// flags
-	for (;;)
-	{
-		if (start == end)
-		{
-			return result; // incomplete, so error
-		}
-		else if (*start == Traits::cPlus ||
-			*start == Traits::cMinus)
-		{
-			result.sign = *start;
-		}
-		else if (*start == Traits::to_digit(0))
-		{
-			result.pad = *start; // zero-pad numbers
-		}
-		else if (*start == Traits::cSpace)
-		{
-			result.sign = *start; // numbers get a space for positive numbers
-			result.pad = *start; // strings get padded with spaces
-		}
-		else if (*start == Traits::cHash)
-		{
-			// "alternate form"
-			result.type_prefix = true;
-		}
-		else
-		{
-			break;
-		}
-		++start;
-	}
-
-	// read in width
-	start = _detail::parse_unsigned(start, end, result.width);
-	if (start == end)
-	{
-		return result;
-	}
-
-	// read in precision, if present
-	if (*start == Traits::cDot)
-	{
-		start = _detail::parse_unsigned(start + 1, end, result.precision);
-		if (start == end)
-		{
-			return result;
-		}
-	}
-
-	// read in any of the modifiers like h or l that modify a type code (no effect in our system)
-	while (_detail::contains(Traits::sPrintfModifiers, *start))
-	{
-		if (++start == end)
-		{
-			return result;
-		}
-	}
-
-
-	// generic code specified option allowed (required for printf)
-	if (_detail::contains(Traits::sPrintfSpecifiers, *start))
-	{
-		result.code = *start++;
-	}
-
-	// store remaining format specifier
-	result.extra = basic_string_view<CharT>(start, end);
-
-	return result;
-}
 
 } // namespace formatxx
 

@@ -29,10 +29,10 @@
 //   Sean Middleditch <sean@middleditch.us>
 
 #include <formatxx/format.h>
-#include <formatxx/fixed.h>
-#include <formatxx/buffered.h>
+#include <formatxx/fixed_writer.h>
+#include <formatxx/buffered_writer.h>
 #include <formatxx/wide.h>
-#include <formatxx/string.h>
+#include <formatxx/std_string.h>
 
 #include <iostream>
 #include <string>
@@ -43,10 +43,10 @@ static int formatxx_tests = 0;
 static int formatxx_failed = 0;
 
 template <typename CharT, typename WriterT, typename FormatT, typename... Args>
-static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& format, Args const&... args)
+static std::basic_string<CharT> format_into(WriterT& writer, FormatT const& format, Args const& ... args)
 {
 	formatxx::format(writer, format, args...);
-	return {writer.c_str(), writer.size()};
+	return { writer.c_str(), writer.size() };
 }
 
 template <typename CharT, typename ValueT>
@@ -55,6 +55,34 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
 	format_value(writer, value, spec);
 	return std::move(writer).str();
+}
+
+template <typename CharT, typename FormatT, typename... Args>
+static formatxx::result_code format_result(FormatT const& format, Args const& ... args)
+{
+	formatxx::basic_string_writer<std::basic_string<CharT>> writer;
+	return formatxx::format(writer, format, args...);
+}
+
+template <typename... Args>
+static std::string printf_string(char const* format, Args const& ... args)
+{
+	char buffer[2014];
+	int const len = std::snprintf(buffer, sizeof(buffer), format, args...);
+	return std::string(buffer, len);
+}
+
+static std::ostream& operator<<(std::ostream& os, formatxx::result_code result)
+{
+	switch (result)
+	{
+	case formatxx::result_code::success: os << "success"; break;
+	case formatxx::result_code::out_of_range: os << "out_of_range"; break;
+	case formatxx::result_code::malformed_input: os << "malformed_input"; break;
+	case formatxx::result_code::out_of_space: os << "out_of_space"; break;
+	default: os << "unknown"; break;
+	}
+	return os;
 }
 
 #define CHECK_FORMAT_HELPER(out, expected, expr) \
@@ -76,6 +104,9 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 #define CHECK_WFORMAT(expected, ...) \
 	CHECK_FORMAT_HELPER(std::wcerr, (expected), formatxx::format_string<std::wstring>(__VA_ARGS__))
 
+#define CHECK_FORMAT_RESULT(expected, ...) \
+	CHECK_FORMAT_HELPER(std::cerr, (expected), format_result<char>(__VA_ARGS__))
+
 #define CHECK_PRINTF(expected, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), formatxx::printf_string<std::string>(__VA_ARGS__))
 
@@ -90,6 +121,9 @@ static std::basic_string<CharT> format_value_string(ValueT const& value, formatx
 
 #define CHECK_FORMAT_WRITER(expected, writer, ...) \
 	CHECK_FORMAT_HELPER(std::cerr, (expected), format_into<char>((writer), __VA_ARGS__))
+
+#define CHECK_PRINTF_EQUAL(...) \
+	CHECK_FORMAT_HELPER(std::cerr, printf_string(__VA_ARGS__), formatxx::printf_string<std::string>(__VA_ARGS__))
 
 static void test_fixed()
 {
@@ -113,6 +147,11 @@ static void test_integers()
 	CHECK_FORMAT("+1", "{:+}", +1);
 	CHECK_FORMAT(" 1", "{: }", +1);
 
+	// should all be identical - https://stackoverflow.com/questions/15333023/are-zero-padded-width-and-precision-the-same-for-integer-arguments-to-printf
+	CHECK_FORMAT("000004D2", "{:08X}", 1234);
+	CHECK_FORMAT("000004D2", "{:.8X}", 1234);
+	CHECK_FORMAT("000004D2", "{:.08X}", 1234);
+
 	CHECK_FORMAT("127", "{}", std::numeric_limits<std::int8_t>::max());
 	CHECK_FORMAT("32767", "{}", std::numeric_limits<std::int16_t>::max());
 	CHECK_FORMAT("2147483647", "{}", std::numeric_limits<std::int32_t>::max());
@@ -130,22 +169,25 @@ static void test_integers()
 	CHECK_FORMAT("0xff", "{:#x}", 255);
 	CHECK_FORMAT("0x100", "{:#x}", 256);
 	CHECK_FORMAT("0X11", "{:#X}", 17);
-	CHECK_FORMAT("-0X11", "{:-#X}", -17);
+	CHECK_FORMAT("0XFFFFFFEF", "{:-#X}", -17);
 
 	CHECK_FORMAT("101", "{:b}", 5);
 	CHECK_FORMAT("-10", "{:b}", -2);
 	CHECK_FORMAT("-0b10", "{:#b}", -2);
 
+	CHECK_FORMAT("11", "{:o}", 9);
+	CHECK_FORMAT("-33", "{:o}", -27);
+	CHECK_FORMAT("-0o10", "{:#o}", -8);
+
 	CHECK_FORMAT("   1234", "{:7d}", 1234);
+	CHECK_FORMAT("1234   ;", "{:-7d};", 1234);
 	CHECK_FORMAT("0001234", "{:07d}", 1234);
 	CHECK_FORMAT("1234", "{:2d}", 1234);
-	CHECK_FORMAT("+   1234", "{:+7d}", 1234);
-	CHECK_FORMAT("+001234", "{:+0.7d}", 1234);
-
-	CHECK_FORMAT("0001234", "{:-0.7d}", 1234);
+	CHECK_FORMAT("  +1234", "{:+7d}", 1234);
+	CHECK_FORMAT("+001234", "{:+07d}", 1234);
+	CHECK_FORMAT("+0001234", "{:+.7d}", 1234);
 }
 
-// FIXME: currently platform-dependent due to sprintf dependence
 static void test_floats()
 {
 	CHECK_FORMAT("123987.456000", "{}", 123987.456);
@@ -154,6 +196,14 @@ static void test_floats()
 	CHECK_FORMAT("1.000000", "{}", 1.0);
 	CHECK_FORMAT("-1.000000", "{}", -1.0);
 
+	CHECK_FORMAT("12.34", "{:2.2}", 12.34);
+	CHECK_FORMAT("12.00", "{:#2.2}", 12.0);
+	CHECK_FORMAT(" 12.34", "{: 6.2}", 12.34);
+	CHECK_FORMAT("012.34", "{:06.2}", 12.34);
+	CHECK_FORMAT("+12.34", "{:+06.2}", 12.34);
+	CHECK_FORMAT("12.34 ;", "{:-6.2};", 12.34);
+
+	// assumes IEEE754 single- and double-precision types
 	CHECK_FORMAT("340282346638528859811704183484516925440.000000", "{}", std::numeric_limits<float>::max());
 	CHECK_FORMAT("17976931348623157081452742373170435679807056752584499659891747680315"
 		"72607800285387605895586327668781715404589535143824642343213268894641827684675"
@@ -198,6 +248,38 @@ static void test_printf()
 	CHECK_PRINTF("def 456", "%2% %1%", 456, "def");
 
 	CHECK_PRINTF("  12", "%4i", 12);
+
+	CHECK_PRINTF_EQUAL("%7d", 1234);
+	CHECK_PRINTF_EQUAL("%-7d", 1234);
+	CHECK_PRINTF_EQUAL("%+7d", 1234);
+	CHECK_PRINTF_EQUAL("%+07d", 1234);
+	CHECK_PRINTF_EQUAL("%-07d", 1234);
+	CHECK_PRINTF_EQUAL("% 7d", 1234);
+	CHECK_PRINTF_EQUAL("% +7d", 1234);
+	CHECK_PRINTF_EQUAL("% +-7d;", 1234);
+	CHECK_PRINTF_EQUAL("%.7d", 1234);
+	CHECK_PRINTF_EQUAL("%-.7d;", 1234);
+	CHECK_PRINTF_EQUAL("%#7x", 1234);
+	CHECK_PRINTF_EQUAL("%#+7x", 1234);
+	CHECK_PRINTF_EQUAL("%#07x", 1234);
+	CHECK_PRINTF_EQUAL("%-#07x;", 1234);
+	CHECK_PRINTF_EQUAL("%+#07x", 1234);
+
+	CHECK_PRINTF_EQUAL("%7d", -1234);
+	CHECK_PRINTF_EQUAL("%-7d", -1234);
+	CHECK_PRINTF_EQUAL("%+7d", -1234);
+	CHECK_PRINTF_EQUAL("%+07d", -1234);
+	CHECK_PRINTF_EQUAL("%-07d", -1234);
+	CHECK_PRINTF_EQUAL("% 7d", -1234);
+	CHECK_PRINTF_EQUAL("% +7d", -1234);
+	CHECK_PRINTF_EQUAL("% +-7d;", -1234);
+	CHECK_PRINTF_EQUAL("%.7d", -1234);
+	CHECK_PRINTF_EQUAL("%-.7d;", -1234);
+	CHECK_PRINTF_EQUAL("%#7x", -1234);
+	CHECK_PRINTF_EQUAL("%#+7x", -1234);
+	CHECK_PRINTF_EQUAL("%#07x", -1234);
+	CHECK_PRINTF_EQUAL("%-#07x;", -1234);
+	CHECK_PRINTF_EQUAL("%+#07x", -1234);
 }
 
 static void test_strings()
@@ -209,6 +291,11 @@ static void test_strings()
 	CHECK_FORMAT("abcdef", "{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef");
 
 	CHECK_FORMAT("abc", std::string("a{}c"), "b");
+
+	CHECK_FORMAT("    test", "{:8s}", "test");
+	CHECK_FORMAT("test    ;", "{:-8s};", "test");
+
+	CHECK_FORMAT("value   00042", "{:-8}{:05}", "value", 42);
 }
 
 static void test_wide_strings()
@@ -243,6 +330,14 @@ static void test_pointers()
 	CHECK_FORMAT("fefefefe", "{:x}", iptr);
 }
 
+static void test_errors()
+{
+	CHECK_FORMAT_RESULT(formatxx::result_code::success, "{} {:4d} {:3.5f}", "abc", 9, 12.57);
+	CHECK_FORMAT_RESULT(formatxx::result_code::malformed_input, "{} {:4d", "abc", 9);
+	CHECK_FORMAT_RESULT(formatxx::result_code::success, "{0} {1}", "abc", 9);
+	CHECK_FORMAT_RESULT(formatxx::result_code::out_of_range, "{0} {1} {5}", "abc", 9, 12.57);
+}
+
 #if defined(WIN32)
 // sometimes useful to compile a whole project with /Gv or the like
 // but that breaks test files
@@ -263,6 +358,7 @@ int FORMATXX_MAIN_DECL main()
 	test_wide_strings();
 	test_bool();
 	test_pointers();
+	test_errors();
 
 	std::cout << "formatxx passed " << (formatxx_tests - formatxx_failed) << " of " << formatxx_tests << " tests\n";
 	return formatxx_failed == 0 ? 0 : 1;

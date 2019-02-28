@@ -32,30 +32,30 @@
 #define _guard_FORMATXX_DETAIL_PRINTF_IMPL_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
+namespace formatxx::_detail {
 
-template <typename CharT>
-FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
-{
-	unsigned next_index = 0;
-
-	CharT const* begin = format.data();
-	CharT const* const end = begin + format.size();
-	CharT const* iter = begin;
-
-	while (iter < end)
+	template <typename CharT>
+	FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 	{
-		if (*iter != FormatTraits<CharT>::cPrintfSpec)
+		unsigned next_index = 0;
+		result_code result = result_code::success;
+
+		CharT const* begin = format.data();
+		CharT const* const end = begin + format.size();
+		CharT const* iter = begin;
+
+		while (iter < end)
 		{
-			++iter;
-		}
-		else
-		{
+			if (*iter != FormatTraits<CharT>::cPrintfSpec)
+			{
+				++iter;
+				continue;
+			}
+
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 			{
-				out.write({begin, iter});
+				out.write({ begin, iter });
 			}
 
 			++iter; // swallow the %
@@ -63,7 +63,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -85,7 +85,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 			// if we hit the end of the string, we have an incomplete format
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -111,7 +111,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 
 					if (iter == end)
 					{
-						out.write(FormatTraits<CharT>::sErrIncomplete);
+						result = result_code::malformed_input;
 						break;
 					}
 				}
@@ -119,53 +119,46 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API printf_impl(basic_forma
 				{
 					index = next_index;
 
-					// the decimal input had nothing to do with position; reset (FIXME: is that necessary?
-					// or does it cause us to just parse the format twice for no reason?)
+					// the decimal input had nothing to do with position; reset so the call to
+					// parse_format_spec ensures we have a valid spec, not something like 1#2.3
 					iter = start;
 				}
 
-				// parse forward through the specification
-				// FIXME: we just want to find the end of the input, a full format parse may be overkill
+				// parse forward through the specification and verify that it's correct and will
+				// properly decode in parse_format_spec later.
 				CharT const* const spec_begin = iter;
-				basic_format_spec<CharT> spec = parse_format_spec(basic_string_view<CharT>(iter, end));
-				CharT const* const spec_end = spec.extra.begin();
-				spec_string = {spec_begin, spec_end};
+				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
+				spec_string = { spec_begin, spec.remaining };
 				if (spec.code == CharT(0))
 				{
 					// invalid spec
-					out.write(FormatTraits<CharT>::sErrBadFormat);
+					result = result_code::malformed_input;
 					break;
 				}
 
 				// prepare for next round
-				begin = iter = spec_end;
+				begin = iter = spec.remaining;
 			}
 
-			// if the index is out of range, we have nothing to format
-			if (index >= count)
+			result_code const arg_result = args.format_arg(out, index, spec_string);
+			if (arg_result != result_code::success)
 			{
-				out.write(FormatTraits<CharT>::sErrOutOfRange);
-				continue;
+				result = arg_result;
 			}
-
-			// magic!
-			funcs[index](out, values[index], spec_string);
 
 			// prepare for next round
 			next_index = index + 1;
 		}
+
+		// write out tail end of format string
+		if (iter > begin)
+		{
+			out.write({ begin, iter });
+		}
+
+		return result;
 	}
 
-	// write out tail end of format string
-	if (iter > begin)
-	{
-		out.write({begin, iter});
-	}
-
-	return out;
-}
-
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_PRINTF_IMPL_H

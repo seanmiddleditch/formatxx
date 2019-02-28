@@ -16,7 +16,6 @@ The library supports writing primitive types as well as user-defined types into 
 buffers. The libray has as little dependence on the C++ standard library as possible, which is
 intended to make it a very light header to include throughout a larger C++ project.
 
-
 The included string writers allow for formatting into a `std::string`-compatible type, a fixed-
 size buffer with guaranteed no allocations, or a buffer that initially has a fixed-size buffer
 but can grow to accomodate larger strings. The combination of these buffers allow for easy use
@@ -41,7 +40,7 @@ the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_s
 ```C++
 struct Foo { int value };
 	
-void format_value(formatxx::writer& out, Foo foo, formatxx::string_view spec)
+void format_value(formatxx::writer& out, Foo const& foo, formatxx::string_view spec)
 {
 	format(out, "Foo({})", foo.value);
 }
@@ -99,6 +98,14 @@ to the header: the enum selection, a `std::tuple` for storing the converted inpu
 also proved to be difficult to get good support for `format_value` functions for user-defined
 types with clean and concise error messages.
 
+We also try to very heavily minimize header dependencies, especially on certain problematic
+C++ headers. For example, the core library tries to avoid including `<string>` due to that
+header's particularly heavy cost in some implementations. This likewise precludes formatxx
+from using other standard library types like `std::string_view` or so on. In some cases we
+_try_ to avoid standard headers but fallback on including them for wide compatibility; for
+example, we attempt to use the common `__builtin_strlen` support on major compilers but will
+fallback to `std::char_traits` when necessary.
+
 The current header relies on a function template wrapper around the real formatting functions.
 This is one template more than is desired that will lead to object file bloat, and for
 unoptimized debug builds essentially means that all `format_value` functions get an extra
@@ -121,30 +128,22 @@ and only bind the format functions for user-provided types. This would allow the
 to parse out integral types efficiently, and possibly also better-optimize primitive formatting.
 
 To the point possible, we use modern C++ and only work with recent compilers. In some cases,
-we're held back to slightly older compilers. We currently target primarily Visual C++ 19.0 (2015)
-and Clang 3.9, and also test against GCC 6.3. The biggest feature lacking from the common
-denominator here that I'd like to use is `string_view`. For now, we have a custom one in the
-formatxx codebase, but it'd be great to switch to the standard one for compatibility once the
-compiler versions can be bumped in the project that drives formatxx.
+we're held back to slightly older compilers. We currently require C++17 support and so require
+recent Visual C++ 19.x (2015 SP 3 or later), Clang 3.9, and GCC 6.3
 
 A final note is that floating point formatting currently bounces through `snprintf` which
 necessarily means that our floating point performance is slower and more complicated than
 calling the CRT directly. Writing a correct floating point formatter is incredibly complex. C++
-now includes helpers like `to_chars` but those might not expose as much functionality as we'd
-like.
+now includes helpers like `to_chars` but it is not yet widely available on enough standard
+library implementations for us to rely on exclusively.
 
 ## To Do
 
-- Remaining primitive types
-- Remaining format specifiers and support, particularly for better `printf` syntax compatibility
-- Observable errors
-  - Throw by default, with option/`std::nothrow` to disable?
-  - Return value or error code?
 - Performance pass
-  - noexcept(true) where appropriate?
   - Benchmarks
-- Unicode support
+- Correctness to wide/unicode char support
   - u8/u16/u32?
+  - maybe just remove?
 
 ## Copying
 

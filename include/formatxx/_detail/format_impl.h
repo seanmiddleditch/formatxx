@@ -32,30 +32,29 @@
 #define _guard_FORMATXX_DETAIL_FORMAT_IMPL_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
+namespace formatxx::_detail {
 
-template <typename CharT>
-FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, std::size_t count, BasicFormatterThunk<CharT> const* funcs, FormatterParameter const* values)
-{
-	unsigned next_index = 0;
-
-	CharT const* begin = format.data();
-	CharT const* const end = begin + format.size();
-	CharT const* iter = begin;
-
-	while (iter < end)
+	template <typename CharT>
+	FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
 	{
-		if (*iter != FormatTraits<CharT>::cFormatBegin)
+		unsigned next_index = 0;
+		result_code result = result_code::success;
+
+		CharT const* begin = format.data();
+		CharT const* const end = begin + format.size();
+		CharT const* iter = begin;
+
+		while (iter < end)
 		{
-			++iter;
-		}
-		else
-		{
+			if (*iter != FormatTraits<CharT>::cFormatBegin)
+			{
+				++iter;
+				continue;
+			}
 			// write out the string so far, since we don't write characters immediately
 			if (iter > begin)
 			{
-				out.write({begin, iter});
+				out.write({ begin, iter });
 			}
 
 			++iter; // swallow the {
@@ -63,7 +62,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -83,7 +82,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			// if we hit the end of the string, we have an incomplete format
 			if (iter == end)
 			{
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				break;
 			}
 
@@ -109,7 +108,7 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 				if (iter == end)
 				{
 					// invalid spec
-					out.write(FormatTraits<CharT>::sErrBadFormat);
+					result = result_code::malformed_input;
 					break;
 				}
 
@@ -120,39 +119,33 @@ FORMATXX_PUBLIC basic_format_writer<CharT>& FORMATXX_API format_impl(basic_forma
 			if (*iter != FormatTraits<CharT>::cFormatEnd)
 			{
 				// we have something besides a number, no bueno
-				out.write(FormatTraits<CharT>::sErrIncomplete);
+				result = result_code::malformed_input;
 				begin = iter; // make sure we're set up for the next begin, which starts at this unknown character
 				continue;
+			}
+
+			result_code const arg_result = args.format_arg(out, index, spec);
+			if (arg_result != result_code::success)
+			{
+				result = arg_result;
 			}
 
 			// the iterrent text begin begins with the next character following the format directive's end
 			begin = iter = iter + 1;
 
-			// if the index is out of range, we have nothing to format
-			if (index >= count)
-			{
-				out.write(FormatTraits<CharT>::sErrOutOfRange);
-				continue;
-			}
-
-			// magic!
-			funcs[index](out, values[index], spec);
-
 			// if we continue to receive {} then the next index will be the next one after the last one used
 			next_index = index + 1;
 		}
+
+		// write out tail end of format string
+		if (iter > begin)
+		{
+			out.write({ begin, iter });
+		}
+
+		return result;
 	}
 
-	// write out tail end of format string
-	if (iter > begin)
-	{
-		out.write({begin, iter});
-	}
-
-	return out;
-}
-
-} // namespace _detail
-} // namespace formatxx
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_FORMAT_IMPL_H

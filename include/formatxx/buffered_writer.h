@@ -33,7 +33,7 @@
 #pragma once
 
 #include <formatxx/format.h>
-#include <algorithm>
+#include <cstring>
 
 namespace formatxx
 {
@@ -51,6 +51,7 @@ namespace formatxx
 	template <typename CharT, std::size_t Size, typename AllocatorT = _detail::new_delete_allocator<CharT>> class basic_buffered_writer;
 
 	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<char>> using buffered_writer = basic_buffered_writer<char, Size, AllocatorT>;
+	template <std::size_t Size = 512, typename AllocatorT = _detail::new_delete_allocator<wchar_t>> using wbuffered_writer = basic_buffered_writer<wchar_t, Size, AllocatorT>;
 
 } // namespace formatxx
 
@@ -77,7 +78,7 @@ private:
 	CharT* _first = _buffer;
 	CharT* _last = _buffer;
 	CharT* _sentinel = _buffer + SizeN;
-	CharT _buffer[SizeN] = {CharT(0),};
+	CharT _buffer[SizeN] = { CharT(0), };
 };
 
 template <typename CharT, std::size_t SizeN, typename AllocatorT>
@@ -102,7 +103,7 @@ void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::_grow(std::size_
 			newCapacity = required;
 
 		char* newBuffer = this->allocate(newCapacity);
-		std::copy(_first, _first + size + 1, newBuffer);
+		std::memcpy(newBuffer, _first, sizeof(CharT) * (size + 1));
 
 		if (_first != _buffer)
 			this->deallocate(_first, capacity);
@@ -117,7 +118,7 @@ template <typename CharT, std::size_t SizeN, typename AllocatorT>
 void formatxx::basic_buffered_writer<CharT, SizeN, AllocatorT>::write(basic_string_view<CharT> str)
 {
 	_grow(str.size());
-	std::copy(str.data(), str.data() + str.size(), _last);
+	std::memcpy(_last, str.data(), sizeof(CharT) * str.size());
 	_last += str.size();
 	*_last = CharT(0);
 }

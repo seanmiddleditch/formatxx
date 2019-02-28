@@ -32,24 +32,36 @@
 #define _guard_FORMATXX_DETAIL_WRITE_STRING_H
 #pragma once
 
-namespace formatxx {
-namespace _detail {
-namespace {
+#include "format_util.h"
 
-template <typename CharT>
-void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT>)
-{
-	out.write(str);
-}
+namespace formatxx::_detail {
 
-template <typename CharT>
-void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
-{
-	write_string(out, {&ch, 1}, spec);
-}
+	template <typename CharT>
+	void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_string_view<CharT> spec_string)
+	{
+		auto const spec = parse_format_spec(spec_string);
 
-} // anonymous namespace
-} // namespace _detail
-} // namespace formatxx
+		if (spec.has_precision)
+		{
+			str = trim_string(str, spec.precision);
+		}
+
+		if (!spec.left_justify)
+		{
+			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		}
+		else
+		{
+			write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		}
+	}
+
+	template <typename CharT>
+	void write_char(basic_format_writer<CharT>& out, CharT ch, basic_string_view<CharT> spec)
+	{
+		write_string(out, { &ch, 1 }, spec);
+	}
+
+} // namespace formatxx::_detail
 
 #endif // _guard_FORMATXX_DETAIL_WRITE_STRING_H

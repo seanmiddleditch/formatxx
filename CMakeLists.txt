@@ -1,13 +1,18 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8)
 
-project(formatxx)
-enable_testing()
+project(formatxx
+	VERSION 0.9.0
+	LANGUAGES CXX
+)
+
+option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
+option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 set(FORMATXX_PUBLIC_HEADERS
-	include/formatxx/buffered.h
-    include/formatxx/fixed.h
+	include/formatxx/buffered_writer.h
+    include/formatxx/fixed_writer.h
     include/formatxx/format.h
-    include/formatxx/string.h
+    include/formatxx/std_string.h
     include/formatxx/wide.h
 )
 set(FORMATXX_PRIVATE_HEADERS
@@ -15,8 +20,11 @@ set(FORMATXX_PRIVATE_HEADERS
 	include/formatxx/_detail/parse_unsigned.h
 	include/formatxx/_detail/format_impl.h
     include/formatxx/_detail/printf_impl.h
-    include/formatxx/_detail/format_traits.h
-    include/formatxx/_detail/write_integer.h
+	include/formatxx/_detail/format_traits.h
+	include/formatxx/_detail/format_util.h
+	include/formatxx/_detail/write_integer.h
+	include/formatxx/_detail/write_float.h
+	include/formatxx/_detail/write_string.h
 )
 set(FORMATXX_SOURCES
 	source/format.cc
@@ -28,22 +36,32 @@ set(FORMATXX_TESTS
 
 set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORMATXX_SOURCES})
 
-if(NOT DEFINED FORMATXX_BUILD_SHARED)
-	set(FORMATXX_BUILD_SHARED ${BUILD_SHARED_LIBRARIES})
-endif()
-
-if(${FORMATXX_BUILD_SHARED})
-	add_library(formatxx SHARED ${FORMATXX_FILES})
-	target_compile_definitions(formatxx PRIVATE FORMATXX_EXPORT)
-else()
-	add_library(formatxx STATIC ${FORMATXX_FILES})
-	target_compile_definitions(formatxx PUBLIC FORMATXX_STATIC)
-endif()
-target_include_directories(formatxx PUBLIC "include")
+add_library(formatxx ${FORMATXX_FILES})
+target_compile_features(formatxx PUBLIC cxx_std_17)
+target_include_directories(formatxx PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+	$<INSTALL_INTERFACE:include/formatxx>
+)
+set_target_properties(formatxx PROPERTIES
+    DEFINE_SYMBOL FORMATXX_EXPORT
+    CXX_VISIBILITY_PRESET hidden
+    VISIBILITY_INLINES_HIDDEN ON
+)
 source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
-set_property(TARGET formatxx PROPERTY CXX_STANDARD 11)
 
-add_executable(formatxx_tests ${FORMATXX_TESTS})
-set_property(TARGET formatxx_tests PROPERTY CXX_STANDARD 11)
-target_link_libraries(formatxx_tests formatxx)
-add_test(formatxx_tests formatxx_tests)
+install(TARGETS formatxx EXPORT formatxx-targets
+    ARCHIVE DESTINATION lib
+	RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
+install(EXPORT formatxx-targets DESTINATION share/formatxx/cmake)
+
+export(TARGETS formatxx FILE formatxx-exports.cmake)
+
+if(FORMATXX_BUILD_TESTS)
+	enable_testing()
+	add_executable(formatxx_tests ${FORMATXX_TESTS})
+	target_link_libraries(formatxx_tests formatxx)
+	add_test(formatxx_tests formatxx_tests)
+endif()
