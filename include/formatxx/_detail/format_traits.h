@@ -74,14 +74,6 @@ namespace formatxx::_detail {
 		static constexpr char const sHexadecimalUpper[] = "0123456789ABCDEF";
 	};
 
-	constexpr string_view FormatTraits<char>::sTrue;
-	constexpr string_view FormatTraits<char>::sFalse;
-	constexpr string_view FormatTraits<char>::sPrintfSpecifiers;
-	constexpr string_view FormatTraits<char>::sPrintfModifiers;
-	constexpr char const FormatTraits<char>::sDecimalPairs[];
-	constexpr char const FormatTraits<char>::sHexadecimalLower[];
-	constexpr char const FormatTraits<char>::sHexadecimalUpper[];
-
 	template <> struct FormatTraits<wchar_t>
 	{
 		static constexpr wchar_t cFormatBegin = L'{';
@@ -119,14 +111,6 @@ namespace formatxx::_detail {
 		static constexpr wchar_t const sHexadecimalLower[] = L"0123456789abcdef";
 		static constexpr wchar_t const sHexadecimalUpper[] = L"0123456789ABCDEF";
 	};
-
-	constexpr wstring_view FormatTraits<wchar_t>::sTrue;
-	constexpr wstring_view FormatTraits<wchar_t>::sFalse;
-	constexpr wstring_view FormatTraits<wchar_t>::sPrintfSpecifiers;
-	constexpr wstring_view FormatTraits<wchar_t>::sPrintfModifiers;
-	constexpr wchar_t const FormatTraits<wchar_t>::sDecimalPairs[];
-	constexpr wchar_t const FormatTraits<wchar_t>::sHexadecimalLower[];
-	constexpr wchar_t const FormatTraits<wchar_t>::sHexadecimalUpper[];
 
 } // namespace formatxx::_detail
 
