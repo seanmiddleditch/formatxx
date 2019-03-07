@@ -8,6 +8,8 @@ project(formatxx
 option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
+add_subdirectory(external)
+
 set(FORMATXX_PUBLIC_HEADERS
 	include/formatxx/buffered_writer.h
     include/formatxx/fixed_writer.h
@@ -42,6 +44,7 @@ target_include_directories(formatxx PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<INSTALL_INTERFACE:include/formatxx>
 )
+target_link_libraries(formatxx PUBLIC litexx)
 set_target_properties(formatxx PROPERTIES
     DEFINE_SYMBOL FORMATXX_EXPORT
     CXX_VISIBILITY_PRESET hidden
