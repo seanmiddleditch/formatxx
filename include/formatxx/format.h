@@ -70,8 +70,8 @@ namespace formatxx
 	using format_writer = basic_format_writer<char>;
 	using format_spec = basic_format_spec<char>;
 
-	template <typename CharT, typename FormatT, typename... Args> result_code format(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
-	template <typename CharT, typename FormatT, typename... Args> result_code printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
+	template <typename CharT, typename FormatT, typename... Args> result_code format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
+	template <typename CharT, typename FormatT, typename... Args> result_code printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
 
 	template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept;
 }
@@ -138,35 +138,35 @@ private:
 namespace formatxx
 {
 	/// Default format helpers.
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* value, string_view spec) noexcept;
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* value, string_view spec) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* zstr, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* zstr, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char ch, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* value, string_view spec = {}) noexcept;
+	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* value, string_view spec = {}) noexcept;
 
 	/// Formatting for enumerations, using their numeric value.
 	template <typename CharT, typename EnumT>
-	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, EnumT value, string_view spec) noexcept -> typename std::enable_if<std::is_enum<EnumT>::value>::type
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, EnumT value, string_view spec = {}) noexcept -> typename std::enable_if<std::is_enum<EnumT>::value>::type
 	{
 		format_value(out, typename std::underlying_type<EnumT>::type(value), spec);
 	}
 
 	template <typename CharT, typename PointerT>
-	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec) noexcept -> typename std::enable_if<std::is_pointer<PointerT>::value>::type
+	auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec = {}) noexcept -> typename std::enable_if<std::is_pointer<PointerT>::value>::type
 	{
 		format_value(out, static_cast<void const*>(value), spec);
 	}
@@ -197,7 +197,7 @@ extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API f
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename CharT, typename FormatT, typename... Args>
-formatxx::result_code formatxx::format(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
+formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
 {
 	// NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that.
 	// using addressof requires us to pull in <memory> which is a very heaver header on some implementations.
@@ -212,7 +212,7 @@ formatxx::result_code formatxx::format(basic_format_writer<CharT>& writer, Forma
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
 template <typename CharT, typename FormatT, typename... Args>
-formatxx::result_code formatxx::printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
+formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args)
 {
 	// NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that
 	// using addressof requires us to pull in <memory> which is a very heaver header on some implementations.

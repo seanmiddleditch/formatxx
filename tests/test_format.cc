@@ -119,9 +119,9 @@ DOCTEST_TEST_CASE("format") {
     DOCTEST_SUBCASE("errors") {
         fixed_writer<1024> tmp;
 
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format(tmp, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
-        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format(tmp, "{} {:4d", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format(tmp, "{0} {1}", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format(tmp, "{0} {1} {5}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(tmp, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(tmp, "{} {:4d", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(tmp, "{0} {1}", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(tmp, "{0} {1} {5}", "abc", 9, 12.57));
     }
 }

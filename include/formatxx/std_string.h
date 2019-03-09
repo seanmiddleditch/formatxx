@@ -91,7 +91,7 @@ template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::format(tmp, basic_string_view<typename StringT::value_type>(format), args...);
+	formatxx::format_to(tmp, basic_string_view<typename StringT::value_type>(format), args...);
 	return tmp.move_str();
 }
 
@@ -102,7 +102,7 @@ template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::printf_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::printf(tmp, basic_string_view<typename StringT::value_type>(format), args...);
+	formatxx::printf_to(tmp, basic_string_view<typename StringT::value_type>(format), args...);
 	return tmp.move_str();
 }
 
