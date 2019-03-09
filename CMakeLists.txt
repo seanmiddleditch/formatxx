@@ -33,7 +33,11 @@ set(FORMATXX_SOURCES
     source/wide.cc
 )
 set(FORMATXX_TESTS
-    source/tests.cc
+    tests/main.cc
+    tests/test_format.cc
+    tests/test_printf.cc
+    tests/test_wide.cc
+    tests/test_writer.cc
 )
 
 set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORMATXX_SOURCES})
@@ -65,6 +69,6 @@ export(TARGETS formatxx FILE formatxx-exports.cmake)
 if(FORMATXX_BUILD_TESTS)
 	enable_testing()
 	add_executable(formatxx_tests ${FORMATXX_TESTS})
-	target_link_libraries(formatxx_tests formatxx)
+	target_link_libraries(formatxx_tests formatxx doctest)
 	add_test(formatxx_tests formatxx_tests)
 endif()

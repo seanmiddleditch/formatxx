@@ -39,6 +39,9 @@ namespace formatxx
 {
 	template <typename StringT> class basic_string_writer;
 
+    using wformat_writer = basic_format_writer<wchar_t>;
+    using wstring_view = basic_string_view<wchar_t>;
+
 	using string_writer = basic_string_writer<std::string>;
 	using wstring_writer = basic_string_writer<std::wstring>;
 
