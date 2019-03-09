@@ -1,0 +1,1 @@
+add_subdirectory(litexx EXCLUDE_FROM_ALL)

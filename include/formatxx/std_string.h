@@ -46,9 +46,6 @@ namespace formatxx
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args);
 
 	template <typename CharT, typename TraitsT, typename AllocatorT>
-	basic_string_view<CharT> make_string_view(std::basic_string<CharT, TraitsT, AllocatorT> const& str) { return { str.c_str(), str.size() }; }
-
-	template <typename CharT, typename TraitsT, typename AllocatorT>
 	void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
 	{
 		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
@@ -91,7 +88,7 @@ template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::format(tmp, make_string_view(format), args...);
+	formatxx::format(tmp, basic_string_view<typename StringT::value_type>(format), args...);
 	return tmp.move_str();
 }
 
@@ -102,7 +99,7 @@ template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::printf_string(FormatT const& format, Args const& ... args)
 {
 	basic_string_writer<StringT> tmp;
-	formatxx::printf(tmp, make_string_view(format), args...);
+	formatxx::printf(tmp, basic_string_view<typename StringT::value_type>(format), args...);
 	return tmp.move_str();
 }
 

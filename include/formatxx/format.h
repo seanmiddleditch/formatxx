@@ -33,15 +33,7 @@
 #pragma once
 
 #include <type_traits>
-
-#if !defined(FORMATXX_USE_BUILTIN_STRLEN)
-#	if defined(_MSC) && _MSC >= 1700
-#		define FORMATXX_USE_BUILTIN_STRLEN
-#	endif
-#endif
-#if !defined(FORMATXX_USE_BUILTIN_STRLEN)
-#	include <string>
-#endif
+#include <litexx/string_view.h>
 
 #if !defined(FORMATXX_API)
 #	if defined(_WIN32)
@@ -67,7 +59,7 @@
 
 namespace formatxx
 {
-	template <typename CharT> class basic_string_view;
+	template <typename CharT> using basic_string_view = litexx::basic_string_view<CharT>;
 	template <typename CharT> class basic_format_writer;
 	template <typename CharT> class basic_format_spec;
 	template <typename CharT> class basic_format_args;
@@ -82,9 +74,6 @@ namespace formatxx
 	template <typename CharT, typename FormatT, typename... Args> result_code printf(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
 
 	template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept;
-
-	template <typename CharT> basic_string_view<CharT> make_string_view(basic_string_view<CharT> str) noexcept { return str; }
-	template <typename CharT> basic_string_view<CharT> make_string_view(CharT const* zstr) noexcept { return zstr; }
 }
 
 enum class formatxx::result_code
@@ -93,32 +82,6 @@ enum class formatxx::result_code
 	out_of_range,
 	malformed_input,
 	out_of_space,
-};
-
-/// Describes a format string.
-template <typename CharT>
-class formatxx::basic_string_view
-{
-public:
-	constexpr basic_string_view() = default;
-	constexpr basic_string_view(CharT const* first, CharT const* last) noexcept : _begin(first), _size(last - first) {}
-	constexpr basic_string_view(CharT const* nstr, std::size_t size) noexcept : _begin(nstr), _size(size) {}
-#if defined(FORMATXX_USE_BUILTIN_STRLEN)
-	basic_string_view(CharT const* zstr) noexcept : _begin(zstr), _size(zstr != nullptr ? __builtin_strlen(zstr) : 0) {}
-#else
-	basic_string_view(CharT const* zstr) : _begin(zstr), _size(zstr != nullptr ? std::char_traits<CharT>::length(zstr) : 0) {}
-#endif
-
-	constexpr CharT const* data() const noexcept { return _begin; }
-	constexpr std::size_t size() const noexcept { return _size; }
-	constexpr bool empty() const noexcept { return _size == 0; }
-
-	constexpr CharT const* begin() const noexcept { return _begin; }
-	constexpr CharT const* end() const noexcept { return _begin + _size; }
-
-private:
-	CharT const* _begin = nullptr;
-	std::size_t _size = 0;
 };
 
 /// Interface for any buffer that the format library can write into.
@@ -241,7 +204,7 @@ formatxx::result_code formatxx::format(basic_format_writer<CharT>& writer, Forma
 	void const* const values[] = { &args..., nullptr };
 	typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
-	return _detail::format_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
+	return _detail::format_impl(writer, basic_string_view<CharT>(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -256,7 +219,7 @@ formatxx::result_code formatxx::printf(basic_format_writer<CharT>& writer, Forma
 	void const* const values[] = { &args..., nullptr };
 	typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
-	return _detail::printf_impl(writer, make_string_view(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
+	return _detail::printf_impl(writer, basic_string_view<CharT>(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
 }
 
 #endif // !defined(_guard_FORMATXX_H)
