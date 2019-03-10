@@ -33,6 +33,7 @@
 #pragma once
 
 #include "formatxx/format.h"
+#include <cstring>
 
 namespace formatxx {
     template <typename ContainerT> class container_writer;
