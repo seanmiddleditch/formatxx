@@ -14,6 +14,7 @@ set(FORMATXX_PUBLIC_HEADERS
 	include/formatxx/buffered_writer.h
     include/formatxx/fixed_writer.h
     include/formatxx/format.h
+	include/formatxx/small_buffer.h
     include/formatxx/std_string.h
     include/formatxx/wide.h
 )
@@ -36,6 +37,7 @@ set(FORMATXX_TESTS
     tests/main.cc
     tests/test_format.cc
     tests/test_printf.cc
+    tests/test_small_buffer.cc
     tests/test_wide.cc
     tests/test_writer.cc
 )
