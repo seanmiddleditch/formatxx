@@ -1,6 +1,6 @@
 #include "formatxx/format.h"
 #include "formatxx/std_string.h"
-#include "formatxx/small_buffer.h"
+#include "formatxx/small_string.h"
 #include "formatxx/writers.h"
 #include <doctest/doctest.h>
 #include <vector>
@@ -25,7 +25,7 @@ DOCTEST_TEST_CASE("writer") {
     }
 
     DOCTEST_SUBCASE("buffered") {
-        small_buffer<char, 4> buf;
+        small_string<char, 4> buf;
         append_writer writer(buf);
 
         format_to(writer, "1{}3", "2");

@@ -28,10 +28,11 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_FORMATXX_SMALL_BUFFER_H)
-#define _guard_FORMATXX_SMALL_BUFFER_H
+#if !defined(_guard_FORMATXX_SMALL_STRING_H)
+#define _guard_FORMATXX_SMALL_STRING_H
 #pragma once
 
+#include <litexx/string_view.h>
 #include <cstring>
 
 namespace formatxx
@@ -47,12 +48,12 @@ namespace formatxx
 
     } // namespace _detail
 
-    template <typename CharT, std::size_t FixedCapacity, typename AllocatorT = _detail::new_delete_allocator<CharT>> class small_buffer;
+    template <typename CharT, std::size_t FixedCapacity, typename AllocatorT = _detail::new_delete_allocator<CharT>> class small_string;
 } // namespace formatxx
 
 /// A writer with a fixed buffer that will allocate when the buffer is exhausted.
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-class formatxx::small_buffer : private AllocatorT
+class formatxx::small_string : private AllocatorT
 {
 public:
     using value_type = CharT;
@@ -61,8 +62,8 @@ public:
     using iterator = pointer;
     using const_iterator = value_type const*;
 
-    small_buffer() noexcept = default;
-    ~small_buffer();
+    small_string() noexcept = default;
+    ~small_string();
 
     void append(value_type const* data, size_type length);
 
@@ -82,6 +83,8 @@ public:
     const_iterator begin() const noexcept { return data(); }
     const_iterator end() const noexcept { return data() + _size; }
 
+    operator litexx::basic_string_view<value_type>() const noexcept { return { data(), _size }; }
+
 private:
     pointer _grow(std::size_t new_size);
 
@@ -92,7 +95,7 @@ private:
 };
 
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-formatxx::small_buffer<CharT, FixedCapacity, AllocatorT>::~small_buffer()
+formatxx::small_string<CharT, FixedCapacity, AllocatorT>::~small_string()
 {
     if (_data != nullptr) {
         this->deallocate(_data, _capacity + 1/*NUL*/);
@@ -100,7 +103,7 @@ formatxx::small_buffer<CharT, FixedCapacity, AllocatorT>::~small_buffer()
 }
 
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-auto formatxx::small_buffer<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t new_size) -> pointer
+auto formatxx::small_string<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t new_size) -> pointer
 {
     auto const old_capacity = capacity();
     if (new_size <= old_capacity) {
@@ -125,7 +128,7 @@ auto formatxx::small_buffer<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t
 }
 
 template <typename CharT, std::size_t SizeN, typename AllocatorT>
-void formatxx::small_buffer<CharT, SizeN, AllocatorT>::append(value_type const* data, size_type length)
+void formatxx::small_string<CharT, SizeN, AllocatorT>::append(value_type const* data, size_type length)
 {
     value_type* mem = _grow(_size + length);
     std::memcpy(mem + _size, data, sizeof(CharT) * length);
@@ -133,4 +136,4 @@ void formatxx::small_buffer<CharT, SizeN, AllocatorT>::append(value_type const* 
     mem[_size] = CharT(0);
 }
 
-#endif // !defined(_guard_FORMATXX_SMALL_BUFFER_H)
+#endif // !defined(_guard_FORMATXX_SMALL_STRING_H)

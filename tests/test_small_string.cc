@@ -1,11 +1,11 @@
-#include "formatxx/small_buffer.h"
+#include "formatxx/small_string.h"
 #include <doctest/doctest.h>
 
-DOCTEST_TEST_CASE("small_buffer") {
+DOCTEST_TEST_CASE("small_string") {
     using namespace formatxx;
 
     DOCTEST_SUBCASE("initialization") {
-        small_buffer<char, 512> buffer;
+        small_string<char, 512> buffer;
 
         DOCTEST_CHECK(buffer.empty());
         DOCTEST_CHECK(!buffer);
@@ -15,7 +15,7 @@ DOCTEST_TEST_CASE("small_buffer") {
     }
 
     DOCTEST_SUBCASE("append") {
-        small_buffer<char, 512> buffer;
+        small_string<char, 512> buffer;
 
         buffer.append("test", 4);
         buffer.append(" ", 1);
@@ -29,7 +29,7 @@ DOCTEST_TEST_CASE("small_buffer") {
     }
 
     DOCTEST_SUBCASE("overflow") {
-        small_buffer<char, 5> buffer;
+        small_string<char, 5> buffer;
 
         buffer.append("abc", 3);
         buffer.append("def", 3);
@@ -45,7 +45,7 @@ DOCTEST_TEST_CASE("small_buffer") {
     }
 
     DOCTEST_SUBCASE("clear") {
-        small_buffer<char, 5> buffer;
+        small_string<char, 5> buffer;
 
         buffer.append("abc", 3);
         buffer.clear();

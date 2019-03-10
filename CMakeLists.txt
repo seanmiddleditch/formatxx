@@ -12,7 +12,7 @@ add_subdirectory(external)
 
 set(FORMATXX_PUBLIC_HEADERS
     include/formatxx/format.h
-	include/formatxx/small_buffer.h
+	include/formatxx/small_string.h
     include/formatxx/std_string.h
     include/formatxx/wide.h
     include/formatxx/writers.h
@@ -36,7 +36,7 @@ set(FORMATXX_TESTS
     tests/main.cc
     tests/test_format.cc
     tests/test_printf.cc
-    tests/test_small_buffer.cc
+    tests/test_small_string.cc
     tests/test_wide.cc
     tests/test_writer.cc
 )
