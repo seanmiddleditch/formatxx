@@ -33,18 +33,11 @@
 #pragma once
 
 #include <formatxx/format.h>
+#include <formatxx/writers.h>
 #include <string>
 
 namespace formatxx
 {
-	template <typename StringT> class basic_string_writer;
-
-    using wformat_writer = basic_format_writer<wchar_t>;
-    using wstring_view = basic_string_view<wchar_t>;
-
-	using string_writer = basic_string_writer<std::string>;
-	using wstring_writer = basic_string_writer<std::wstring>;
-
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args);
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args);
 
@@ -55,33 +48,12 @@ namespace formatxx
 	}
 
 	template <typename CharT, typename TraitsT, typename AllocatorT>
-	void format_value(wformat_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, wstring_view spec)
+	void format_value(basic_format_writer<wchar_t>& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, basic_string_view<wchar_t> spec)
 	{
 		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
 	}
 
 } // namespace formatxx
-
-/// A writer that generates a buffer (intended for std::string).
-template <typename StringT>
-class formatxx::basic_string_writer : public basic_format_writer<typename StringT::value_type>
-{
-public:
-	basic_string_writer() = default;
-	basic_string_writer(StringT init) : _string(std::move(init)) {}
-
-	void write(basic_string_view<typename StringT::value_type> str) override { _string.append(str.data(), str.size()); }
-
-	StringT const& str() { return _string; }
-	StringT move_str() { return static_cast<StringT&&>(_string); }
-
-	void clear() { _string.clear(); }
-	std::size_t size() const { return _string.size(); }
-	typename StringT::value_type const* c_str() const { return _string.c_str(); }
-
-private:
-	StringT _string;
-};
 
 /// Write the string format using the given parameters and return a string with the result.
 /// @param format The primary text and formatting controls to be written.
@@ -90,9 +62,10 @@ private:
 template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 {
-	basic_string_writer<StringT> tmp;
-	formatxx::format_to(tmp, basic_string_view<typename StringT::value_type>(format), args...);
-	return tmp.move_str();
+    StringT result;
+    append_writer writer(result);
+	formatxx::format_to(writer, basic_string_view<typename StringT::value_type>(format), args...);
+	return result;
 }
 
 /// Write the printf format using the given parameters and return a string with the result.
@@ -101,9 +74,10 @@ StringT formatxx::format_string(FormatT const& format, Args const& ... args)
 template <typename StringT, typename FormatT, typename... Args>
 StringT formatxx::printf_string(FormatT const& format, Args const& ... args)
 {
-	basic_string_writer<StringT> tmp;
-	formatxx::printf_to(tmp, basic_string_view<typename StringT::value_type>(format), args...);
-	return tmp.move_str();
+    StringT result;
+    append_writer writer(result);
+    formatxx::printf_to(writer, basic_string_view<typename StringT::value_type>(format), args...);
+    return result;
 }
 
 #endif // !defined(_guard_FORMATXX_STRING_H)

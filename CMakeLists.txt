@@ -11,12 +11,11 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 add_subdirectory(external)
 
 set(FORMATXX_PUBLIC_HEADERS
-	include/formatxx/buffered_writer.h
-    include/formatxx/fixed_writer.h
     include/formatxx/format.h
 	include/formatxx/small_buffer.h
     include/formatxx/std_string.h
     include/formatxx/wide.h
+    include/formatxx/writers.h
 )
 set(FORMATXX_PRIVATE_HEADERS
 	include/formatxx/_detail/parse_format.h

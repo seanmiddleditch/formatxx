@@ -1,6 +1,5 @@
 #include "formatxx/format.h"
 #include "formatxx/std_string.h"
-#include "formatxx/fixed_writer.h"
 #include <doctest/doctest.h>
 #include <ostream>
 
@@ -117,11 +116,12 @@ DOCTEST_TEST_CASE("format") {
 
 
     DOCTEST_SUBCASE("errors") {
-        fixed_writer<1024> tmp;
+        char buffer[256];
+        span_writer writer(buffer);
 
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(tmp, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
-        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(tmp, "{} {:4d", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(tmp, "{0} {1}", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(tmp, "{0} {1} {5}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(writer, "{} {:4d", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{0} {1}", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(writer, "{0} {1} {5}", "abc", 9, 12.57));
     }
 }
