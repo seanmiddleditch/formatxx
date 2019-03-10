@@ -41,16 +41,10 @@ namespace formatxx
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args);
 	template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args);
 
-	template <typename CharT, typename TraitsT, typename AllocatorT>
-	void format_value(format_writer& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, string_view spec)
+	template <typename CharT, typename StringCharT, typename TraitsT, typename AllocatorT>
+	void format_value(basic_format_writer<CharT>& out, std::basic_string<StringCharT, TraitsT, AllocatorT> const& string, basic_string_view<CharT> spec)
 	{
-		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
-	}
-
-	template <typename CharT, typename TraitsT, typename AllocatorT>
-	void format_value(basic_format_writer<wchar_t>& out, std::basic_string<CharT, TraitsT, AllocatorT> const& string, basic_string_view<wchar_t> spec)
-	{
-		format_value(out, basic_string_view<CharT>(string.c_str(), string.size()), spec);
+		format_value(out, basic_string_view<StringCharT>(string.c_str(), string.size()), spec);
 	}
 
 } // namespace formatxx
