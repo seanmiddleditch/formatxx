@@ -1,6 +1,6 @@
 #include "formatxx/format.h"
 #include "formatxx/std_string.h"
-#include "formatxx/fixed_writer.h"
+#include "formatxx/writers.h"
 #include <doctest/doctest.h>
 #include <ostream>
 
@@ -90,6 +90,7 @@ DOCTEST_TEST_CASE("format") {
     DOCTEST_SUBCASE("strings") {
         DOCTEST_CHECK_EQ("test", format_string("{}", "test"));
         DOCTEST_CHECK_EQ("test", format_string("{}", std::string("test")));
+        DOCTEST_CHECK_EQ("test", format_string("{}", std::string_view("test")));
         DOCTEST_CHECK_EQ("test", format_string("{}", formatxx::string_view("test")));
 
         DOCTEST_CHECK_EQ("abcdef", format_string("{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef"));
@@ -117,11 +118,12 @@ DOCTEST_TEST_CASE("format") {
 
 
     DOCTEST_SUBCASE("errors") {
-        fixed_writer<1024> tmp;
+        char buffer[256];
+        span_writer writer(buffer);
 
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format(tmp, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
-        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format(tmp, "{} {:4d", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::success, format(tmp, "{0} {1}", "abc", 9));
-        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format(tmp, "{0} {1} {5}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{} {:4d} {:3.5f}", "abc", 9, 12.57));
+        DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(writer, "{} {:4d", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{0} {1}", "abc", 9));
+        DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(writer, "{0} {1} {5}", "abc", 9, 12.57));
     }
 }

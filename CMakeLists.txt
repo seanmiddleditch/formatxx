@@ -11,13 +11,14 @@ option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 add_subdirectory(external)
 
 set(FORMATXX_PUBLIC_HEADERS
-	include/formatxx/buffered_writer.h
-    include/formatxx/fixed_writer.h
     include/formatxx/format.h
+	include/formatxx/small_string.h
     include/formatxx/std_string.h
     include/formatxx/wide.h
+    include/formatxx/writers.h
 )
 set(FORMATXX_PRIVATE_HEADERS
+    include/formatxx/_detail/append_writer.h
 	include/formatxx/_detail/parse_format.h
 	include/formatxx/_detail/parse_unsigned.h
 	include/formatxx/_detail/format_impl.h
@@ -36,6 +37,7 @@ set(FORMATXX_TESTS
     tests/main.cc
     tests/test_format.cc
     tests/test_printf.cc
+    tests/test_small_string.cc
     tests/test_wide.cc
     tests/test_writer.cc
 )
