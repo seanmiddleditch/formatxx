@@ -31,15 +31,13 @@
 
 namespace formatxx {
     template <typename CharT> class basic_format_writer;
-}
 
-namespace formatxx::_detail {
     template <typename ContainerT> class append_writer;
 }
 
 /// Writer that calls append(data, size) on wrapped value.
 template <typename ContainerT>
-class formatxx::_detail::append_writer : public formatxx::basic_format_writer<typename ContainerT::value_type>{
+class formatxx::append_writer : public formatxx::basic_format_writer<typename ContainerT::value_type>{
 public:
     constexpr append_writer(ContainerT& container) : _container(container) {}
 

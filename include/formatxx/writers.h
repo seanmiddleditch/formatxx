@@ -38,7 +38,6 @@
 
 namespace formatxx {
     template <typename ContainerT> class container_writer;
-    template <typename ContainerT> class append_writer;
     template <typename CharT> class span_writer;
 }
 
@@ -65,13 +64,6 @@ public:
 
 private:
     ContainerT& _container;
-};
-
-/// Writer that calls append(data, size) on wrapped value.
-template <typename ContainerT>
-class formatxx::append_writer final : public formatxx::_detail::append_writer<ContainerT> {
-public:
-    using _detail::append_writer<ContainerT>::append_writer;
 };
 
 /// Writer that appends into a provided memory region, guaranteeing NUL termination and no overflow.

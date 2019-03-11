@@ -233,7 +233,7 @@ formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, Fo
 template <typename ResultT, typename FormatT, typename... Args>
 ResultT formatxx::format_as(FormatT const& format, Args const& ... args) {
     ResultT result;
-    _detail::append_writer writer(result);
+    append_writer writer(result);
     formatxx::format_to(writer, basic_string_view<typename ResultT::value_type>(format), args...);
     return result;
 }
@@ -244,7 +244,7 @@ ResultT formatxx::format_as(FormatT const& format, Args const& ... args) {
 template <typename ResultT, typename FormatT, typename... Args>
 ResultT formatxx::printf_as(FormatT const& format, Args const& ... args) {
     ResultT result;
-    _detail::append_writer writer(result);
+    append_writer writer(result);
     formatxx::printf_to(writer, basic_string_view<typename ResultT::value_type>(format), args...);
     return result;
 }
