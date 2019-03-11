@@ -1,5 +1,6 @@
 #include "formatxx/format.h"
 #include "formatxx/std_string.h"
+#include "formatxx/writers.h"
 #include <doctest/doctest.h>
 #include <ostream>
 
@@ -89,6 +90,7 @@ DOCTEST_TEST_CASE("format") {
     DOCTEST_SUBCASE("strings") {
         DOCTEST_CHECK_EQ("test", format_string("{}", "test"));
         DOCTEST_CHECK_EQ("test", format_string("{}", std::string("test")));
+        DOCTEST_CHECK_EQ("test", format_string("{}", std::string_view("test")));
         DOCTEST_CHECK_EQ("test", format_string("{}", formatxx::string_view("test")));
 
         DOCTEST_CHECK_EQ("abcdef", format_string("{}{}{}", formatxx::string_view("ab"), std::string("cd"), "ef"));

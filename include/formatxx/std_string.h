@@ -28,20 +28,24 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_FORMATXX_STRING_H)
-#define _guard_FORMATXX_STRING_H
+#if !defined(_guard_FORMATXX_STD_STRING_H)
+#define _guard_FORMATXX_STD_STRING_H
 #pragma once
 
 #include <formatxx/format.h>
-#include <formatxx/writers.h>
 #include <string>
+#include <string_view>
 
-namespace formatxx
-{
+namespace formatxx {
     template <typename CharT, typename StringCharT, typename TraitsT, typename AllocatorT>
 	void format_value(basic_format_writer<CharT>& out, std::basic_string<StringCharT, TraitsT, AllocatorT> const& string, basic_string_view<CharT> spec) {
 		format_value(out, basic_string_view<StringCharT>(string.c_str(), string.size()), spec);
 	}
+
+    template <typename CharT, typename StringCharT, typename TraitsT>
+    void format_value(basic_format_writer<CharT>& out, std::basic_string_view<StringCharT, TraitsT> const& string, basic_string_view<CharT> spec) {
+        format_value(out, basic_string_view<StringCharT>(string.data(), string.size()), spec);
+    }
 
     template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args) {
         return format_as<StringT>(format, args...);
@@ -52,4 +56,4 @@ namespace formatxx
     }
 } // namespace formatxx
 
-#endif // !defined(_guard_FORMATXX_STRING_H)
+#endif // !defined(_guard_FORMATXX_STD_STRING_H)
