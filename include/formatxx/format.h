@@ -34,6 +34,7 @@
 
 #include <type_traits>
 #include <litexx/string_view.h>
+#include "formatxx/_detail/append_writer.h"
 
 #if !defined(FORMATXX_API)
 #	if defined(_WIN32)
@@ -59,19 +60,22 @@
 
 namespace formatxx
 {
-	template <typename CharT> using basic_string_view = litexx::basic_string_view<CharT>;
-	template <typename CharT> class basic_format_writer;
-	template <typename CharT> class basic_format_spec;
-	template <typename CharT> class basic_format_args;
+    template <typename CharT> using basic_string_view = litexx::basic_string_view<CharT>;
+    template <typename CharT> class basic_format_writer;
+    template <typename CharT> class basic_format_spec;
+    template <typename CharT> class basic_format_args;
 
-	enum class result_code;
+    enum class result_code;
 
-	using string_view = basic_string_view<char>;
-	using format_writer = basic_format_writer<char>;
-	using format_spec = basic_format_spec<char>;
+    using string_view = basic_string_view<char>;
+    using format_writer = basic_format_writer<char>;
+    using format_spec = basic_format_spec<char>;
 
-	template <typename CharT, typename FormatT, typename... Args> result_code format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
-	template <typename CharT, typename FormatT, typename... Args> result_code printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
+    template <typename CharT, typename FormatT, typename... Args> result_code format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
+    template <typename CharT, typename FormatT, typename... Args> result_code printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
+
+    template <typename ResultT, typename FormatT, typename... Args> ResultT format_as(FormatT const& format, Args const& ... args);
+    template <typename ResultT, typename FormatT, typename... Args> ResultT printf_as(FormatT const& format, Args const& ... args);
 
 	template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept;
 }
@@ -220,6 +224,29 @@ formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, Fo
 	typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
 	return _detail::printf_impl(writer, basic_string_view<CharT>(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
+}
+
+/// Write the string format using the given parameters and return a string with the result.
+/// @param format The primary text and formatting controls to be written.
+/// @param args The arguments used by the formatting string.
+/// @returns a formatted string.
+template <typename ResultT, typename FormatT, typename... Args>
+ResultT formatxx::format_as(FormatT const& format, Args const& ... args) {
+    ResultT result;
+    _detail::append_writer writer(result);
+    formatxx::format_to(writer, basic_string_view<typename ResultT::value_type>(format), args...);
+    return result;
+}
+
+/// Write the printf format using the given parameters and return a string with the result.
+/// @param format The primary text and printf controls to be written.
+/// @param args The arguments used by the formatting string.
+template <typename ResultT, typename FormatT, typename... Args>
+ResultT formatxx::printf_as(FormatT const& format, Args const& ... args) {
+    ResultT result;
+    _detail::append_writer writer(result);
+    formatxx::printf_to(writer, basic_string_view<typename ResultT::value_type>(format), args...);
+    return result;
 }
 
 #endif // !defined(_guard_FORMATXX_H)

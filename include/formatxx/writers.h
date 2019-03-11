@@ -33,6 +33,7 @@
 #pragma once
 
 #include "formatxx/format.h"
+#include "formatxx/_detail/append_writer.h"
 #include <cstring>
 
 namespace formatxx {
@@ -68,16 +69,9 @@ private:
 
 /// Writer that calls append(data, size) on wrapped value.
 template <typename ContainerT>
-class formatxx::append_writer final : public formatxx::basic_format_writer<typename ContainerT::value_type> {
+class formatxx::append_writer final : public formatxx::_detail::append_writer<ContainerT> {
 public:
-    constexpr append_writer(ContainerT & container) : _container(container) {}
-
-    constexpr void write(basic_string_view<typename ContainerT::value_type> str) override {
-        _container.append(str.data(), str.size());
-    }
-
-private:
-    ContainerT & _container;
+    using _detail::append_writer<ContainerT>::append_writer;
 };
 
 /// Writer that appends into a provided memory region, guaranteeing NUL termination and no overflow.

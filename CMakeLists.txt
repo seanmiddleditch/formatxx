@@ -18,6 +18,7 @@ set(FORMATXX_PUBLIC_HEADERS
     include/formatxx/writers.h
 )
 set(FORMATXX_PRIVATE_HEADERS
+    include/formatxx/_detail/append_writer.h
 	include/formatxx/_detail/parse_format.h
 	include/formatxx/_detail/parse_unsigned.h
 	include/formatxx/_detail/format_impl.h

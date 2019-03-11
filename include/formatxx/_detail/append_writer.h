@@ -1,8 +1,3 @@
-// formatxx - C++ string formatting library.
-//
-// This is free and unencumbered software released into the public domain.
-// 
-// Anyone is free to copy, modify, publish, use, compile, sell, or
 // distribute this software, either in source code form or as a compiled
 // binary, for any purpose, commercial or non - commercial, and by any
 // means.
@@ -28,28 +23,32 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_FORMATXX_STRING_H)
-#define _guard_FORMATXX_STRING_H
+#if !defined(_guard_FORMATXX_DETAIL_APPEND_WRITER_H)
+#define _guard_FORMATXX_DETAIL_APPEND_WRITER_H
 #pragma once
 
-#include <formatxx/format.h>
-#include <formatxx/writers.h>
-#include <string>
+#include <litexx/string_view.h>
 
-namespace formatxx
-{
-    template <typename CharT, typename StringCharT, typename TraitsT, typename AllocatorT>
-	void format_value(basic_format_writer<CharT>& out, std::basic_string<StringCharT, TraitsT, AllocatorT> const& string, basic_string_view<CharT> spec) {
-		format_value(out, basic_string_view<StringCharT>(string.c_str(), string.size()), spec);
-	}
+namespace formatxx {
+    template <typename CharT> class basic_format_writer;
+}
 
-    template <typename StringT = std::string, typename FormatT, typename... Args> StringT format_string(FormatT const& format, Args const& ... args) {
-        return format_as<StringT>(format, args...);
+namespace formatxx::_detail {
+    template <typename ContainerT> class append_writer;
+}
+
+/// Writer that calls append(data, size) on wrapped value.
+template <typename ContainerT>
+class formatxx::_detail::append_writer : public formatxx::basic_format_writer<typename ContainerT::value_type>{
+public:
+    constexpr append_writer(ContainerT& container) : _container(container) {}
+
+    constexpr void write(litexx::basic_string_view<typename ContainerT::value_type> str) override {
+        _container.append(str.data(), str.size());
     }
 
-    template <typename StringT = std::string, typename FormatT, typename... Args> StringT printf_string(FormatT const& format, Args const& ... args) {
-        return printf_as<StringT>(format, args...);
-    }
-} // namespace formatxx
+private:
+    ContainerT & _container;
+};
 
-#endif // !defined(_guard_FORMATXX_STRING_H)
+#endif // !defined(_guard_FORMATXX_DETAIL_APPEND_WRITER_H)
