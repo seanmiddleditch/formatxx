@@ -62,6 +62,8 @@ namespace formatxx {
     template <typename CharT> using basic_string_view = litexx::basic_string_view<CharT>;
     template <typename CharT> class basic_format_writer;
     template <typename CharT> class basic_format_spec;
+    template <typename CharT> class basic_format_arg;
+    template <typename CharT> class basic_format_args_old;
     template <typename CharT> class basic_format_args;
 
     enum class result_code;
@@ -113,15 +115,56 @@ public:
     bool leading_zeroes = false;
 };
 
-/// Abstraction for a set of format arguments.
-template <typename CharT>
-class formatxx::basic_format_args {
+/// Abstraction for a single formattable value
+template <typename CharT> 
+class formatxx::basic_format_arg {
 public:
     using thunk_type = result_code(FORMATXX_API*)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
+
+    enum class type {
+        unknown,
+        char_t,
+        wchar,
+        signed_char,
+        unsigned_char,
+        signed_short_int,
+        unsigned_short_int,
+        signed_long_int,
+        unsigned_long_int,
+        signed_long_long_int,
+        unsigned_long_long_int,
+        single_float,
+        double_float,
+        boolean,
+        char_string,
+        wchar_string,
+        null_pointer,
+        void_pointer,
+        custom
+    };
+
+    constexpr basic_format_arg() noexcept = default;
+    constexpr basic_format_arg(type type, void const* value) noexcept : _type(type), _value(value) {}
+    constexpr basic_format_arg(thunk_type thunk, void const* value) noexcept : _type(type::custom), _thunk(thunk), _value(value) {}
+
+    FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_string_view<CharT> spec) const;
+
+private:
+    type _type = type::unknown;
+    thunk_type _thunk = nullptr;
+    void const* _value = nullptr;
+};
+
+/// Abstraction for a set of format arguments.
+template <typename CharT>
+class formatxx::basic_format_args_old {
+public:
+    using arg_type = basic_format_arg<CharT>;
+    using thunk_type = typename arg_type::thunk_type;
     using size_type = std::size_t;
 
-    basic_format_args() = default;
-    explicit basic_format_args(size_type count, thunk_type const* thunks, void const* const* args) noexcept : _thunks(thunks), _args(args), _count(count) {}
+    constexpr basic_format_args_old() noexcept = default;
+    explicit basic_format_args_old(size_type count, thunk_type const* thunks, void const* const* args) noexcept : _thunks(thunks), _args(args), _count(count) {}
 
     result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_string_view<CharT> spec) const {
         return index < _count ? _thunks[index](output, _args[index], spec) : result_code::out_of_range;
@@ -130,6 +173,26 @@ public:
 private:
     thunk_type const* _thunks = nullptr;
     void const* const* _args = nullptr;
+    size_type _count = 0;
+};
+
+/// Abstraction for a set of format arguments.
+template <typename CharT>
+class formatxx::basic_format_args {
+public:
+    using arg_type = basic_format_arg<CharT>;
+    using thunk_type = typename arg_type::thunk_type;
+    using size_type = std::size_t;
+
+    constexpr basic_format_args() noexcept = default;
+    explicit constexpr basic_format_args(size_type count, arg_type const* args) noexcept : _args(args), _count(count) {}
+
+    constexpr result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_string_view<CharT> spec) const {
+        return index < _count ? _args[index].format_into(output, spec) : result_code::out_of_range;
+    }
+
+private:
+    basic_format_arg<CharT> const* _args = nullptr;
     size_type _count = 0;
 };
 
@@ -165,24 +228,57 @@ namespace formatxx {
     auto FORMATXX_API format_value(basic_format_writer<CharT>& out, PointerT value, string_view spec = {}) noexcept -> typename std::enable_if<std::is_pointer<PointerT>::value>::type {
         format_value(out, static_cast<void const*>(value), spec);
     }
+}
 
-    /// @internal
-    namespace _detail {
-        template <typename CharT, typename T>
-        result_code FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec) {
-            format_value(out, *static_cast<T const*>(ptr), spec);
-            return result_code::success;
-        }
-
-        template <typename CharT>
-        FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
-        template <typename CharT>
-        FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
+/// @internal
+namespace formatxx::_detail {
+    template <typename CharT, typename T>
+    result_code FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec) {
+        format_value(out, *static_cast<T const*>(ptr), spec);
+        return result_code::success;
     }
+
+    template <typename CharT, typename T> constexpr basic_format_arg<CharT> make_arg(T const& value) noexcept {
+        return basic_format_arg<CharT>(&format_value_thunk<CharT, T>, &value);
+    }
+
+#define FORMATXX_TYPE(x, e) template <typename CharT> constexpr basic_format_arg<CharT> make_arg(x const& value) noexcept { \
+    return basic_format_arg<CharT>(basic_format_arg<CharT>::type::e, &value); \
+    }
+
+    FORMATXX_TYPE(char, char_t);
+    FORMATXX_TYPE(wchar_t, wchar);
+    FORMATXX_TYPE(signed char, signed_char);
+    FORMATXX_TYPE(unsigned char, unsigned_char);
+    FORMATXX_TYPE(signed short, signed_short_int);
+    FORMATXX_TYPE(unsigned short, unsigned_short_int);
+    FORMATXX_TYPE(signed long, signed_long_int);
+    FORMATXX_TYPE(unsigned long, unsigned_long_int);
+    FORMATXX_TYPE(signed long long, signed_long_long_int);
+    FORMATXX_TYPE(unsigned long long, unsigned_long_long_int);
+    FORMATXX_TYPE(float, single_float);
+    FORMATXX_TYPE(double, double_float);
+    FORMATXX_TYPE(bool, boolean);
+    FORMATXX_TYPE(char*, char_string);
+    FORMATXX_TYPE(char const*, char_string);
+    FORMATXX_TYPE(wchar_t*, char_string);
+    FORMATXX_TYPE(wchar_t const*, wchar_string);
+    FORMATXX_TYPE(std::nullptr_t, null_pointer);
+    FORMATXX_TYPE(void*, void_pointer);
+    FORMATXX_TYPE(void const*, void_pointer);
+
+
+#undef FORMTAXX_TYPE
+
+    template <typename CharT>
+    FORMATXX_PUBLIC result_code FORMATXX_API format_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
+    template <typename CharT>
+    FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args);
 }
 
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_string_view<char> spec) const;
 extern template FORMATXX_PUBLIC formatxx::basic_format_spec<char> FORMATXX_API formatxx::parse_format_spec(basic_string_view<char> spec) noexcept;
 
 /// Write the string format using the given parameters into a buffer.
@@ -193,10 +289,13 @@ template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
     // NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that.
     // using addressof requires us to pull in <memory> which is a very heaver header on some implementations.
-    void const* const values[] = { &args..., nullptr };
-    typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
+    //void const* const values[] = { &args..., nullptr };
+    //typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
-    return _detail::format_impl(writer, basic_string_view<CharT>(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
+    basic_format_arg<CharT> format_args[] = { _detail::make_arg<CharT>(args)... };
+    basic_format_args<CharT> arg_list(sizeof...(args), format_args);
+
+    return _detail::format_impl(writer, basic_string_view<CharT>(format), arg_list);
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -207,10 +306,13 @@ template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
     // NOTE: using & instead of addressof means we don't support types that overload operator&, but... well, don't do that
     // using addressof requires us to pull in <memory> which is a very heaver header on some implementations.
-    void const* const values[] = { &args..., nullptr };
-    typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
+    //void const* const values[] = { &args..., nullptr };
+    //typename basic_format_args<CharT>::thunk_type const funcs[] = { &_detail::format_value_thunk<CharT, Args>..., nullptr };
 
-    return _detail::printf_impl(writer, basic_string_view<CharT>(format), basic_format_args<CharT>(sizeof...(args), funcs, values));
+    basic_format_arg<CharT> format_args[] = { _detail::make_arg<CharT>(args)... };
+    basic_format_args<CharT> arg_list(sizeof...(args), format_args);
+
+    return _detail::printf_impl(writer, basic_string_view<CharT>(format), arg_list);
 }
 
 /// Write the string format using the given parameters and return a string with the result.

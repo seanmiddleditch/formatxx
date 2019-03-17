@@ -55,6 +55,7 @@ namespace formatxx::_detail {
 
 		static constexpr string_view sTrue{ "true", 4 };
 		static constexpr string_view sFalse{ "false", 5 };
+        static constexpr string_view sNullptr{ "nullptr", 7 };
 
 		static constexpr string_view sPrintfSpecifiers{ "bcCsSdioxXufFeEaAgGp", 20 };
 		static constexpr string_view sPrintfModifiers{ "hljztL", 6 };
@@ -93,6 +94,7 @@ namespace formatxx::_detail {
 
 		static constexpr wstring_view sTrue{ L"true", 4 };
 		static constexpr wstring_view sFalse{ L"false", 5 };
+        static constexpr wstring_view sNullptr{ L"nullptr", 7 };
 
 		static constexpr wstring_view sPrintfSpecifiers{ L"bcCsSdioxXufFeEaAgGp", 20 };
 		static constexpr wstring_view sPrintfModifiers{ L"hljztL", 6 };

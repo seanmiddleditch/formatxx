@@ -31,19 +31,16 @@
 #include <formatxx/format.h>
 #include <formatxx/wide.h>
 
+#include <formatxx/_detail/format_arg.h>
 #include <formatxx/_detail/format_traits.h>
 #include <formatxx/_detail/parse_unsigned.h>
 #include <formatxx/_detail/parse_format.h>
-#include <formatxx/_detail/write_integer.h>
-#include <formatxx/_detail/write_string.h>
-#include <formatxx/_detail/write_float.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/printf_impl.h>
 
 #include <cstdint>
 
 namespace formatxx {
-
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char value, string_view spec) noexcept { _detail::write_char(out, value, spec); }
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* value, string_view spec) noexcept { _detail::write_string<char>(out, value, spec); }
 	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* value, string_view spec) noexcept { _detail::write_string<char>(out, value, spec); }
@@ -75,5 +72,6 @@ namespace formatxx {
 
 	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
 	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+    template FORMATXX_PUBLIC result_code FORMATXX_API basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_string_view<char> spec) const;
 	template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>) noexcept;
 } // namespace formatxx
