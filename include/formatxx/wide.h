@@ -34,8 +34,7 @@
 
 #include <formatxx/format.h>
 
-namespace formatxx
-{
+namespace formatxx {
 	namespace _detail { template <typename T> struct new_delete_allocator; }
 	template <typename CharT, std::size_t> class basic_fixed_writer;
 	template <typename StringT> class basic_string_writer;
@@ -46,8 +45,7 @@ namespace formatxx
 	using wformat_spec = basic_format_spec<wchar_t>;
 }
 
-namespace formatxx
-{
+namespace formatxx {
 	/// Default format helpers.
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t const* zstr, wstring_view spec) noexcept;
 	FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wchar_t* zstr, wstring_view spec) noexcept;
