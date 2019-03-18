@@ -37,58 +37,58 @@
 template <typename CharT>
 formatxx::result_code FORMATXX_API formatxx::basic_format_arg<CharT>::format_into(basic_format_writer<CharT>& output, basic_string_view<CharT> spec) const {
     switch (_type) {
-    case type::char_t:
+    case arg_type::char_t:
         _detail::write_char(output, *static_cast<char const*>(_value), spec);
         return result_code::success;
-    case type::wchar:
+    case arg_type::wchar:
         _detail::write_char(output, *static_cast<wchar_t const*>(_value), spec);
         return result_code::success;
-    case type::signed_char:
+    case arg_type::signed_char:
         _detail::write_integer(output, *static_cast<signed char const*>(_value), spec);
         return result_code::success;
-    case type::unsigned_char:
+    case arg_type::unsigned_char:
         _detail::write_integer(output, *static_cast<unsigned char const*>(_value), spec);
         return result_code::success;
-    case type::signed_short_int:
+    case arg_type::signed_short_int:
 		_detail::write_integer(output, *static_cast<signed short const*>(_value), spec);
 		return result_code::success;
-    case type::unsigned_short_int:
+    case arg_type::unsigned_short_int:
 		_detail::write_integer(output, *static_cast<unsigned short const*>(_value), spec);
 		return result_code::success;
-    case type::signed_long_int:
+    case arg_type::signed_long_int:
 		_detail::write_integer(output, *static_cast<signed long const*>(_value), spec);
 		return result_code::success;
-    case type::unsigned_long_int:
+    case arg_type::unsigned_long_int:
 		_detail::write_integer(output, *static_cast<unsigned long const*>(_value), spec);
 		return result_code::success;
-    case type::signed_long_long_int:
+    case arg_type::signed_long_long_int:
 		_detail::write_integer(output, *static_cast<signed long long const*>(_value), spec);
 		return result_code::success;
-    case type::unsigned_long_long_int:
+    case arg_type::unsigned_long_long_int:
 		_detail::write_integer(output, *static_cast<unsigned long long const*>(_value), spec);
 		return result_code::success;
-    case type::single_float:
+    case arg_type::single_float:
 		_detail::write_float(output, *static_cast<float const*>(_value), spec);
 		return result_code::success;
-    case type::double_float:
+    case arg_type::double_float:
 		_detail::write_float(output, *static_cast<double const*>(_value), spec);
 		return result_code::success;
-    case type::boolean:
+    case arg_type::boolean:
 		_detail::write_string(output, *static_cast<bool const*>(_value) ? _detail::FormatTraits<CharT>::sTrue : _detail::FormatTraits<CharT>::sFalse, spec);
 		return result_code::success;
-    case type::char_string:
+    case arg_type::char_string:
 		_detail::write_string(output, string_view(*static_cast<char const* const*>(_value)), spec);
 		return result_code::success;
-    case type::wchar_string:
+    case arg_type::wchar_string:
 		_detail::write_string(output, wstring_view(*static_cast<wchar_t const* const*>(_value)), spec);
 		return result_code::success;
-    case type::null_pointer:
+    case arg_type::null_pointer:
 		_detail::write_string(output, _detail::FormatTraits<CharT>::sNullptr, spec);
 		return result_code::success;
-    case type::void_pointer:
+    case arg_type::void_pointer:
 		_detail::write_integer(output, reinterpret_cast<std::uintptr_t>(*static_cast<void const* const*>(_value)), spec);
 		return result_code::success;
-    case type::custom:
+    case arg_type::custom:
         return _thunk(output, _value, spec);
     default:
         return result_code::success;
