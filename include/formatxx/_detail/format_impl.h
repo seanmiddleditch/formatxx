@@ -32,6 +32,8 @@
 #define _guard_FORMATXX_DETAIL_FORMAT_IMPL_H
 #pragma once
 
+#include "parse_unsigned.h"
+
 namespace formatxx::_detail {
 
 	template <typename CharT>

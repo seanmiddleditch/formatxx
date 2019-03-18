@@ -1,6 +1,5 @@
 #include "formatxx/format.h"
 #include "formatxx/std_string.h"
-#include "formatxx/wide.h"
 #include <doctest/doctest.h>
 #include <ostream>
 

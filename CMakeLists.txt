@@ -14,7 +14,6 @@ set(FORMATXX_PUBLIC_HEADERS
     include/formatxx/format.h
 	include/formatxx/small_string.h
     include/formatxx/std_string.h
-    include/formatxx/wide.h
     include/formatxx/writers.h
 )
 set(FORMATXX_PRIVATE_HEADERS
@@ -31,7 +30,6 @@ set(FORMATXX_PRIVATE_HEADERS
 )
 set(FORMATXX_SOURCES
 	source/format.cc
-    source/wide.cc
 )
 set(FORMATXX_TESTS
     tests/main.cc
