@@ -35,11 +35,9 @@
 namespace formatxx::_detail {
 
 	template <typename CharT>
-	static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result)
-	{
+	static CharT const* parse_unsigned(CharT const* start, CharT const* end, unsigned& result) {
 		result = 0;
-		while (start != end && *start >= CharT('0') && *start <= CharT('9'))
-		{
+		while (start != end && *start >= CharT('0') && *start <= CharT('9')) {
 			result *= 10;
 			result += *start - CharT('0');
 			++start;

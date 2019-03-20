@@ -37,19 +37,16 @@
 
 namespace formatxx::_detail {
 
-	inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value)
-	{
+	inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value) {
 		return std::snprintf(buf, result, fmt, width, precision, value);
 	}
 
-	inline int float_helper(wchar_t* buf, int result, wchar_t const* fmt, int width, int precision, double value)
-	{
+	inline int float_helper(wchar_t* buf, int result, wchar_t const* fmt, int width, int precision, double value) {
 		return std::swprintf(buf, result, fmt, width, precision, value);
 	}
 
 	template <typename CharT>
-	void write_float(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string)
-	{
+	void write_float(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string) {
 		auto const spec = parse_format_spec(spec_string);
 
 		constexpr std::size_t fmt_buf_size = 10;
@@ -60,8 +57,7 @@ namespace formatxx::_detail {
 		*--fmt_ptr = 0;
 
 		// every sprint call must have a valid code (1)
-		switch (spec.code)
-		{
+		switch (spec.code) {
 		case 'a':
 		case 'A':
 		case 'e':
@@ -84,26 +80,21 @@ namespace formatxx::_detail {
 		*--fmt_ptr = '*';
 
 		// these flags are mutually exclusive within themselves (1)
-		if (spec.prepend_sign)
-		{
+		if (spec.prepend_sign) {
 			*--fmt_ptr = FormatTraits<CharT>::cPlus;
 		}
-		else if (spec.prepend_space)
-		{
+		else if (spec.prepend_space) {
 			*--fmt_ptr = FormatTraits<CharT>::cSpace;
 		}
 
 		// these flags may all be set together (3)
-		if (spec.left_justify)
-		{
+		if (spec.left_justify) {
 			*--fmt_ptr = '-';
 		}
-		if (spec.leading_zeroes)
-		{
+		if (spec.leading_zeroes) {
 			*--fmt_ptr = '0';
 		}
-		if (spec.alternate_form)
-		{
+		if (spec.alternate_form) {
 			*--fmt_ptr = FormatTraits<CharT>::cHash;
 		}
 
@@ -114,8 +105,7 @@ namespace formatxx::_detail {
 		CharT buf[buf_size];
 
 		int const result = float_helper(buf, buf_size, fmt_ptr, spec.width, spec.has_precision ? spec.precision : -1, value);
-		if (result > 0)
-		{
+		if (result > 0) {
 			out.write({ buf, result < buf_size ? std::size_t(result) : buf_size });
 		}
 	}

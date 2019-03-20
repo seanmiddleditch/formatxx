@@ -37,8 +37,9 @@
 
 namespace formatxx::_detail {
     template <typename T>
-    struct new_delete_allocator
-    {
+    struct new_delete_allocator {
+        static_assert(std::is_trivial_v<T>);
+
         T* allocate(std::size_t count) { return new T[count]; }
         void deallocate(T* ptr, std::size_t) { delete[] ptr; }
     };

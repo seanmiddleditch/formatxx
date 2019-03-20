@@ -35,8 +35,7 @@
 namespace formatxx::_detail {
 
 	template <typename CharT>
-	FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args)
-	{
+	FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_args<CharT> args) {
 		unsigned next_index = 0;
 		result_code result = result_code::success;
 
@@ -44,33 +43,28 @@ namespace formatxx::_detail {
 		CharT const* const end = begin + format.size();
 		CharT const* iter = begin;
 
-		while (iter < end)
-		{
-			if (*iter != FormatTraits<CharT>::cPrintfSpec)
-			{
+		while (iter < end) {
+			if (*iter != FormatTraits<CharT>::cPrintfSpec) {
 				++iter;
 				continue;
 			}
 
 			// write out the string so far, since we don't write characters immediately
-			if (iter > begin)
-			{
+			if (iter > begin) {
 				out.write({ begin, iter });
 			}
 
 			++iter; // swallow the %
 
 			// if we hit the end of the input, we have an incomplete format, and nothing else we can do
-			if (iter == end)
-			{
+			if (iter == end) {
 				result = result_code::malformed_input;
 				break;
 			}
 
 			// if we just have another % then take it as a literal character by starting our next begin here,
 			// so it'll get written next time we write out the begin; nothing else to do for formatting here
-			if (*iter == FormatTraits<CharT>::cPrintfSpec)
-			{
+			if (*iter == FormatTraits<CharT>::cPrintfSpec) {
 				begin = iter++;
 				continue;
 			}
@@ -83,40 +77,33 @@ namespace formatxx::_detail {
 			iter = parse_unsigned(start, end, index);
 
 			// if we hit the end of the string, we have an incomplete format
-			if (iter == end)
-			{
+			if (iter == end) {
 				result = result_code::malformed_input;
 				break;
 			}
 
 			// if the format hits another % then this is the complete input, and it's just a position
-			if (*iter == FormatTraits<CharT>::cPrintfSpec)
-			{
+			if (*iter == FormatTraits<CharT>::cPrintfSpec) {
 				--index; // printf format indices are 1-based
 				begin = ++iter;
 			}
-			else
-			{
+			else {
 				// if we read nothing, we have a "next index" situation (or an error)
-				if (iter == start)
-				{
+				if (iter == start) {
 					index = next_index;
 				}
-				else if (*iter == FormatTraits<CharT>::cPrintfIndex)
-				{
+				else if (*iter == FormatTraits<CharT>::cPrintfIndex) {
 					--index; // printf format indices are 1-based
 
 					// we have a position argument and a remainder of the printf input
 					++iter;
 
-					if (iter == end)
-					{
+					if (iter == end) {
 						result = result_code::malformed_input;
 						break;
 					}
 				}
-				else
-				{
+				else {
 					index = next_index;
 
 					// the decimal input had nothing to do with position; reset so the call to
@@ -129,8 +116,7 @@ namespace formatxx::_detail {
 				CharT const* const spec_begin = iter;
 				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
 				spec_string = { spec_begin, spec.remaining };
-				if (spec.code == CharT(0))
-				{
+				if (spec.code == CharT(0)) {
 					// invalid spec
 					result = result_code::malformed_input;
 					break;
@@ -141,8 +127,7 @@ namespace formatxx::_detail {
 			}
 
 			result_code const arg_result = args.format_arg(out, index, spec_string);
-			if (arg_result != result_code::success)
-			{
+			if (arg_result != result_code::success) {
 				result = arg_result;
 			}
 
@@ -151,8 +136,7 @@ namespace formatxx::_detail {
 		}
 
 		// write out tail end of format string
-		if (iter > begin)
-		{
+		if (iter > begin) {
 			out.write({ begin, iter });
 		}
 

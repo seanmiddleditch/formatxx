@@ -36,8 +36,7 @@ namespace formatxx::_detail {
 
 	template <typename CharT> struct FormatTraits;
 
-	template <> struct FormatTraits<char>
-	{
+	template <> struct FormatTraits<char> {
 		static constexpr char cFormatBegin = '{';
 		static constexpr char cFormatEnd = '}';
 		static constexpr char cFormatSep = ':';
@@ -75,8 +74,7 @@ namespace formatxx::_detail {
 		static constexpr char const sHexadecimalUpper[] = "0123456789ABCDEF";
 	};
 
-	template <> struct FormatTraits<wchar_t>
-	{
+	template <> struct FormatTraits<wchar_t> {
 		static constexpr wchar_t cFormatBegin = L'{';
 		static constexpr wchar_t cFormatEnd = L'}';
 		static constexpr wchar_t cFormatSep = L':';
