@@ -127,12 +127,6 @@ namespace formatxx {
     FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, string_view spec = {}) noexcept;
     FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wstring_view spec = {}) noexcept;
     FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wstring_view spec = {}) noexcept;
-
-    template <typename CharT, typename T>
-    result_code format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_string_view<CharT> spec) {
-        auto arg = _detail::make_format_arg<CharT>(value);
-        return arg.format_into(writer, spec);
-    }
 }
 
 /// @internal
@@ -157,6 +151,7 @@ extern template FORMATXX_PUBLIC formatxx::basic_format_spec<wchar_t> FORMATXX_AP
 /// @param writer The write buffer that will receive the formatted text.
 /// @param format The primary text and formatting controls to be written.
 /// @param args The arguments used by the formatting string.
+/// @returns a result code indicating any errors.
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
     _detail::basic_format_arg<CharT> format_args[] = { _detail::make_format_arg<CharT>(static_cast<_detail::remove_array<Args> const&>(args))... };
@@ -167,6 +162,7 @@ formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, Fo
 /// @param writer The write buffer that will receive the formatted text.
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
+/// @returns a result code indicating any errors.
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
     _detail::basic_format_arg<CharT> format_args[] = { _detail::make_format_arg<CharT>(static_cast<_detail::remove_array<Args> const&>(args))... };
@@ -188,12 +184,24 @@ ResultT formatxx::format_as(FormatT const& format, Args const& ... args) {
 /// Write the printf format using the given parameters and return a string with the result.
 /// @param format The primary text and printf controls to be written.
 /// @param args The arguments used by the formatting string.
+/// @returns a formatted string.
 template <typename ResultT, typename FormatT, typename... Args>
 ResultT formatxx::printf_as(FormatT const& format, Args const& ... args) {
     ResultT result;
     append_writer writer(result);
     formatxx::printf_to(writer, basic_string_view<typename ResultT::value_type>(format), args...);
     return result;
+}
+
+/// Format a value into a buffer using the given spec.
+/// @param writer The write buffer that will receive the formatted text.
+/// @param value The value to format.
+/// @param spec The format control spec.
+/// @returns a result code indicating any errors.
+template <typename CharT, typename T>
+formatxx::result_code formatxx::format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_string_view<CharT> spec) {
+    auto arg = _detail::make_format_arg<CharT>(value);
+    return arg.format_into(writer, spec);
 }
 
 #endif // !defined(_guard_FORMATXX_H)
