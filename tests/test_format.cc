@@ -24,6 +24,14 @@ void format_value(formatxx::format_writer& writer, custom_type const*, formatxx:
     writer.write("custom pointer");
 }
 
+template <typename T>
+std::string format_as_string(T const& value) {
+    std::string result;
+    formatxx::append_writer writer(result);
+    formatxx::format_value_to(writer, value, {});
+    return result;
+}
+
 DOCTEST_TEST_CASE("format") {
     using namespace formatxx;
 
@@ -160,5 +168,9 @@ DOCTEST_TEST_CASE("format") {
         DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(writer, "{} {:4d", "abc", 9));
         DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{0} {1}", "abc", 9));
         DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(writer, "{0} {1} {5}", "abc", 9, 12.57));
+    }
+
+    DOCTEST_SUBCASE("format_value_into") {
+        DOCTEST_CHECK_EQ("123", format_as_string(123));
     }
 }
