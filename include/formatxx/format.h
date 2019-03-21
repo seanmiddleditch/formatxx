@@ -84,15 +84,15 @@ namespace formatxx {
     template <typename CharT> FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept;
 }
 
-#include "formatxx/_detail/append_writer.h"
-#include "formatxx/_detail/format_arg.h"
-
 enum class formatxx::result_code {
     success,
     out_of_range,
     malformed_input,
     out_of_space,
 };
+
+#include "formatxx/_detail/append_writer.h"
+#include "formatxx/_detail/format_arg.h"
 
 /// Interface for any buffer that the format library can write into.
 template <typename CharT>
