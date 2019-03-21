@@ -27,78 +27,137 @@
 #define _guard_FORMATXX_DETAIL_FORMAT_ARG_H
 #pragma once
 
-#include "format_traits.h"
-#include "write_integer.h"
-#include "write_string.h"
-#include "write_float.h"
-#include "write_wide.h"
+namespace formatxx::_detail {
+    enum class format_arg_type;
 
-#include <cinttypes>
+    template <typename CharT> class basic_format_arg;
+    template <typename CharT> class basic_format_arg_list;
 
+    template <typename CharT, typename T> constexpr basic_format_arg<CharT> make_format_arg(T const& value) noexcept;
+}
+
+enum class formatxx::_detail::format_arg_type {
+    unknown,
+    char_t,
+    wchar,
+    signed_char,
+    unsigned_char,
+    signed_int,
+    unsigned_int,
+    signed_short_int,
+    unsigned_short_int,
+    signed_long_int,
+    unsigned_long_int,
+    signed_long_long_int,
+    unsigned_long_long_int,
+    single_float,
+    double_float,
+    boolean,
+    char_string,
+    wchar_string,
+    null_pointer,
+    void_pointer,
+    custom
+};
+
+/// Abstraction for a single formattable value
 template <typename CharT>
-formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<CharT>::format_into(basic_format_writer<CharT>& output, basic_string_view<CharT> spec) const {
-    switch (_type) {
-    case _detail::format_arg_type::char_t:
-        _detail::write_char(output, *static_cast<char const*>(_value), spec);
+class formatxx::_detail::basic_format_arg {
+public:
+    using thunk_type = result_code(FORMATXX_API*)(basic_format_writer<CharT>&, void const*, basic_string_view<CharT>);
+
+    constexpr basic_format_arg() noexcept = default;
+    constexpr basic_format_arg(_detail::format_arg_type type, void const* value) noexcept : _type(type), _value(value) {}
+    constexpr basic_format_arg(thunk_type thunk, void const* value) noexcept : _type(_detail::format_arg_type::custom), _thunk(thunk), _value(value) {}
+
+    FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_string_view<CharT> spec) const;
+
+private:
+    _detail::format_arg_type _type = _detail::format_arg_type::unknown;
+    thunk_type _thunk = nullptr;
+    void const* _value = nullptr;
+};
+
+/// Abstraction for a set of format arguments.
+template <typename CharT>
+class formatxx::_detail::basic_format_arg_list {
+public:
+    using format_arg_type = basic_format_arg<CharT>;
+    using thunk_type = typename format_arg_type::thunk_type;
+    using size_type = std::size_t;
+
+    constexpr basic_format_arg_list() noexcept = default;
+    explicit constexpr basic_format_arg_list(size_type count, format_arg_type const* args) noexcept : _args(args), _count(count) {}
+
+    constexpr result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_string_view<CharT> spec) const {
+        return index < _count ? _args[index].format_into(output, spec) : result_code::out_of_range;
+    }
+
+private:
+    basic_format_arg<CharT> const* _args = nullptr;
+    size_type _count = 0;
+};
+
+namespace formatxx::_detail {
+    template <typename T>
+    using remove_array = std::conditional_t<std::is_array_v<T>, std::remove_extent_t<T> const*, T>;
+
+    template <typename C, typename T, typename V = void>
+    struct has_format_value { static constexpr bool value = false; };
+    template <typename C, typename T>
+    struct has_format_value<C, T, std::void_t<decltype(format_value(std::declval<basic_format_writer<C>&>(), std::declval<T>(), std::declval<basic_string_view<C>>()))>> {
+        static constexpr bool value = true;
+    };
+
+    template <typename T> struct type_of { static constexpr format_arg_type value = format_arg_type::unknown; };
+#define FORMATXX_TYPE(x, e) template <> struct type_of<x> { static constexpr format_arg_type value = format_arg_type::e; };
+    FORMATXX_TYPE(char, char_t);
+    FORMATXX_TYPE(wchar_t, wchar);
+    FORMATXX_TYPE(signed char, signed_char);
+    FORMATXX_TYPE(unsigned char, unsigned_char);
+    FORMATXX_TYPE(signed int, signed_int);
+    FORMATXX_TYPE(unsigned int, unsigned_int);
+    FORMATXX_TYPE(signed short, signed_short_int);
+    FORMATXX_TYPE(unsigned short, unsigned_short_int);
+    FORMATXX_TYPE(signed long, signed_long_int);
+    FORMATXX_TYPE(unsigned long, unsigned_long_int);
+    FORMATXX_TYPE(signed long long, signed_long_long_int);
+    FORMATXX_TYPE(unsigned long long, unsigned_long_long_int);
+    FORMATXX_TYPE(float, single_float);
+    FORMATXX_TYPE(double, double_float);
+    FORMATXX_TYPE(bool, boolean);
+    FORMATXX_TYPE(char*, char_string);
+    FORMATXX_TYPE(char const*, char_string);
+    FORMATXX_TYPE(wchar_t*, char_string);
+    FORMATXX_TYPE(wchar_t const*, wchar_string);
+    FORMATXX_TYPE(std::nullptr_t, null_pointer);
+    FORMATXX_TYPE(void*, void_pointer);
+    FORMATXX_TYPE(void const*, void_pointer);
+#undef FORMTAXX_TYPE
+
+    template <typename CharT, typename T>
+    result_code FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_string_view<CharT> spec) {
+        format_value(out, *static_cast<T const*>(ptr), spec);
         return result_code::success;
-    case _detail::format_arg_type::wchar:
-        _detail::write_char(output, *static_cast<wchar_t const*>(_value), spec);
-        return result_code::success;
-    case _detail::format_arg_type::signed_char:
-        _detail::write_integer(output, *static_cast<signed char const*>(_value), spec);
-        return result_code::success;
-    case _detail::format_arg_type::unsigned_char:
-        _detail::write_integer(output, *static_cast<unsigned char const*>(_value), spec);
-        return result_code::success;
-    case _detail::format_arg_type::signed_int:
-        _detail::write_integer(output, *static_cast<signed int const*>(_value), spec);
-        return result_code::success;
-    case _detail::format_arg_type::unsigned_int:
-        _detail::write_integer(output, *static_cast<unsigned int const*>(_value), spec);
-        return result_code::success;
-    case _detail::format_arg_type::signed_short_int:
-		_detail::write_integer(output, *static_cast<signed short const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::unsigned_short_int:
-		_detail::write_integer(output, *static_cast<unsigned short const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::signed_long_int:
-		_detail::write_integer(output, *static_cast<signed long const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::unsigned_long_int:
-		_detail::write_integer(output, *static_cast<unsigned long const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::signed_long_long_int:
-		_detail::write_integer(output, *static_cast<signed long long const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::unsigned_long_long_int:
-		_detail::write_integer(output, *static_cast<unsigned long long const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::single_float:
-		_detail::write_float(output, *static_cast<float const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::double_float:
-		_detail::write_float(output, *static_cast<double const*>(_value), spec);
-		return result_code::success;
-    case _detail::format_arg_type::boolean:
-		_detail::write_string(output, *static_cast<bool const*>(_value) ? _detail::FormatTraits<CharT>::sTrue : _detail::FormatTraits<CharT>::sFalse, spec);
-		return result_code::success;
-    case _detail::format_arg_type::char_string:
-		_detail::write_string(output, string_view(*static_cast<char const* const*>(_value)), spec);
-		return result_code::success;
-    case _detail::format_arg_type::wchar_string:
-		_detail::write_string(output, wstring_view(*static_cast<wchar_t const* const*>(_value)), spec);
-		return result_code::success;
-    case _detail::format_arg_type::null_pointer:
-		_detail::write_string(output, _detail::FormatTraits<CharT>::sNullptr, spec);
-		return result_code::success;
-    case _detail::format_arg_type::void_pointer:
-		_detail::write_integer(output, reinterpret_cast<std::uintptr_t>(*static_cast<void const* const*>(_value)), spec);
-		return result_code::success;
-    case _detail::format_arg_type::custom:
-        return _thunk(output, _value, spec);
-    default:
-        return result_code::success;
+    }
+
+    template <typename CharT, typename T>
+    constexpr basic_format_arg<CharT> make_format_arg(T const& value) noexcept {
+        if constexpr (constexpr format_arg_type type = type_of<std::decay_t<T>>::value; type != format_arg_type::unknown) {
+            return { type, &value };
+        }
+        else if constexpr (has_format_value<CharT, T>::value) {
+            return basic_format_arg<CharT>(&format_value_thunk<CharT, T>, &value);
+        }
+        else if constexpr (std::is_pointer_v<T>) {
+            return { format_arg_type::void_pointer, &value };
+        }
+        else if constexpr (std::is_enum_v<T>) {
+            return { type_of<std::underlying_type_t<T>>::value, &value };
+        }
+        else {
+            return {};
+        }
     }
 }
 

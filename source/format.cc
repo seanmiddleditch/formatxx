@@ -30,10 +30,11 @@
 
 #include <formatxx/format.h>
 
-#include <formatxx/_detail/format_arg.h>
-#include <formatxx/_detail/parse_format.h>
+#include <formatxx/_detail/format_arg_impl.h>
 #include <formatxx/_detail/format_impl.h>
+#include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/printf_impl.h>
+#include <formatxx/_detail/write_string.h>
 
 namespace formatxx {
     FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, string_view value, string_view spec) noexcept {

@@ -18,15 +18,18 @@ set(FORMATXX_PUBLIC_HEADERS
 )
 set(FORMATXX_PRIVATE_HEADERS
     include/formatxx/_detail/append_writer.h
-    include/formatxx/_detail/parse_format.h
-    include/formatxx/_detail/parse_unsigned.h
+    include/formatxx/_detail/format_arg.h
+    include/formatxx/_detail/format_arg_impl.h
     include/formatxx/_detail/format_impl.h
-    include/formatxx/_detail/printf_impl.h
     include/formatxx/_detail/format_traits.h
     include/formatxx/_detail/format_util.h
-    include/formatxx/_detail/write_integer.h
+    include/formatxx/_detail/parse_format.h
+    include/formatxx/_detail/parse_unsigned.h
+    include/formatxx/_detail/printf_impl.h
     include/formatxx/_detail/write_float.h
+    include/formatxx/_detail/write_integer.h
     include/formatxx/_detail/write_string.h
+    include/formatxx/_detail/write_wide.h
 )
 set(FORMATXX_SOURCES
     source/format.cc
