@@ -143,7 +143,8 @@ namespace formatxx::_detail {
 
     template <typename CharT, typename T>
     constexpr basic_format_arg<CharT> make_format_arg(T const& value) noexcept {
-        if constexpr (constexpr format_arg_type type = type_of<std::decay_t<T>>::value; type != format_arg_type::unknown) {
+        constexpr format_arg_type type = type_of<std::decay_t<T>>::value;
+        if constexpr (type != format_arg_type::unknown) {
             return { type, &value };
         }
         else if constexpr (has_format_value<CharT, T>::value) {
