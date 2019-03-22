@@ -27,6 +27,8 @@
 #define _guard_FORMATXX_DETAIL_FORMAT_ARG_H
 #pragma once
 
+#include <initializer_list>
+
 namespace formatxx::_detail {
     enum class format_arg_type;
 
@@ -87,7 +89,7 @@ public:
     using size_type = std::size_t;
 
     constexpr basic_format_arg_list() noexcept = default;
-    explicit constexpr basic_format_arg_list(size_type count, format_arg_type const* args) noexcept : _args(args), _count(count) {}
+    constexpr basic_format_arg_list(std::initializer_list<format_arg_type> args) noexcept : _args(args.begin()), _count(args.size()) {}
 
     constexpr result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_string_view<CharT> spec) const {
         return index < _count ? _args[index].format_into(output, spec) : result_code::out_of_range;
@@ -100,7 +102,10 @@ private:
 
 namespace formatxx::_detail {
     template <typename T>
-    using remove_array = std::conditional_t<std::is_array_v<T>, std::remove_extent_t<T> const*, T>;
+    using decay_array_t = std::conditional_t<std::is_array_v<T>, std::remove_extent_t<T> const*, T>;
+
+    template <typename T>
+    using formattable_t = decay_array_t<std::remove_reference_t<T>>;
 
     template <typename C, typename T, typename V = void>
     struct has_format_value { static constexpr bool value = false; };
@@ -143,7 +148,8 @@ namespace formatxx::_detail {
 
     template <typename CharT, typename T>
     constexpr basic_format_arg<CharT> make_format_arg(T const& value) noexcept {
-        constexpr format_arg_type type = type_of<std::decay_t<T>>::value;
+        constexpr format_arg_type type = type_of<T>::value;
+
         if constexpr (type != format_arg_type::unknown) {
             return { type, &value };
         }

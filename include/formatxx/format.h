@@ -154,8 +154,7 @@ extern template FORMATXX_PUBLIC formatxx::basic_format_spec<wchar_t> FORMATXX_AP
 /// @returns a result code indicating any errors.
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
-    _detail::basic_format_arg<CharT> format_args[] = { _detail::make_format_arg<CharT>(static_cast<_detail::remove_array<Args> const&>(args))... };
-    return _detail::format_impl(writer, basic_string_view<CharT>(format), _detail::basic_format_arg_list<CharT>(sizeof...(args), format_args));
+    return _detail::format_impl(writer, basic_string_view<CharT>(format), { _detail::make_format_arg<CharT, _detail::formattable_t<Args>>(args)... });
 }
 
 /// Write the printf format using the given parameters into a buffer.
@@ -165,8 +164,7 @@ formatxx::result_code formatxx::format_to(basic_format_writer<CharT>& writer, Fo
 /// @returns a result code indicating any errors.
 template <typename CharT, typename FormatT, typename... Args>
 formatxx::result_code formatxx::printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args) {
-    _detail::basic_format_arg<CharT> format_args[] = { _detail::make_format_arg<CharT>(static_cast<_detail::remove_array<Args> const&>(args))... };
-    return _detail::printf_impl(writer, basic_string_view<CharT>(format), _detail::basic_format_arg_list<CharT>(sizeof...(args), format_args));
+    return _detail::printf_impl(writer, basic_string_view<CharT>(format), { _detail::make_format_arg<CharT, _detail::formattable_t<Args>>(args)... });
 }
 
 /// Write the string format using the given parameters and return a string with the result.
