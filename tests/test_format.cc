@@ -4,6 +4,34 @@
 #include <doctest/doctest.h>
 #include <ostream>
 
+
+enum class standard_enum { one, two };
+enum class custom_enum { foo, bar };
+
+class custom_type {};
+
+void format_value(formatxx::format_writer& writer, custom_enum value, formatxx::string_view spec) noexcept {
+    switch (value) {
+    case custom_enum::foo: writer.write("foo"); return;
+    case custom_enum::bar: writer.write("bar"); return;
+    }
+}
+
+void format_value(formatxx::format_writer& writer, custom_type, formatxx::string_view spec) noexcept {
+    writer.write("custom");
+}
+void format_value(formatxx::format_writer& writer, custom_type const*, formatxx::string_view spec) noexcept {
+    writer.write("custom pointer");
+}
+
+template <typename T>
+std::string format_as_string(T const& value) {
+    std::string result;
+    formatxx::append_writer writer(result);
+    formatxx::format_value_to(writer, value, {});
+    return result;
+}
+
 DOCTEST_TEST_CASE("format") {
     using namespace formatxx;
 
@@ -116,6 +144,21 @@ DOCTEST_TEST_CASE("format") {
         DOCTEST_CHECK_EQ("fefefefe", format_string("{:x}", iptr));
     }
 
+    DOCTEST_SUBCASE("enums") {
+        DOCTEST_CHECK_EQ("1", format_string("{:0}", standard_enum::two));
+        DOCTEST_CHECK_EQ("bar", format_string("{}", custom_enum::bar));
+    }
+
+    DOCTEST_SUBCASE("custom") {
+        custom_type local;
+        custom_type& ref = local;
+        custom_type* ptr = &local;
+
+        DOCTEST_CHECK_EQ("custom", format_string("{}", custom_type{}));
+        DOCTEST_CHECK_EQ("custom", format_string("{}", local));
+        DOCTEST_CHECK_EQ("custom", format_string("{}", ref));
+        DOCTEST_CHECK_EQ("custom pointer", format_string("{}", ptr));
+    }
 
     DOCTEST_SUBCASE("errors") {
         char buffer[256];
@@ -125,5 +168,9 @@ DOCTEST_TEST_CASE("format") {
         DOCTEST_CHECK_EQ(formatxx::result_code::malformed_input, format_to(writer, "{} {:4d", "abc", 9));
         DOCTEST_CHECK_EQ(formatxx::result_code::success, format_to(writer, "{0} {1}", "abc", 9));
         DOCTEST_CHECK_EQ(formatxx::result_code::out_of_range, format_to(writer, "{0} {1} {5}", "abc", 9, 12.57));
+    }
+
+    DOCTEST_SUBCASE("format_value_into") {
+        DOCTEST_CHECK_EQ("123", format_as_string(123));
     }
 }

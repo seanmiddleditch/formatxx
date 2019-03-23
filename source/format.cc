@@ -29,51 +29,38 @@
 //   Sean Middleditch <sean@middleditch.us>
 
 #include <formatxx/format.h>
-#include <formatxx/wide.h>
 
-#include <formatxx/_detail/format_traits.h>
-#include <formatxx/_detail/parse_unsigned.h>
-#include <formatxx/_detail/parse_format.h>
-#include <formatxx/_detail/write_integer.h>
-#include <formatxx/_detail/write_string.h>
-#include <formatxx/_detail/write_float.h>
+#include <formatxx/_detail/format_arg_impl.h>
 #include <formatxx/_detail/format_impl.h>
+#include <formatxx/_detail/parse_format.h>
 #include <formatxx/_detail/printf_impl.h>
-
-#include <cstdint>
+#include <formatxx/_detail/write_string.h>
 
 namespace formatxx {
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, string_view value, string_view spec) noexcept {
+        _detail::write_string(output, value, spec);
+    }
 
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char value, string_view spec) noexcept { _detail::write_char(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char const* value, string_view spec) noexcept { _detail::write_string<char>(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, char* value, string_view spec) noexcept { _detail::write_string<char>(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view value, string_view spec) noexcept { _detail::write_string<char>(out, value, spec); }
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, wstring_view value, string_view spec) noexcept {
+        _detail::write_string(output, value, spec);
+    }
 
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed int value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed char value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed short value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, signed long long value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, string_view value, wstring_view spec) noexcept {
+        _detail::write_string(output, value, spec);
+    }
 
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned int value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned char value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned short value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, unsigned long long value, string_view spec) noexcept { _detail::write_integer(out, value, spec); }
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, wstring_view value, wstring_view spec) noexcept {
+        _detail::write_string(output, value, spec);
+    }
 
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, bool value, string_view spec) noexcept
-	{
-		format_value(out, value ? _detail::FormatTraits<char>::sTrue : _detail::FormatTraits<char>::sFalse, spec);
-	}
-
-
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, float value, string_view spec) noexcept { _detail::write_float(out, value, spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, double value, string_view spec) noexcept { _detail::write_float(out, value, spec); }
-
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void* ptr, string_view spec) noexcept { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
-	FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, void const* ptr, string_view spec) noexcept { _detail::write_integer(out, reinterpret_cast<std::uintptr_t>(ptr), spec); }
-
-	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
-	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_args<char> args);
+	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
+	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_string_view<char> spec) const;
 	template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>) noexcept;
+
+
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_string_view<wchar_t> spec) const;
+    template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>) noexcept;
 } // namespace formatxx

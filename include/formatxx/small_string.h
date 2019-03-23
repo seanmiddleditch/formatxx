@@ -35,26 +35,24 @@
 #include <litexx/string_view.h>
 #include <cstring>
 
-namespace formatxx
-{
-    namespace _detail
-    {
-        template <typename T>
-        struct new_delete_allocator
-        {
-            T* allocate(std::size_t count) { return new T[count]; }
-            void deallocate(T* ptr, std::size_t) { delete[] ptr; }
-        };
+namespace formatxx::_detail {
+    template <typename T>
+    struct new_delete_allocator {
+        static_assert(std::is_trivial_v<T>);
 
-    } // namespace _detail
+        T* allocate(std::size_t count) { return new T[count]; }
+        void deallocate(T* ptr, std::size_t) { delete[] ptr; }
+    };
 
+} // namespace formatxx::_detail
+
+namespace formatxx {
     template <typename CharT, std::size_t FixedCapacity, typename AllocatorT = _detail::new_delete_allocator<CharT>> class small_string;
 } // namespace formatxx
 
 /// A writer with a fixed buffer that will allocate when the buffer is exhausted.
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-class formatxx::small_string : private AllocatorT
-{
+class formatxx::small_string : private AllocatorT {
 public:
     using value_type = CharT;
     using size_type = std::size_t;
@@ -95,16 +93,14 @@ private:
 };
 
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-formatxx::small_string<CharT, FixedCapacity, AllocatorT>::~small_string()
-{
+formatxx::small_string<CharT, FixedCapacity, AllocatorT>::~small_string() {
     if (_data != nullptr) {
         this->deallocate(_data, _capacity + 1/*NUL*/);
     }
 }
 
 template <typename CharT, std::size_t FixedCapacity, typename AllocatorT>
-auto formatxx::small_string<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t new_size) -> pointer
-{
+auto formatxx::small_string<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t new_size) -> pointer {
     auto const old_capacity = capacity();
     if (new_size <= old_capacity) {
         return data();
@@ -128,8 +124,7 @@ auto formatxx::small_string<CharT, FixedCapacity, AllocatorT>::_grow(std::size_t
 }
 
 template <typename CharT, std::size_t SizeN, typename AllocatorT>
-void formatxx::small_string<CharT, SizeN, AllocatorT>::append(value_type const* data, size_type length)
-{
+void formatxx::small_string<CharT, SizeN, AllocatorT>::append(value_type const* data, size_type length) {
     value_type* mem = _grow(_size + length);
     std::memcpy(mem + _size, data, sizeof(CharT) * length);
     _size += length;

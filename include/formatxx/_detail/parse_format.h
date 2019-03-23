@@ -38,8 +38,7 @@
 namespace formatxx {
 
 	template <typename CharT>
-	FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept
-	{
+	FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept {
 		using Traits = _detail::FormatTraits<CharT>;
 
 		basic_format_spec<CharT> result;
@@ -49,30 +48,23 @@ namespace formatxx {
 		CharT const* const end = spec.data() + spec.size();
 
 		// flags
-		while (start != end)
-		{
-			if (*start == Traits::cPlus)
-			{
+		while (start != end) {
+			if (*start == Traits::cPlus) {
 				result.prepend_sign = true;
 			}
-			else if (*start == Traits::cMinus)
-			{
+			else if (*start == Traits::cMinus) {
 				result.left_justify = true;
 			}
-			else if (*start == Traits::to_digit(0))
-			{
+			else if (*start == Traits::to_digit(0)) {
 				result.leading_zeroes = true;
 			}
-			else if (*start == Traits::cSpace)
-			{
+			else if (*start == Traits::cSpace) {
 				result.prepend_space = true;
 			}
-			else if (*start == Traits::cHash)
-			{
+			else if (*start == Traits::cHash) {
 				result.alternate_form = true;
 			}
-			else
-			{
+			else {
 				break;
 			}
 			++start;
@@ -82,21 +74,18 @@ namespace formatxx {
 		start = _detail::parse_unsigned(start, end, result.width);
 
 		// read in precision, if present
-		if (start != end && *start == Traits::cDot)
-		{
+		if (start != end && *start == Traits::cDot) {
 			result.has_precision = true;
 			start = _detail::parse_unsigned(start + 1, end, result.precision);
 		}
 
 		// read in any of the modifiers like h or l that modify a type code (no effect in our system)
-		while (start != end && _detail::string_contains(Traits::sPrintfModifiers, *start))
-		{
+		while (start != end && _detail::string_contains(Traits::sPrintfModifiers, *start)) {
 			++start;
 		}
 
 		// generic code specified option allowed (required for printf)
-		if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start))
-		{
+		if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
 			result.code = *start++;
 		}
 

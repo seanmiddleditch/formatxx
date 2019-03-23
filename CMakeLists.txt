@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.8)
 
 project(formatxx
-	VERSION 0.9.0
-	LANGUAGES CXX
+    VERSION 0.9.0
+    LANGUAGES CXX
 )
 
 option(FORMATXX_BUILD_TESTS "Build formatxx tests" ON)
@@ -12,26 +12,27 @@ add_subdirectory(external)
 
 set(FORMATXX_PUBLIC_HEADERS
     include/formatxx/format.h
-	include/formatxx/small_string.h
+    include/formatxx/small_string.h
     include/formatxx/std_string.h
-    include/formatxx/wide.h
     include/formatxx/writers.h
 )
 set(FORMATXX_PRIVATE_HEADERS
     include/formatxx/_detail/append_writer.h
-	include/formatxx/_detail/parse_format.h
-	include/formatxx/_detail/parse_unsigned.h
-	include/formatxx/_detail/format_impl.h
+    include/formatxx/_detail/format_arg.h
+    include/formatxx/_detail/format_arg_impl.h
+    include/formatxx/_detail/format_impl.h
+    include/formatxx/_detail/format_traits.h
+    include/formatxx/_detail/format_util.h
+    include/formatxx/_detail/parse_format.h
+    include/formatxx/_detail/parse_unsigned.h
     include/formatxx/_detail/printf_impl.h
-	include/formatxx/_detail/format_traits.h
-	include/formatxx/_detail/format_util.h
-	include/formatxx/_detail/write_integer.h
-	include/formatxx/_detail/write_float.h
-	include/formatxx/_detail/write_string.h
+    include/formatxx/_detail/write_float.h
+    include/formatxx/_detail/write_integer.h
+    include/formatxx/_detail/write_string.h
+    include/formatxx/_detail/write_wide.h
 )
 set(FORMATXX_SOURCES
-	source/format.cc
-    source/wide.cc
+    source/format.cc
 )
 set(FORMATXX_TESTS
     tests/main.cc
@@ -47,8 +48,8 @@ set(FORMATXX_FILES ${FORMATXX_PUBLIC_HEADERS} ${FORMATXX_PRIVATE_HEADERS} ${FORM
 add_library(formatxx ${FORMATXX_FILES})
 target_compile_features(formatxx PUBLIC cxx_std_17)
 target_include_directories(formatxx PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-	$<INSTALL_INTERFACE:include/formatxx>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include/formatxx>
 )
 target_link_libraries(formatxx PUBLIC litexx)
 set_target_properties(formatxx PROPERTIES
@@ -60,7 +61,7 @@ source_group("Header Files\\_detail" FILES ${FORMATXX_PRIVATE_HEADERS})
 
 install(TARGETS formatxx EXPORT formatxx-targets
     ARCHIVE DESTINATION lib
-	RUNTIME DESTINATION bin
+    RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION ${CMAKE_INSTALL_PREFIX})
@@ -69,8 +70,8 @@ install(EXPORT formatxx-targets DESTINATION share/formatxx/cmake)
 export(TARGETS formatxx FILE formatxx-exports.cmake)
 
 if(FORMATXX_BUILD_TESTS)
-	enable_testing()
-	add_executable(formatxx_tests ${FORMATXX_TESTS})
-	target_link_libraries(formatxx_tests formatxx doctest)
-	add_test(formatxx_tests formatxx_tests)
+    enable_testing()
+    add_executable(formatxx_tests ${FORMATXX_TESTS})
+    target_link_libraries(formatxx_tests formatxx doctest)
+    add_test(formatxx_tests formatxx_tests)
 endif()
