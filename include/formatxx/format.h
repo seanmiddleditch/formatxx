@@ -134,7 +134,7 @@ public:
 template <typename CharT>
 class formatxx::basic_format_spec {
 public:
-    basic_format_spec() : has_precision(false), alternate_form(false), leading_zeroes(false) {}
+    constexpr basic_format_spec() noexcept : has_precision(false), alternate_form(false), leading_zeroes(false) {}
 
     basic_string_view<CharT> remaining;
     unsigned width = 0;
