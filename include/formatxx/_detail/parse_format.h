@@ -74,7 +74,6 @@ namespace formatxx {
 
 		// read in precision, if present
 		if (start != end && *start == Traits::cDot) {
-            result.options.has_precision = true;
 			start = _detail::parse_unsigned(start + 1, end, result.options.precision);
 		}
 

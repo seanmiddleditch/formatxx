@@ -134,15 +134,14 @@ public:
 template <typename CharT>
 class formatxx::basic_format_options {
 public:
-    constexpr basic_format_options() noexcept : has_precision(false), alternate_form(false), leading_zeroes(false) {}
+    constexpr basic_format_options() noexcept : alternate_form(false), leading_zeroes(false) {}
 
     basic_string_view<CharT> user;
     unsigned width = 0;
-    unsigned precision = 0;
+    unsigned precision = ~0u;
     CharT specifier = 0;
     format_justify justify = format_justify::right;
     format_sign sign = format_sign::negative;
-    bool has_precision : 1;
     bool alternate_form : 1;
     bool leading_zeroes : 1;
 };

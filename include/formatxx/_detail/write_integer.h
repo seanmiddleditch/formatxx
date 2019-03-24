@@ -206,7 +206,7 @@ namespace formatxx::_detail {
 		CharT value_buffer[HelperT::template buffer_size<unsigned_type>];
 		auto const result = HelperT::write(value_buffer, unsigned_value);
 
-		if (options.has_precision) {
+		if (options.precision != ~0u) {
 			out.write(prefix);
 			write_padded_align_right(out, result, FormatTraits<CharT>::cZero, options.precision);
 		}

@@ -101,7 +101,7 @@ namespace formatxx::_detail {
 		constexpr std::size_t buf_size = 1078;
 		CharT buf[buf_size];
 
-		int const result = float_helper(buf, buf_size, fmt_ptr, options.width, options.has_precision ? options.precision : -1, value);
+		int const result = float_helper(buf, buf_size, fmt_ptr, options.width, options.precision, value);
 		if (result > 0) {
 			out.write({ buf, result < buf_size ? std::size_t(result) : buf_size });
 		}

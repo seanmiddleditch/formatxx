@@ -38,7 +38,7 @@ namespace formatxx::_detail {
 
 	template <typename CharT>
 	void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_format_options<CharT> const& options) {
-		if (options.has_precision) {
+		if (options.precision != ~0u) {
 			str = trim_string(str, options.precision);
 		}
 
