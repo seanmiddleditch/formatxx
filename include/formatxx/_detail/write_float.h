@@ -46,9 +46,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	void write_float(basic_format_writer<CharT>& out, double value, basic_string_view<CharT> spec_string) {
-		auto const spec = parse_format_spec(spec_string);
-
+	void write_float(basic_format_writer<CharT>& out, double value, basic_format_spec<CharT> spec) {
 		constexpr std::size_t fmt_buf_size = 10;
 		CharT fmt_buf[fmt_buf_size];
 		CharT* fmt_ptr = fmt_buf + fmt_buf_size;

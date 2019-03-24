@@ -38,31 +38,30 @@
 namespace formatxx {
 
 	template <typename CharT>
-	FORMATXX_PUBLIC basic_format_spec<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept {
+	FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept {
 		using Traits = _detail::FormatTraits<CharT>;
 
-		basic_format_spec<CharT> result;
+        basic_parse_spec_result<CharT> result;
 
-		result.remaining = spec.data();
-		CharT const*& start = result.remaining;
-		CharT const* const end = spec.data() + spec.size();
+        CharT const* start = spec.data();
+		CharT const* const end = start + spec.size();
 
 		// flags
 		while (start != end) {
 			if (*start == Traits::cPlus) {
-				result.prepend_sign = true;
+				result.spec.prepend_sign = true;
 			}
 			else if (*start == Traits::cMinus) {
-				result.left_justify = true;
+				result.spec.left_justify = true;
 			}
 			else if (*start == Traits::to_digit(0)) {
-				result.leading_zeroes = true;
+                result.spec.leading_zeroes = true;
 			}
 			else if (*start == Traits::cSpace) {
-				result.prepend_space = true;
+                result.spec.prepend_space = true;
 			}
 			else if (*start == Traits::cHash) {
-				result.alternate_form = true;
+                result.spec.alternate_form = true;
 			}
 			else {
 				break;
@@ -71,12 +70,12 @@ namespace formatxx {
 		}
 
 		// read in width
-		start = _detail::parse_unsigned(start, end, result.width);
+		start = _detail::parse_unsigned(start, end, result.spec.width);
 
 		// read in precision, if present
 		if (start != end && *start == Traits::cDot) {
-			result.has_precision = true;
-			start = _detail::parse_unsigned(start + 1, end, result.precision);
+            result.spec.has_precision = true;
+			start = _detail::parse_unsigned(start + 1, end, result.spec.precision);
 		}
 
 		// read in any of the modifiers like h or l that modify a type code (no effect in our system)
@@ -86,8 +85,10 @@ namespace formatxx {
 
 		// generic code specified option allowed (required for printf)
 		if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
-			result.code = *start++;
+            result.spec.code = *start++;
 		}
+
+        result.unparsed = { start, end };
 
 		return result;
 	}

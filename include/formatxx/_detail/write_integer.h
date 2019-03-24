@@ -39,7 +39,7 @@
 
 namespace formatxx::_detail {
 
-	template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_string_view<CharT> spec);
+	template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_format_spec<CharT> spec);
 
 	struct prefix_helper {
 		// type prefix (2), sign (1)
@@ -180,7 +180,7 @@ namespace formatxx::_detail {
 	};
 
 	template <typename HelperT, typename CharT, typename ValueT>
-	void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_spec<CharT> const& spec) {
+	void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_spec<CharT> spec) {
 		using unsigned_type = std::make_unsigned_t<ValueT>;
 
 		// convert to an unsigned value to make the formatting easier; note that must
@@ -223,9 +223,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT, typename T>
-	void write_integer(basic_format_writer<CharT> & out, T raw, basic_string_view<CharT> spec_string) {
-		basic_format_spec<CharT> spec = parse_format_spec(spec_string);
-
+	void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_spec<CharT> spec) {
 		switch (spec.code) {
 		default:
 		case 0:

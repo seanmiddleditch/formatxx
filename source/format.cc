@@ -37,30 +37,29 @@
 #include <formatxx/_detail/write_string.h>
 
 namespace formatxx {
-    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, string_view value, string_view spec) noexcept {
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, string_view value, format_spec spec) noexcept {
         _detail::write_string(output, value, spec);
     }
 
-    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, wstring_view value, string_view spec) noexcept {
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& output, wstring_view value, format_spec spec) noexcept {
         _detail::write_string(output, value, spec);
     }
 
-    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, string_view value, wstring_view spec) noexcept {
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, string_view value, wformat_spec spec) noexcept {
         _detail::write_string(output, value, spec);
     }
 
-    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, wstring_view value, wstring_view spec) noexcept {
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& output, wstring_view value, wformat_spec spec) noexcept {
         _detail::write_string(output, value, spec);
     }
 
 	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
 	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
-    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_string_view<char> spec) const;
-	template FORMATXX_PUBLIC basic_format_spec<char> FORMATXX_API parse_format_spec(basic_string_view<char>) noexcept;
-
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_format_spec<char> spec) const;
+	template FORMATXX_PUBLIC basic_parse_spec_result<char> FORMATXX_API parse_format_spec(basic_string_view<char>) noexcept;
 
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
-    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_string_view<wchar_t> spec) const;
-    template FORMATXX_PUBLIC basic_format_spec<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>) noexcept;
+    template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_format_spec<wchar_t> spec) const;
+    template FORMATXX_PUBLIC basic_parse_spec_result<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>) noexcept;
 } // namespace formatxx

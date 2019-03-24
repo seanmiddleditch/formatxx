@@ -10,18 +10,18 @@ enum class custom_enum { foo, bar };
 
 class custom_type {};
 
-void format_value(formatxx::format_writer& writer, custom_enum value, formatxx::string_view spec) noexcept {
+void format_value(formatxx::format_writer& writer, custom_enum value, formatxx::format_spec spec) noexcept {
     switch (value) {
-    case custom_enum::foo: writer.write("foo"); return;
-    case custom_enum::bar: writer.write("bar"); return;
+    case custom_enum::foo: format_value_to(writer, "foo", spec); return;
+    case custom_enum::bar: format_value_to(writer, "bar", spec); return;
     }
 }
 
-void format_value(formatxx::format_writer& writer, custom_type, formatxx::string_view spec) noexcept {
-    writer.write("custom");
+void format_value(formatxx::format_writer& writer, custom_type, formatxx::format_spec spec) noexcept {
+    format_value_to(writer, "custom", spec);
 }
-void format_value(formatxx::format_writer& writer, custom_type const*, formatxx::string_view spec) noexcept {
-    writer.write("custom pointer");
+void format_value(formatxx::format_writer& writer, custom_type const*, formatxx::format_spec spec) noexcept {
+    format_value_to(writer, "custom pointer", spec);
 }
 
 template <typename T>

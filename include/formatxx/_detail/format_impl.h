@@ -86,7 +86,7 @@ namespace formatxx::_detail {
 				index = next_index;
 			}
 
-			basic_string_view<CharT> spec;
+			basic_format_spec<CharT> spec;
 
 			// if a : follows the number, we have some formatting controls
 			if (*iter == FormatTraits<CharT>::cFormatSep) {
@@ -103,7 +103,14 @@ namespace formatxx::_detail {
 					break;
 				}
 
-				spec = basic_string_view<CharT>(spec_begin, iter);
+                basic_parse_spec_result<CharT> const spec_result = parse_format_spec<CharT>({ spec_begin, iter });
+                if (spec_result.code != result_code::success) {
+                    result = spec_result.code;
+                    break;
+                }
+
+                spec = spec_result.spec;
+                spec.remaining = spec_result.unparsed;
 			}
 
 			// after the index/spec, we expect an end to the format marker
