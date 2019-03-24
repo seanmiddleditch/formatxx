@@ -41,51 +41,41 @@ namespace formatxx::_detail {
 #pragma warning(push)
 #pragma warning(disable: 4996)
 
-    inline void write_char(wformat_writer& out, char ch, wstring_view) noexcept
-    {
+    inline void write_char(wformat_writer& out, char ch, wformat_options const&) noexcept {
         std::mbstate_t state{};
         wchar_t wc;
         std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
-        if (rs > 0 && rs < static_cast<std::size_t>(-2))
-        {
+        if (rs > 0 && rs < static_cast<std::size_t>(-2)) {
             out.write({ &wc, 1 });
         }
     }
 
-    inline void write_string(wformat_writer& out, string_view str, wstring_view) noexcept
-    {
+    inline void write_string(wformat_writer& out, string_view str, wformat_options const&) noexcept {
         std::mbstate_t state{};
-        for (auto const ch : str)
-        {
+        for (auto const ch : str) {
             wchar_t wc;
             std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
-            if (rs < static_cast<std::size_t>(-2))
-            {
+            if (rs < static_cast<std::size_t>(-2)) {
                 out.write({ &wc, 1 });
             }
         }
     }
 
-    inline void write_char(format_writer& out, wchar_t ch, string_view) noexcept
-    {
+    inline void write_char(format_writer& out, wchar_t ch, format_options const&) noexcept {
         std::mbstate_t state{};
         char mb[MB_LEN_MAX];
         std::size_t const rs = std::wcrtomb(mb, ch, &state);
-        if (rs != static_cast<std::size_t>(-1))
-        {
+        if (rs != static_cast<std::size_t>(-1)) {
             out.write({ mb, rs });
         }
     }
 
-    inline void write_string(format_writer& out, wstring_view str, string_view) noexcept
-    {
+    inline void write_string(format_writer& out, wstring_view str, format_options const&) noexcept {
         std::mbstate_t state{};
         char mb[MB_LEN_MAX];
-        for (auto const ch : str)
-        {
+        for (auto const ch : str) {
             std::size_t const rs = std::wcrtomb(mb, ch, &state);
-            if (rs != static_cast<std::size_t>(-1))
-            {
+            if (rs != static_cast<std::size_t>(-1)) {
                 out.write({ mb, rs });
             }
         }

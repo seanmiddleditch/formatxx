@@ -32,6 +32,8 @@
 #define _guard_FORMATXX_DETAIL_PRINTF_IMPL_H
 #pragma once
 
+#include "parse_printf.h"
+
 namespace formatxx::_detail {
 
 	template <typename CharT>
@@ -69,7 +71,7 @@ namespace formatxx::_detail {
 				continue;
 			}
 
-			basic_string_view<CharT> spec_string;
+			basic_format_options<CharT> options;
 
 			// determine which argument we're going to format (optional in printf syntax)
 			unsigned index = 0;
@@ -107,26 +109,26 @@ namespace formatxx::_detail {
 					index = next_index;
 
 					// the decimal input had nothing to do with position; reset so the call to
-					// parse_format_spec ensures we have a valid spec, not something like 1#2.3
+					// parse_format_spec ensures we have a valid options, not something like 1#2.3
 					iter = start;
 				}
 
 				// parse forward through the specification and verify that it's correct and will
 				// properly decode in parse_format_spec later.
 				CharT const* const spec_begin = iter;
-				basic_format_spec<CharT> const spec = parse_format_spec(basic_string_view<CharT>(iter, end));
-				spec_string = { spec_begin, spec.remaining };
-				if (spec.code == CharT(0)) {
-					// invalid spec
-					result = result_code::malformed_input;
-					break;
-				}
+                basic_parse_spec_result<CharT> const spec_result = parse_printf_spec(basic_string_view<CharT>(iter, end));
+                if (spec_result.code != result_code::success) {
+                    result = spec_result.code;
+                    break;
+                }
+
+                options = spec_result.options;
 
 				// prepare for next round
-				begin = iter = spec.remaining;
+				begin = iter = spec_result.unparsed.begin();
 			}
 
-			result_code const arg_result = args.format_arg(out, index, spec_string);
+            result_code const arg_result = args.format_arg(out, index, options);
 			if (arg_result != result_code::success) {
 				result = arg_result;
 			}

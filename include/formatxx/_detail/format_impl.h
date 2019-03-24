@@ -33,6 +33,7 @@
 #pragma once
 
 #include "parse_unsigned.h"
+#include "parse_format.h"
 
 namespace formatxx::_detail {
 
@@ -86,7 +87,7 @@ namespace formatxx::_detail {
 				index = next_index;
 			}
 
-			basic_string_view<CharT> spec;
+			basic_format_options<CharT> options;
 
 			// if a : follows the number, we have some formatting controls
 			if (*iter == FormatTraits<CharT>::cFormatSep) {
@@ -98,15 +99,22 @@ namespace formatxx::_detail {
 				}
 
 				if (iter == end) {
-					// invalid spec
+					// invalid options
 					result = result_code::malformed_input;
 					break;
 				}
 
-				spec = basic_string_view<CharT>(spec_begin, iter);
+                basic_parse_spec_result<CharT> const spec_result = parse_format_spec<CharT>({ spec_begin, iter });
+                if (spec_result.code != result_code::success) {
+                    result = spec_result.code;
+                    break;
+                }
+
+                options = spec_result.options;
+                options.user = spec_result.unparsed;
 			}
 
-			// after the index/spec, we expect an end to the format marker
+			// after the index/options, we expect an end to the format marker
 			if (*iter != FormatTraits<CharT>::cFormatEnd) {
 				// we have something besides a number, no bueno
 				result = result_code::malformed_input;
@@ -114,7 +122,7 @@ namespace formatxx::_detail {
 				continue;
 			}
 
-			result_code const arg_result = args.format_arg(out, index, spec);
+			result_code const arg_result = args.format_arg(out, index, options);
 			if (arg_result != result_code::success) {
 				result = arg_result;
 			}

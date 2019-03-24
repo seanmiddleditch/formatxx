@@ -28,8 +28,8 @@
 // Authors:
 //   Sean Middleditch <sean@middleditch.us>
 
-#if !defined(_guard_FORMATXX_DETAIL_PARSE_FORMAT_H)
-#define _guard_FORMATXX_DETAIL_PARSE_FORMAT_H
+#if !defined(_guard_FORMATXX_DETAIL_PARSE_PRINTF_H)
+#define _guard_FORMATXX_DETAIL_PARSE_PRINTF_H
 #pragma once
 
 #include "parse_unsigned.h"
@@ -37,56 +37,62 @@
 
 namespace formatxx {
 
-	template <typename CharT>
-	FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec_string) noexcept {
-		using Traits = _detail::FormatTraits<CharT>;
+    template <typename CharT>
+    FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_printf_spec(basic_string_view<CharT> spec_string) noexcept {
+        using Traits = _detail::FormatTraits<CharT>;
 
         basic_parse_spec_result<CharT> result;
 
         CharT const* start = spec_string.data();
-		CharT const* const end = start + spec_string.size();
+        CharT const* const end = start + spec_string.size();
 
-		// flags
-		while (start != end) {
-			if (*start == Traits::cPlus) {
-				result.options.sign = format_sign::always;
-			}
-			else if (*start == Traits::cMinus) {
-				result.options.justify = format_justify::left;
-			}
-			else if (*start == Traits::cZero) {
+        // flags
+        while (start != end) {
+            if (*start == Traits::cPlus) {
+                result.options.sign = format_sign::always;
+            }
+            else if (*start == Traits::cMinus) {
+                result.options.justify = format_justify::left;
+            }
+            else if (*start == Traits::cZero) {
                 result.options.leading_zeroes = true;
-			}
-			else if (*start == Traits::cSpace) {
+            }
+            else if (*start == Traits::cSpace) {
                 result.options.sign = format_sign::space;
-			}
-			else if (*start == Traits::cHash) {
+            }
+            else if (*start == Traits::cHash) {
                 result.options.alternate_form = true;
-			}
-			else {
-				break;
-			}
-			++start;
-		}
+            }
+            else {
+                break;
+            }
+            ++start;
+        }
 
-		// read in width
-		start = _detail::parse_unsigned(start, end, result.options.width);
+        // read in width
+        start = _detail::parse_unsigned(start, end, result.options.width);
 
-		// read in precision, if present
-		if (start != end && *start == Traits::cDot) {
-			start = _detail::parse_unsigned(start + 1, end, result.options.precision);
-		}
+        // read in precision, if present
+        if (start != end && *start == Traits::cDot) {
+            start = _detail::parse_unsigned(start + 1, end, result.options.precision);
+        }
 
-		// generic code specified option allowed (mostly to set format_options on numeric formatting)
-		if (start != end && _detail::string_contains(Traits::sFormatSpecifiers, *start)) {
-            result.options.specifier = *start++;
-		}
+        // read in any of the modifiers like h or l that modify a type code (no effect in our system)
+        while (start != end && _detail::string_contains(Traits::sPrintfModifiers, *start)) {
+            ++start;
+        }
+
+        // mandatory generic code
+        if (start == end || !_detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
+            result.code = result_code::malformed_input;
+            return result;
+        }
+        result.options.specifier = *start++;
 
         result.unparsed = { start, end };
-
-		return result;
-	}
+        return result;
+    }
 
 } // namespace formatxx
 
-#endif // _guard_FORMATXX_DETAIL_PARSE_FORMAT_H
+#endif // _guard_FORMATXX_DETAIL_PARSE_PRINTF_H

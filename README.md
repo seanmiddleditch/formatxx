@@ -26,53 +26,55 @@ necessary. Users can easily write their own buffer systems as well.
 The underlying method of operation of formatxx is to collect a list of arguments via variadic
 templates, lookup a `format_value` function for each of those arguments, and then pass the format
 string, an array of format functions, and an array of `void` pointers to arguments into the
-the actual formatting function. The header mechanisms that generate these lists of functions
-and pointers are intended to be as absolutel light-weight on the compiler as possible. The
-actual formatting work is all implemented in a source file and not the header, to keep the
+the actual formatting function. Builtin C++ types go through a slightly different mechanism for
+the sake of avoiding excessing ADL noise. The header mechanisms that generate these lists of
+functions and pointers are intended to be light-weight on the compiler to the extent reasonable.
+The actual formatting work is all implemented in a source file and not the header, to keep the
 header small and cheap to include.
 
 ## Usage
 
 formatxx can write into user-defined buffers, or a user may use one of the provided buffer
 types. Formatting is support for any type that has an appropriate `format_value` free function with
-the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_spec)`. For instance:
+the signature `void format_value(formatxx::IWriter&, TheType, formatxx::format_options const&)`.
+For instance:
 
-```C++
+```c++
+#include <formatxx/format.h>
+#include <string>
+
 struct Foo { int value };
 	
-void format_value(formatxx::writer& out, Foo const& foo, formatxx::string_view spec)
-{
-	format(out, "Foo({})", foo.value);
+void format_value(formatxx::writer& out, Foo const& foo, formatxx::format_options const& opts) {
+	format_to(out, "Foo({})", foo.value);
 }
 	
-int main()
-{
-	std::cout << formatxx::FormatString<>("testing {0}", Foo{123});
+int main() {
+	std::cout << formatxx::format_as<std::string>("testing {0}", Foo{123});
 }
 ```
 
 The above will print `testing Foo(123)` to standard output.
 
-The `spec` argument are additional options passed to the formatter. These can be
-interpreted by the `format_value` function anyway it sees fit. The
-`formatxx::parse_format_spec` function will return a `formatxx::format_spec` structure
-with various printf-style flags and options parsed, which are used by default for built-in
-format types like integers, floats, and strings.
+The `options` argument are additional options passed to the formatter. These are parsed from
+format string options. In the `format_to` case user-provided arguments may be provided,
+otherwise they are interpreted by Python or printf rules.
 
-The `formatxx::format<StringT = std::string>(string_view, ...)` template can be used
-for formatting a series of arguments into a `std::string` or any compatible string type.
+The functions `formatxx::parse_format_spec` and `formatxx::parse_printf_spec` can be used
+to interpret format specs from string inputs.
 
-The `formatxx::format(formatxx::writer&, string_view, ...)` template can be used to
-write into a write buffer.
+The `formatxx::format_as<ResultT>(string_view, ...)` template can be used
+for formatting a series of arguments into any result type that implements a `string`-like
+`append` method. Including `formatxx/std_string.h` also provides a `format_string` function
+that defaults to returning `std::string` results.
+
+The `formatxx::format_to(formatxx::writer&, string_view, ...)` template can be used to
+write into a write buffer. This is the recommended way of formatting.
 
 The provided write buffers are:
-- `fmt::fixed_writer<N>` - a write buffer that will never allocate but only support
-  `N`-1 characters.
-- `fmt::string_writer<StringT>` - a write buffer that writes into a `std::string`-
-  compatible type.
-- `fmt::buffered_writer<N, AllocatorT = std::allocator<char>>` - a write buffer that
-  will not allocate for strings up to `N`-1 characters long but will allocate when
-  necessary if that length is exceeded.
+- `formatxx::append_writer<StringT>` - writes to a `string`-like object using `append`.
+- `fmt::container_writer<ContainerT>` - writes to a container using `insert` at the end.
+- `fmt::span_writer<CharT>` - writes to a pre-allocated buffer.
 
 All three of the provided write buffers guarantee NUL-terminated strings, but support
 use with string types that are not NUL-terminated (another important use case for
