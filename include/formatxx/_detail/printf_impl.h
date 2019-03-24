@@ -32,6 +32,8 @@
 #define _guard_FORMATXX_DETAIL_PRINTF_IMPL_H
 #pragma once
 
+#include "parse_printf.h"
+
 namespace formatxx::_detail {
 
 	template <typename CharT>
@@ -114,7 +116,7 @@ namespace formatxx::_detail {
 				// parse forward through the specification and verify that it's correct and will
 				// properly decode in parse_format_spec later.
 				CharT const* const spec_begin = iter;
-                basic_parse_spec_result<CharT> const spec_result = parse_format_spec(basic_string_view<CharT>(iter, end));
+                basic_parse_spec_result<CharT> const spec_result = parse_printf_spec(basic_string_view<CharT>(iter, end));
                 if (spec_result.code != result_code::success) {
                     result = spec_result.code;
                     break;

@@ -24,6 +24,7 @@ set(FORMATXX_PRIVATE_HEADERS
     include/formatxx/_detail/format_traits.h
     include/formatxx/_detail/format_util.h
     include/formatxx/_detail/parse_format.h
+    include/formatxx/_detail/parse_printf.h
     include/formatxx/_detail/parse_unsigned.h
     include/formatxx/_detail/printf_impl.h
     include/formatxx/_detail/write_float.h

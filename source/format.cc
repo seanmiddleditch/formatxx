@@ -33,6 +33,7 @@
 #include <formatxx/_detail/format_arg_impl.h>
 #include <formatxx/_detail/format_impl.h>
 #include <formatxx/_detail/parse_format.h>
+#include <formatxx/_detail/parse_printf.h>
 #include <formatxx/_detail/printf_impl.h>
 #include <formatxx/_detail/write_string.h>
 
@@ -57,9 +58,11 @@ namespace formatxx {
 	template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_format_spec<char> spec) const;
 	template FORMATXX_PUBLIC basic_parse_spec_result<char> FORMATXX_API parse_format_spec(basic_string_view<char>) noexcept;
+    template FORMATXX_PUBLIC basic_parse_spec_result<char> FORMATXX_API parse_printf_spec(basic_string_view<char>) noexcept;
 
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
     template FORMATXX_PUBLIC result_code FORMATXX_API _detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_format_spec<wchar_t> spec) const;
     template FORMATXX_PUBLIC basic_parse_spec_result<wchar_t> FORMATXX_API parse_format_spec(basic_string_view<wchar_t>) noexcept;
+    template FORMATXX_PUBLIC basic_parse_spec_result<wchar_t> FORMATXX_API parse_printf_spec(basic_string_view<wchar_t>) noexcept;
 } // namespace formatxx

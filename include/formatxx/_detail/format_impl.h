@@ -33,6 +33,7 @@
 #pragma once
 
 #include "parse_unsigned.h"
+#include "parse_format.h"
 
 namespace formatxx::_detail {
 
