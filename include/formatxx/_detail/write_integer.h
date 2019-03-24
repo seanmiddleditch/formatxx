@@ -60,10 +60,10 @@ namespace formatxx::_detail {
 			if (negative) {
 				*--ptr = FormatTraits<CharT>::cMinus;
 			}
-			else if (spec.prepend_sign) {
+			else if (spec.prepend_sign == sign::always) {
 				*--ptr = FormatTraits<CharT>::cPlus;
 			}
-			else if (spec.prepend_space) {
+			else if (spec.prepend_sign == sign::space) {
 				*--ptr = FormatTraits<CharT>::cSpace;
 			}
 
@@ -204,7 +204,7 @@ namespace formatxx::_detail {
 			std::size_t const output_length = prefix.size() + result.size();
 			std::size_t const padding = spec.width > output_length ? spec.width - output_length : 0;
 
-			if (spec.left_justify) {
+			if (spec.pad_justify == justify::left) {
 				out.write(prefix);
 				out.write(result);
 				write_padding(out, FormatTraits<CharT>::cSpace, padding);
@@ -228,23 +228,19 @@ namespace formatxx::_detail {
 		default:
 		case 0:
 		case 'i':
-			spec.code = 'd'; // code is used literally in alt-form, and 'd' is decimal code
-			return write_integer_helper<decimal_helper>(out, raw, spec);
 		case 'd':
 		case 'D':
 			return write_integer_helper<decimal_helper>(out, raw, spec);
 		case 'x':
-			spec.prepend_sign = spec.prepend_space = false; // ignored on hex numbers
+            spec.prepend_sign = sign::negative; // ignored on hex numbers
 			return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, std::make_unsigned_t<T>(raw), spec);
 		case 'X':
-			spec.prepend_sign = spec.prepend_space = false; // ignored on hex numbers
+            spec.prepend_sign = sign::negative; // ignored on hex numbers
 			return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, std::make_unsigned_t<T>(raw), spec);
 		case 'o':
-		case 'O':
 			return write_integer_helper<octal_helper>(out, raw, spec);
 			break;
 		case 'b':
-		case 'B':
 			return write_integer_helper<binary_helper>(out, raw, spec);
 			break;
 		}

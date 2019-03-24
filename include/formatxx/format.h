@@ -63,7 +63,9 @@ namespace formatxx {
     template <typename CharT> class basic_format_spec;
     template <typename CharT> class basic_parse_spec_result;
 
-    enum class result_code;
+    enum class result_code : unsigned int;
+    enum class justify : unsigned char;
+    enum class sign : unsigned char;
 
     using string_view = basic_string_view<char>;
     using format_writer = basic_format_writer<char>;
@@ -86,11 +88,23 @@ namespace formatxx {
     template <typename CharT> FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_printf_spec(basic_string_view<CharT> spec) noexcept;
 }
 
-enum class formatxx::result_code {
+enum class formatxx::result_code : unsigned int {
     success,
     out_of_range,
     malformed_input,
     out_of_space,
+};
+
+enum class formatxx::justify : unsigned char {
+    right,
+    left,
+    center
+};
+
+enum class formatxx::sign : unsigned char {
+    negative,
+    always,
+    space
 };
 
 #include "formatxx/_detail/append_writer.h"
@@ -120,16 +134,15 @@ public:
 template <typename CharT>
 class formatxx::basic_format_spec {
 public:
-    basic_format_spec() : has_precision(false), left_justify(false), prepend_sign(false), prepend_space(false), alternate_form(false), leading_zeroes(false) {}
+    basic_format_spec() : has_precision(false), alternate_form(false), leading_zeroes(false) {}
 
     basic_string_view<CharT> remaining;
     unsigned width = 0;
     unsigned precision = 0;
     CharT code = 0;
+    justify pad_justify = justify::right;
+    sign prepend_sign = sign::negative;
     bool has_precision : 1;
-    bool left_justify : 1;
-    bool prepend_sign : 1;
-    bool prepend_space : 1;
     bool alternate_form : 1;
     bool leading_zeroes : 1;
 };

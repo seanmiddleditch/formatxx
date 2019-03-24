@@ -122,12 +122,6 @@ namespace formatxx::_detail {
                     break;
                 }
 
-				if (spec_result.spec.code == CharT(0)) {
-					// invalid spec
-					result = result_code::malformed_input;
-					break;
-				}
-
                 spec = spec_result.spec;
 
 				// prepare for next round

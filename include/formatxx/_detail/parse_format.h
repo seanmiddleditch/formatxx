@@ -49,16 +49,16 @@ namespace formatxx {
 		// flags
 		while (start != end) {
 			if (*start == Traits::cPlus) {
-				result.spec.prepend_sign = true;
+				result.spec.prepend_sign = sign::always;
 			}
 			else if (*start == Traits::cMinus) {
-				result.spec.left_justify = true;
+				result.spec.pad_justify = justify::left;
 			}
 			else if (*start == Traits::cZero) {
                 result.spec.leading_zeroes = true;
 			}
 			else if (*start == Traits::cSpace) {
-                result.spec.prepend_space = true;
+                result.spec.prepend_sign = sign::space;
 			}
 			else if (*start == Traits::cHash) {
                 result.spec.alternate_form = true;
@@ -78,13 +78,8 @@ namespace formatxx {
 			start = _detail::parse_unsigned(start + 1, end, result.spec.precision);
 		}
 
-		// read in any of the modifiers like h or l that modify a type code (no effect in our system)
-		while (start != end && _detail::string_contains(Traits::sPrintfModifiers, *start)) {
-			++start;
-		}
-
-		// generic code specified option allowed (required for printf)
-		if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
+		// generic code specified option allowed (mostly to set options on numeric formatting)
+		if (start != end && _detail::string_contains(Traits::sFormatSpecifiers, *start)) {
             result.spec.code = *start++;
 		}
 

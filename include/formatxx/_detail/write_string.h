@@ -42,7 +42,7 @@ namespace formatxx::_detail {
 			str = trim_string(str, spec.precision);
 		}
 
-		if (!spec.left_justify) {
+		if (spec.pad_justify == justify::right) {
 			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
 		}
         else {

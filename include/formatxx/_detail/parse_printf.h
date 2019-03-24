@@ -49,16 +49,16 @@ namespace formatxx {
         // flags
         while (start != end) {
             if (*start == Traits::cPlus) {
-                result.spec.prepend_sign = true;
+                result.spec.prepend_sign = sign::always;
             }
             else if (*start == Traits::cMinus) {
-                result.spec.left_justify = true;
+                result.spec.pad_justify = justify::left;
             }
             else if (*start == Traits::cZero) {
                 result.spec.leading_zeroes = true;
             }
             else if (*start == Traits::cSpace) {
-                result.spec.prepend_space = true;
+                result.spec.prepend_sign = sign::space;
             }
             else if (*start == Traits::cHash) {
                 result.spec.alternate_form = true;
@@ -83,13 +83,14 @@ namespace formatxx {
             ++start;
         }
 
-        // generic code specified option allowed (required for printf)
-        if (start != end && _detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
-            result.spec.code = *start++;
+        // mandatory generic code
+        if (start == end || !_detail::string_contains(Traits::sPrintfSpecifiers, *start)) {
+            result.code = result_code::malformed_input;
+            return result;
         }
+        result.spec.code = *start++;
 
         result.unparsed = { start, end };
-
         return result;
     }
 

@@ -51,12 +51,14 @@ namespace formatxx::_detail {
 		static constexpr char cPrintfSpec = '%';
 		static constexpr char cPrintfIndex = '$';
 
-		static constexpr string_view sTrue{ "true", 4 };
-		static constexpr string_view sFalse{ "false", 5 };
-        static constexpr string_view sNullptr{ "nullptr", 7 };
+		static constexpr string_view sTrue{ "true" };
+		static constexpr string_view sFalse{ "false" };
+        static constexpr string_view sNullptr{ "nullptr" };
 
-		static constexpr string_view sPrintfSpecifiers{ "bcCsSdioxXufFeEaAgGp", 20 };
-		static constexpr string_view sPrintfModifiers{ "hljztL", 6 };
+        static constexpr string_view sFormatSpecifiers{ "bcsdioxXfFeEaAgG" };
+
+		static constexpr string_view sPrintfSpecifiers{ "bcCsSdioxXufFeEaAgGp" };
+		static constexpr string_view sPrintfModifiers{ "hljztL" };
 
 		static constexpr char const sDecimalPairs[] =
 			"00010203040506070809"
@@ -88,12 +90,14 @@ namespace formatxx::_detail {
 		static constexpr wchar_t cPrintfSpec = L'%';
 		static constexpr wchar_t cPrintfIndex = L'$';
 
-		static constexpr wstring_view sTrue{ L"true", 4 };
-		static constexpr wstring_view sFalse{ L"false", 5 };
-        static constexpr wstring_view sNullptr{ L"nullptr", 7 };
+		static constexpr wstring_view sTrue{ L"true" };
+		static constexpr wstring_view sFalse{ L"false" };
+        static constexpr wstring_view sNullptr{ L"nullptr" };
 
-		static constexpr wstring_view sPrintfSpecifiers{ L"bcCsSdioxXufFeEaAgGp", 20 };
-		static constexpr wstring_view sPrintfModifiers{ L"hljztL", 6 };
+        static constexpr wstring_view sFormatSpecifiers{ L"bcsdioxXfFeEaAgG" };
+
+		static constexpr wstring_view sPrintfSpecifiers{ L"bcCsSdioxXufFeEaAgGp" };
+		static constexpr wstring_view sPrintfModifiers{ L"hljztL" };
 
 		static constexpr wchar_t const sDecimalPairs[] =
 			L"00010203040506070809"

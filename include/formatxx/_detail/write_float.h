@@ -78,15 +78,14 @@ namespace formatxx::_detail {
 		*--fmt_ptr = '*';
 
 		// these flags are mutually exclusive within themselves (1)
-		if (spec.prepend_sign) {
-			*--fmt_ptr = FormatTraits<CharT>::cPlus;
-		}
-		else if (spec.prepend_space) {
-			*--fmt_ptr = FormatTraits<CharT>::cSpace;
+        switch (spec.prepend_sign) {
+        case sign::negative: break;
+        case sign::always: *--fmt_ptr = FormatTraits<CharT>::cPlus; break;
+        case sign::space: *--fmt_ptr = FormatTraits<CharT>::cSpace; break;
 		}
 
 		// these flags may all be set together (3)
-		if (spec.left_justify) {
+		if (spec.pad_justify == justify::left) {
 			*--fmt_ptr = '-';
 		}
 		if (spec.leading_zeroes) {
