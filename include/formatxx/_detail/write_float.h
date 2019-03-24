@@ -55,7 +55,7 @@ namespace formatxx::_detail {
 		*--fmt_ptr = 0;
 
 		// every sprint call must have a valid code (1)
-		switch (options.code) {
+		switch (options.specifier) {
 		case 'a':
 		case 'A':
 		case 'e':
@@ -64,7 +64,7 @@ namespace formatxx::_detail {
 		case 'F':
 		case 'g':
 		case 'G':
-			*--fmt_ptr = options.code;
+			*--fmt_ptr = options.specifier;
 			break;
 		default:
 			*--fmt_ptr = 'f';
@@ -78,14 +78,14 @@ namespace formatxx::_detail {
 		*--fmt_ptr = '*';
 
 		// these flags are mutually exclusive within themselves (1)
-        switch (options.prepend_sign) {
-        case sign::negative: break;
-        case sign::always: *--fmt_ptr = FormatTraits<CharT>::cPlus; break;
-        case sign::space: *--fmt_ptr = FormatTraits<CharT>::cSpace; break;
+        switch (options.sign) {
+        case format_sign::negative: break;
+        case format_sign::always: *--fmt_ptr = FormatTraits<CharT>::cPlus; break;
+        case format_sign::space: *--fmt_ptr = FormatTraits<CharT>::cSpace; break;
 		}
 
 		// these flags may all be set together (3)
-		if (options.pad_justify == justify::left) {
+		if (options.justify == format_justify::left) {
 			*--fmt_ptr = '-';
 		}
 		if (options.leading_zeroes) {

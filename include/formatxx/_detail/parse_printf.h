@@ -49,16 +49,16 @@ namespace formatxx {
         // flags
         while (start != end) {
             if (*start == Traits::cPlus) {
-                result.options.prepend_sign = sign::always;
+                result.options.sign = format_sign::always;
             }
             else if (*start == Traits::cMinus) {
-                result.options.pad_justify = justify::left;
+                result.options.justify = format_justify::left;
             }
             else if (*start == Traits::cZero) {
                 result.options.leading_zeroes = true;
             }
             else if (*start == Traits::cSpace) {
-                result.options.prepend_sign = sign::space;
+                result.options.sign = format_sign::space;
             }
             else if (*start == Traits::cHash) {
                 result.options.alternate_form = true;
@@ -88,7 +88,7 @@ namespace formatxx {
             result.code = result_code::malformed_input;
             return result;
         }
-        result.options.code = *start++;
+        result.options.specifier = *start++;
 
         result.unparsed = { start, end };
         return result;

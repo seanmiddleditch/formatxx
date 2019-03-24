@@ -64,8 +64,8 @@ namespace formatxx {
     template <typename CharT> class basic_parse_spec_result;
 
     enum class result_code : unsigned int;
-    enum class justify : unsigned char;
-    enum class sign : unsigned char;
+    enum class format_justify : unsigned char;
+    enum class format_sign : unsigned char;
 
     using string_view = basic_string_view<char>;
     using format_writer = basic_format_writer<char>;
@@ -95,13 +95,13 @@ enum class formatxx::result_code : unsigned int {
     out_of_space,
 };
 
-enum class formatxx::justify : unsigned char {
+enum class formatxx::format_justify : unsigned char {
     right,
     left,
     center
 };
 
-enum class formatxx::sign : unsigned char {
+enum class formatxx::format_sign : unsigned char {
     negative,
     always,
     space
@@ -139,9 +139,9 @@ public:
     basic_string_view<CharT> user;
     unsigned width = 0;
     unsigned precision = 0;
-    CharT code = 0;
-    justify pad_justify = justify::right;
-    sign prepend_sign = sign::negative;
+    CharT specifier = 0;
+    format_justify justify = format_justify::right;
+    format_sign sign = format_sign::negative;
     bool has_precision : 1;
     bool alternate_form : 1;
     bool leading_zeroes : 1;

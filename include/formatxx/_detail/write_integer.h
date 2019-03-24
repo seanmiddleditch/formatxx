@@ -52,7 +52,7 @@ namespace formatxx::_detail {
 
 			// add numeric type prefix (2)
 			if (options.alternate_form) {
-				*--ptr = options.code;
+				*--ptr = options.specifier;
 				*--ptr = FormatTraits<CharT>::cZero;
 			}
 
@@ -61,10 +61,10 @@ namespace formatxx::_detail {
                 if (negative) {
                     *--ptr = FormatTraits<CharT>::cMinus;
                 }
-                else if (options.prepend_sign == sign::always) {
+                else if (options.sign == format_sign::always) {
                     *--ptr = FormatTraits<CharT>::cPlus;
                 }
-                else if (options.prepend_sign == sign::space) {
+                else if (options.sign == format_sign::space) {
                     *--ptr = FormatTraits<CharT>::cSpace;
                 }
             }
@@ -214,7 +214,7 @@ namespace formatxx::_detail {
 			std::size_t const output_length = prefix.size() + result.size();
 			std::size_t const padding = options.width > output_length ? options.width - output_length : 0;
 
-			if (options.pad_justify == justify::left) {
+			if (options.justify == format_justify::left) {
 				out.write(prefix);
 				out.write(result);
 				write_padding(out, FormatTraits<CharT>::cSpace, padding);
@@ -234,7 +234,7 @@ namespace formatxx::_detail {
 
 	template <typename CharT, typename T>
 	void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_options<CharT> const& options) {
-		switch (options.code) {
+		switch (options.specifier) {
 		default:
 		case 0:
 		case 'i':
