@@ -37,22 +37,22 @@
 namespace formatxx::_detail {
 
 	template <typename CharT>
-	void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_format_spec<CharT> const& spec) {
-		if (spec.has_precision) {
-			str = trim_string(str, spec.precision);
+	void write_string(basic_format_writer<CharT>& out, basic_string_view<CharT> str, basic_format_options<CharT> const& options) {
+		if (options.has_precision) {
+			str = trim_string(str, options.precision);
 		}
 
-		if (spec.pad_justify == justify::right) {
-			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, spec.width);
+		if (options.pad_justify == justify::right) {
+			write_padded_align_right(out, str, FormatTraits<CharT>::cSpace, options.width);
 		}
         else {
-			write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, spec.width);
+			write_padded_align_left(out, str, FormatTraits<CharT>::cSpace, options.width);
 		}
 	}
 
 	template <typename CharT>
-	void write_char(basic_format_writer<CharT>& out, CharT ch, basic_format_spec<CharT> const& spec) {
-		write_string(out, { &ch, 1 }, spec);
+	void write_char(basic_format_writer<CharT>& out, CharT ch, basic_format_options<CharT> const& options) {
+		write_string(out, { &ch, 1 }, options);
 	}
 
 } // namespace formatxx::_detail

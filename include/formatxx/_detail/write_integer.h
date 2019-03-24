@@ -39,20 +39,20 @@
 
 namespace formatxx::_detail {
 
-	template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_format_spec<CharT> const& spec);
+	template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_format_options<CharT> const& options);
 
 	struct prefix_helper {
 		// type prefix (2), sign (1)
 		static constexpr std::size_t buffer_size() { return 3; }
 
 		template <typename CharT>
-		static basic_string_view<CharT> write(CharT* buffer, basic_format_spec<CharT> const& spec, bool negative, bool add_sign) {
+		static basic_string_view<CharT> write(CharT* buffer, basic_format_options<CharT> const& options, bool negative, bool add_sign) {
 			CharT* const end = buffer + buffer_size();
 			CharT* ptr = end;
 
 			// add numeric type prefix (2)
-			if (spec.alternate_form) {
-				*--ptr = spec.code;
+			if (options.alternate_form) {
+				*--ptr = options.code;
 				*--ptr = FormatTraits<CharT>::cZero;
 			}
 
@@ -61,10 +61,10 @@ namespace formatxx::_detail {
                 if (negative) {
                     *--ptr = FormatTraits<CharT>::cMinus;
                 }
-                else if (spec.prepend_sign == sign::always) {
+                else if (options.prepend_sign == sign::always) {
                     *--ptr = FormatTraits<CharT>::cPlus;
                 }
-                else if (spec.prepend_sign == sign::space) {
+                else if (options.prepend_sign == sign::space) {
                     *--ptr = FormatTraits<CharT>::cSpace;
                 }
             }
@@ -190,7 +190,7 @@ namespace formatxx::_detail {
 	};
 
 	template <typename HelperT, typename CharT, typename ValueT>
-	void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_spec<CharT> const& spec) {
+	void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_options<CharT> const& options) {
 		using unsigned_type = std::make_unsigned_t<ValueT>;
 
 		// convert to an unsigned value to make the formatting easier; note that must
@@ -200,26 +200,26 @@ namespace formatxx::_detail {
 
 		// calculate prefixes like signs
 		CharT prefix_buffer[prefix_helper::buffer_size()];
-		auto const prefix = prefix_helper::write(prefix_buffer, spec, raw_value < 0, HelperT::use_signs);
+		auto const prefix = prefix_helper::write(prefix_buffer, options, raw_value < 0, HelperT::use_signs);
 
 		// generate the actual number
 		CharT value_buffer[HelperT::template buffer_size<unsigned_type>];
 		auto const result = HelperT::write(value_buffer, unsigned_value);
 
-		if (spec.has_precision) {
+		if (options.has_precision) {
 			out.write(prefix);
-			write_padded_align_right(out, result, FormatTraits<CharT>::cZero, spec.precision);
+			write_padded_align_right(out, result, FormatTraits<CharT>::cZero, options.precision);
 		}
 		else {
 			std::size_t const output_length = prefix.size() + result.size();
-			std::size_t const padding = spec.width > output_length ? spec.width - output_length : 0;
+			std::size_t const padding = options.width > output_length ? options.width - output_length : 0;
 
-			if (spec.pad_justify == justify::left) {
+			if (options.pad_justify == justify::left) {
 				out.write(prefix);
 				out.write(result);
 				write_padding(out, FormatTraits<CharT>::cSpace, padding);
 			}
-			else if (spec.leading_zeroes) {
+			else if (options.leading_zeroes) {
 				out.write(prefix);
 				write_padding(out, FormatTraits<CharT>::cZero, padding);
 				out.write(result);
@@ -233,23 +233,23 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT, typename T>
-	void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_spec<CharT> const& spec) {
-		switch (spec.code) {
+	void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_options<CharT> const& options) {
+		switch (options.code) {
 		default:
 		case 0:
 		case 'i':
 		case 'd':
 		case 'D':
-			return write_integer_helper<decimal_helper>(out, raw, spec);
+			return write_integer_helper<decimal_helper>(out, raw, options);
 		case 'x':
-			return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, std::make_unsigned_t<T>(raw), spec);
+			return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, std::make_unsigned_t<T>(raw), options);
 		case 'X':
-			return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, std::make_unsigned_t<T>(raw), spec);
+			return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, std::make_unsigned_t<T>(raw), options);
 		case 'o':
-			return write_integer_helper<octal_helper>(out, raw, spec);
+			return write_integer_helper<octal_helper>(out, raw, options);
 			break;
 		case 'b':
-			return write_integer_helper<binary_helper>(out, raw, spec);
+			return write_integer_helper<binary_helper>(out, raw, options);
 			break;
 		}
 	}

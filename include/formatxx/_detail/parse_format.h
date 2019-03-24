@@ -49,19 +49,19 @@ namespace formatxx {
 		// flags
 		while (start != end) {
 			if (*start == Traits::cPlus) {
-				result.spec.prepend_sign = sign::always;
+				result.options.prepend_sign = sign::always;
 			}
 			else if (*start == Traits::cMinus) {
-				result.spec.pad_justify = justify::left;
+				result.options.pad_justify = justify::left;
 			}
 			else if (*start == Traits::cZero) {
-                result.spec.leading_zeroes = true;
+                result.options.leading_zeroes = true;
 			}
 			else if (*start == Traits::cSpace) {
-                result.spec.prepend_sign = sign::space;
+                result.options.prepend_sign = sign::space;
 			}
 			else if (*start == Traits::cHash) {
-                result.spec.alternate_form = true;
+                result.options.alternate_form = true;
 			}
 			else {
 				break;
@@ -70,17 +70,17 @@ namespace formatxx {
 		}
 
 		// read in width
-		start = _detail::parse_unsigned(start, end, result.spec.width);
+		start = _detail::parse_unsigned(start, end, result.options.width);
 
 		// read in precision, if present
 		if (start != end && *start == Traits::cDot) {
-            result.spec.has_precision = true;
-			start = _detail::parse_unsigned(start + 1, end, result.spec.precision);
+            result.options.has_precision = true;
+			start = _detail::parse_unsigned(start + 1, end, result.options.precision);
 		}
 
-		// generic code specified option allowed (mostly to set options on numeric formatting)
+		// generic code specified option allowed (mostly to set format_options on numeric formatting)
 		if (start != end && _detail::string_contains(Traits::sFormatSpecifiers, *start)) {
-            result.spec.code = *start++;
+            result.options.code = *start++;
 		}
 
         result.unparsed = { start, end };

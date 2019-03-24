@@ -71,7 +71,7 @@ namespace formatxx::_detail {
 				continue;
 			}
 
-			basic_format_spec<CharT> spec;
+			basic_format_options<CharT> options;
 
 			// determine which argument we're going to format (optional in printf syntax)
 			unsigned index = 0;
@@ -109,7 +109,7 @@ namespace formatxx::_detail {
 					index = next_index;
 
 					// the decimal input had nothing to do with position; reset so the call to
-					// parse_format_spec ensures we have a valid spec, not something like 1#2.3
+					// parse_format_spec ensures we have a valid options, not something like 1#2.3
 					iter = start;
 				}
 
@@ -122,13 +122,13 @@ namespace formatxx::_detail {
                     break;
                 }
 
-                spec = spec_result.spec;
+                options = spec_result.options;
 
 				// prepare for next round
 				begin = iter = spec_result.unparsed.begin();
 			}
 
-            result_code const arg_result = args.format_arg(out, index, spec);
+            result_code const arg_result = args.format_arg(out, index, options);
 			if (arg_result != result_code::success) {
 				result = arg_result;
 			}

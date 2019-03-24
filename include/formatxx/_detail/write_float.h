@@ -46,7 +46,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	void write_float(basic_format_writer<CharT>& out, double value, basic_format_spec<CharT> spec) {
+	void write_float(basic_format_writer<CharT>& out, double value, basic_format_options<CharT> options) {
 		constexpr std::size_t fmt_buf_size = 10;
 		CharT fmt_buf[fmt_buf_size];
 		CharT* fmt_ptr = fmt_buf + fmt_buf_size;
@@ -55,7 +55,7 @@ namespace formatxx::_detail {
 		*--fmt_ptr = 0;
 
 		// every sprint call must have a valid code (1)
-		switch (spec.code) {
+		switch (options.code) {
 		case 'a':
 		case 'A':
 		case 'e':
@@ -64,7 +64,7 @@ namespace formatxx::_detail {
 		case 'F':
 		case 'g':
 		case 'G':
-			*--fmt_ptr = spec.code;
+			*--fmt_ptr = options.code;
 			break;
 		default:
 			*--fmt_ptr = 'f';
@@ -78,20 +78,20 @@ namespace formatxx::_detail {
 		*--fmt_ptr = '*';
 
 		// these flags are mutually exclusive within themselves (1)
-        switch (spec.prepend_sign) {
+        switch (options.prepend_sign) {
         case sign::negative: break;
         case sign::always: *--fmt_ptr = FormatTraits<CharT>::cPlus; break;
         case sign::space: *--fmt_ptr = FormatTraits<CharT>::cSpace; break;
 		}
 
 		// these flags may all be set together (3)
-		if (spec.pad_justify == justify::left) {
+		if (options.pad_justify == justify::left) {
 			*--fmt_ptr = '-';
 		}
-		if (spec.leading_zeroes) {
+		if (options.leading_zeroes) {
 			*--fmt_ptr = '0';
 		}
-		if (spec.alternate_form) {
+		if (options.alternate_form) {
 			*--fmt_ptr = FormatTraits<CharT>::cHash;
 		}
 
@@ -101,7 +101,7 @@ namespace formatxx::_detail {
 		constexpr std::size_t buf_size = 1078;
 		CharT buf[buf_size];
 
-		int const result = float_helper(buf, buf_size, fmt_ptr, spec.width, spec.has_precision ? spec.precision : -1, value);
+		int const result = float_helper(buf, buf_size, fmt_ptr, options.width, options.has_precision ? options.precision : -1, value);
 		if (result > 0) {
 			out.write({ buf, result < buf_size ? std::size_t(result) : buf_size });
 		}

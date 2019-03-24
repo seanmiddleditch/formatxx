@@ -60,7 +60,7 @@
 namespace formatxx {
     template <typename CharT> using basic_string_view = litexx::basic_string_view<CharT>;
     template <typename CharT> class basic_format_writer;
-    template <typename CharT> class basic_format_spec;
+    template <typename CharT> class basic_format_options;
     template <typename CharT> class basic_parse_spec_result;
 
     enum class result_code : unsigned int;
@@ -69,11 +69,11 @@ namespace formatxx {
 
     using string_view = basic_string_view<char>;
     using format_writer = basic_format_writer<char>;
-    using format_spec = basic_format_spec<char>;
+    using format_options = basic_format_options<char>;
 
     using wstring_view = basic_string_view<wchar_t>;
     using wformat_writer = basic_format_writer<wchar_t>;
-    using wformat_spec = basic_format_spec<wchar_t>;
+    using wformat_options = basic_format_options<wchar_t>;
 
     template <typename CharT, typename FormatT, typename... Args> result_code format_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
     template <typename CharT, typename FormatT, typename... Args> result_code printf_to(basic_format_writer<CharT>& writer, FormatT const& format, Args const& ... args);
@@ -82,7 +82,7 @@ namespace formatxx {
     template <typename ResultT, typename FormatT, typename... Args> ResultT printf_as(FormatT const& format, Args const& ... args);
 
     template <typename CharT, typename T>
-    result_code format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_format_spec<CharT> spec = {});
+    result_code format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_format_options<CharT> const& options = {});
 
     template <typename CharT> FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec_string) noexcept;
     template <typename CharT> FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_printf_spec(basic_string_view<CharT> spec_string) noexcept;
@@ -126,15 +126,15 @@ template <typename CharT>
 class formatxx::basic_parse_spec_result {
 public:
     result_code code = result_code::success;
-    basic_format_spec<CharT> spec;
+    basic_format_options<CharT> options;
     basic_string_view<CharT> unparsed;
 };
 
 /// Extra formatting specifications.
 template <typename CharT>
-class formatxx::basic_format_spec {
+class formatxx::basic_format_options {
 public:
-    constexpr basic_format_spec() noexcept : has_precision(false), alternate_form(false), leading_zeroes(false) {}
+    constexpr basic_format_options() noexcept : has_precision(false), alternate_form(false), leading_zeroes(false) {}
 
     basic_string_view<CharT> user;
     unsigned width = 0;
@@ -149,10 +149,10 @@ public:
 
 namespace formatxx {
     /// Default format helpers.
-    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, format_spec const& spec = {}) noexcept;
-    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, format_spec const& spec = {}) noexcept;
-    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wformat_spec const& spec = {}) noexcept;
-    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wformat_spec const& spec = {}) noexcept;
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, string_view str, format_options const& options = {}) noexcept;
+    FORMATXX_PUBLIC void FORMATXX_API format_value(format_writer& out, wstring_view str, format_options const& options = {}) noexcept;
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, string_view str, wformat_options const& options = {}) noexcept;
+    FORMATXX_PUBLIC void FORMATXX_API format_value(wformat_writer& out, wstring_view str, wformat_options const& options = {}) noexcept;
 }
 
 /// @internal
@@ -165,13 +165,13 @@ namespace formatxx::_detail {
 
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<char>& out, basic_string_view<char> format, basic_format_arg_list<char> args);
-extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_format_spec<char> const& spec) const;
+extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<char>::format_into(basic_format_writer<char>& output, basic_format_options<char> const& options) const;
 extern template FORMATXX_PUBLIC formatxx::basic_parse_spec_result<char> FORMATXX_API formatxx::parse_format_spec(basic_string_view<char> spec_string) noexcept;
 extern template FORMATXX_PUBLIC formatxx::basic_parse_spec_result<char> FORMATXX_API formatxx::parse_printf_spec(basic_string_view<char> spec_string) noexcept;
 
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::format_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
 extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::printf_impl(basic_format_writer<wchar_t>& out, basic_string_view<wchar_t> format, basic_format_arg_list<wchar_t> args);
-extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_format_spec<wchar_t> const& spec) const;
+extern template FORMATXX_PUBLIC formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<wchar_t>::format_into(basic_format_writer<wchar_t>& output, basic_format_options<wchar_t> const& options) const;
 extern template FORMATXX_PUBLIC formatxx::basic_parse_spec_result<wchar_t> FORMATXX_API formatxx::parse_format_spec(basic_string_view<wchar_t> spec_string) noexcept;
 extern template FORMATXX_PUBLIC formatxx::basic_parse_spec_result<wchar_t> FORMATXX_API formatxx::parse_printf_spec(basic_string_view<wchar_t> spec_string) noexcept;
 
@@ -221,14 +221,14 @@ ResultT formatxx::printf_as(FormatT const& format, Args const& ... args) {
     return result;
 }
 
-/// Format a value into a buffer using the given spec.
+/// Format a value into a buffer using the given options.
 /// @param writer The write buffer that will receive the formatted text.
 /// @param value The value to format.
-/// @param spec The format control spec.
+/// @param options The format control options.
 /// @returns a result code indicating any errors.
 template <typename CharT, typename T>
-formatxx::result_code formatxx::format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_format_spec<CharT> spec) {
-    return _detail::make_format_arg<CharT>(value).format_into(writer, spec);
+formatxx::result_code formatxx::format_value_to(basic_format_writer<CharT>& writer, T const& value, basic_format_options<CharT> const& options) {
+    return _detail::make_format_arg<CharT>(value).format_into(writer, options);
 }
 
 #endif // !defined(_guard_FORMATXX_H)

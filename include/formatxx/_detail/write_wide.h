@@ -41,7 +41,7 @@ namespace formatxx::_detail {
 #pragma warning(push)
 #pragma warning(disable: 4996)
 
-    inline void write_char(wformat_writer& out, char ch, wformat_spec const&) noexcept {
+    inline void write_char(wformat_writer& out, char ch, wformat_options const&) noexcept {
         std::mbstate_t state{};
         wchar_t wc;
         std::size_t const rs = std::mbrtowc(&wc, &ch, 1, &state);
@@ -50,7 +50,7 @@ namespace formatxx::_detail {
         }
     }
 
-    inline void write_string(wformat_writer& out, string_view str, wformat_spec const&) noexcept {
+    inline void write_string(wformat_writer& out, string_view str, wformat_options const&) noexcept {
         std::mbstate_t state{};
         for (auto const ch : str) {
             wchar_t wc;
@@ -61,7 +61,7 @@ namespace formatxx::_detail {
         }
     }
 
-    inline void write_char(format_writer& out, wchar_t ch, format_spec const&) noexcept {
+    inline void write_char(format_writer& out, wchar_t ch, format_options const&) noexcept {
         std::mbstate_t state{};
         char mb[MB_LEN_MAX];
         std::size_t const rs = std::wcrtomb(mb, ch, &state);
@@ -70,7 +70,7 @@ namespace formatxx::_detail {
         }
     }
 
-    inline void write_string(format_writer& out, wstring_view str, format_spec const&) noexcept {
+    inline void write_string(format_writer& out, wstring_view str, format_options const&) noexcept {
         std::mbstate_t state{};
         char mb[MB_LEN_MAX];
         for (auto const ch : str) {
