@@ -53,7 +53,7 @@ namespace formatxx::_detail {
 			// add numeric type prefix (2)
 			if (spec.alternate_form) {
 				*--ptr = spec.code;
-				*--ptr = FormatTraits<CharT>::to_digit(0);
+				*--ptr = FormatTraits<CharT>::cZero;
 			}
 
 			// add sign (1)
@@ -109,7 +109,7 @@ namespace formatxx::_detail {
 			}
 			else {
 				// we have but a single digit left, so this is easy
-				*--ptr = FormatTraits<CharT>::to_digit(static_cast<char>(value));
+				*--ptr = static_cast<char>(FormatTraits<CharT>::cZero + value);
 			}
 
 			return { ptr, end };
@@ -172,7 +172,7 @@ namespace formatxx::_detail {
 			CharT* ptr = end;
 
 			do {
-				*--ptr = FormatTraits<CharT>::to_digit(value & 1);
+				*--ptr = static_cast<CharT>(FormatTraits<CharT>::cZero + (value & 1));
 			} while ((value >>= 1) != 0);
 
 			return { ptr, end };
@@ -198,7 +198,7 @@ namespace formatxx::_detail {
 
 		if (spec.has_precision) {
 			out.write(prefix);
-			write_padded_align_right(out, result, FormatTraits<CharT>::to_digit(0), spec.precision);
+			write_padded_align_right(out, result, FormatTraits<CharT>::cZero, spec.precision);
 		}
 		else {
 			std::size_t const output_length = prefix.size() + result.size();
@@ -211,7 +211,7 @@ namespace formatxx::_detail {
 			}
 			else if (spec.leading_zeroes) {
 				out.write(prefix);
-				write_padding(out, FormatTraits<CharT>::to_digit(0), padding);
+				write_padding(out, FormatTraits<CharT>::cZero, padding);
 				out.write(result);
 			}
 			else {
@@ -235,10 +235,10 @@ namespace formatxx::_detail {
 			return write_integer_helper<decimal_helper>(out, raw, spec);
 		case 'x':
 			spec.prepend_sign = spec.prepend_space = false; // ignored on hex numbers
-			return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, typename std::make_unsigned<T>::type(raw), spec);
+			return write_integer_helper<hexadecimal_helper</*lower=*/true>>(out, std::make_unsigned_t<T>(raw), spec);
 		case 'X':
 			spec.prepend_sign = spec.prepend_space = false; // ignored on hex numbers
-			return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, typename std::make_unsigned<T>::type(raw), spec);
+			return write_integer_helper<hexadecimal_helper</*lower=*/false>>(out, std::make_unsigned_t<T>(raw), spec);
 		case 'o':
 		case 'O':
 			return write_integer_helper<octal_helper>(out, raw, spec);

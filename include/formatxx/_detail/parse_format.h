@@ -54,7 +54,7 @@ namespace formatxx {
 			else if (*start == Traits::cMinus) {
 				result.spec.left_justify = true;
 			}
-			else if (*start == Traits::to_digit(0)) {
+			else if (*start == Traits::cZero) {
                 result.spec.leading_zeroes = true;
 			}
 			else if (*start == Traits::cSpace) {

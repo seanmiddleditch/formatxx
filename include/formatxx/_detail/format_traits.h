@@ -46,8 +46,7 @@ namespace formatxx::_detail {
 		static constexpr char cSpace = ' ';
 		static constexpr char cHash = '#';
 		static constexpr char cDot = '.';
-
-		static constexpr char to_digit(char c) { return c + '0'; }
+        static constexpr char cZero = '0';
 
 		static constexpr char cPrintfSpec = '%';
 		static constexpr char cPrintfIndex = '$';
@@ -84,8 +83,7 @@ namespace formatxx::_detail {
 		static constexpr wchar_t cSpace = L' ';
 		static constexpr wchar_t cHash = L'#';
 		static constexpr wchar_t cDot = L'.';
-
-		static constexpr wchar_t to_digit(wchar_t c) { return c + L'0'; }
+        static constexpr wchar_t cZero = L'0';
 
 		static constexpr wchar_t cPrintfSpec = L'%';
 		static constexpr wchar_t cPrintfIndex = L'$';
