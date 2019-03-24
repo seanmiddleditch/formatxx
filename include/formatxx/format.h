@@ -136,7 +136,7 @@ class formatxx::basic_format_spec {
 public:
     constexpr basic_format_spec() noexcept : has_precision(false), alternate_form(false), leading_zeroes(false) {}
 
-    basic_string_view<CharT> remaining;
+    basic_string_view<CharT> user;
     unsigned width = 0;
     unsigned precision = 0;
     CharT code = 0;

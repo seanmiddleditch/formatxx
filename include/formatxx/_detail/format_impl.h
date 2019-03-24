@@ -111,7 +111,7 @@ namespace formatxx::_detail {
                 }
 
                 spec = spec_result.spec;
-                spec.remaining = spec_result.unparsed;
+                spec.user = spec_result.unparsed;
 			}
 
 			// after the index/spec, we expect an end to the format marker
