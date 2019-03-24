@@ -35,7 +35,7 @@
 namespace formatxx::_detail {
 
 	template <typename CharT>
-	void write_padding(basic_format_writer<CharT>& out, CharT pad_char, std::size_t count) {
+	constexpr void write_padding(basic_format_writer<CharT>& out, CharT pad_char, std::size_t count) {
 		// FIXME: this is not even remotely the most efficient way to do this
 		for (std::size_t i = 0; i != count; ++i) {
 			out.write({ &pad_char, 1 });
@@ -43,7 +43,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	void write_padded_align_right(basic_format_writer<CharT>& out, basic_string_view<CharT> string, CharT pad_char, std::size_t count) {
+    constexpr void write_padded_align_right(basic_format_writer<CharT>& out, basic_string_view<CharT> string, CharT pad_char, std::size_t count) {
 		if (count > string.size()) {
 			write_padding(out, pad_char, count - string.size());
 		}
@@ -52,7 +52,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	void write_padded_align_left(basic_format_writer<CharT> & out, basic_string_view<CharT> string, CharT pad_char, std::size_t count) {
+    constexpr void write_padded_align_left(basic_format_writer<CharT> & out, basic_string_view<CharT> string, CharT pad_char, std::size_t count) {
 		out.write(string);
 
 		if (count > string.size()) {
@@ -61,7 +61,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	void write_padded_aligned(basic_format_writer<CharT> & out, basic_string_view<CharT> string, CharT pad_char, std::size_t count, bool align_left) {
+    constexpr void write_padded_aligned(basic_format_writer<CharT> & out, basic_string_view<CharT> string, CharT pad_char, std::size_t count, bool align_left) {
 		if (!align_left) {
 			write_padded_align_right(out, string, pad_char, count);
 		}
@@ -71,12 +71,12 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT>
-	auto trim_string(basic_string_view<CharT> string, std::size_t max_size) -> basic_string_view<CharT> {
+	constexpr auto trim_string(basic_string_view<CharT> string, std::size_t max_size) noexcept -> basic_string_view<CharT> {
 		return string.size() < max_size ? string : basic_string_view<CharT>(string.data(), max_size);
 	}
 
 	template <typename CharT>
-	bool string_contains(basic_string_view<CharT> haystack, CharT needle) {
+	constexpr bool string_contains(basic_string_view<CharT> haystack, CharT needle) noexcept {
 		for (CharT const c : haystack) {
 			if (c == needle) {
 				return true;

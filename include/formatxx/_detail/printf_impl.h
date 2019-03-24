@@ -37,7 +37,7 @@
 namespace formatxx::_detail {
 
 	template <typename CharT>
-	FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_arg_list<CharT> args) {
+	constexpr FORMATXX_PUBLIC result_code FORMATXX_API printf_impl(basic_format_writer<CharT>& out, basic_string_view<CharT> format, basic_format_arg_list<CharT> args) {
 		unsigned next_index = 0;
 		result_code result = result_code::success;
 

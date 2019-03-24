@@ -38,7 +38,7 @@
 namespace formatxx {
 
     template <typename CharT>
-    FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_printf_spec(basic_string_view<CharT> spec_string) noexcept {
+    constexpr FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_printf_spec(basic_string_view<CharT> spec_string) noexcept {
         using Traits = _detail::FormatTraits<CharT>;
 
         basic_parse_spec_result<CharT> result;

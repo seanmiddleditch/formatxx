@@ -72,7 +72,7 @@ public:
     constexpr basic_format_arg(_detail::format_arg_type type, void const* value) noexcept : _type(type), _value(value) {}
     constexpr basic_format_arg(thunk_type thunk, void const* value) noexcept : _type(_detail::format_arg_type::custom), _thunk(thunk), _value(value) {}
 
-    FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_format_options<CharT> const& options) const;
+    constexpr FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_format_options<CharT> const& options) const;
 
 private:
     _detail::format_arg_type _type = _detail::format_arg_type::unknown;
@@ -141,7 +141,7 @@ namespace formatxx::_detail {
 #undef FORMTAXX_TYPE
 
     template <typename CharT, typename T>
-    result_code FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_format_options<CharT> options) {
+    constexpr result_code FORMATXX_API format_value_thunk(basic_format_writer<CharT>& out, void const* ptr, basic_format_options<CharT> options) {
         format_value(out, *static_cast<T const*>(ptr), options);
         return result_code::success;
     }
