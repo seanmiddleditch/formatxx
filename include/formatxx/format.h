@@ -119,16 +119,18 @@ public:
 template <typename CharT>
 class formatxx::basic_format_spec {
 public:
+    basic_format_spec() : has_precision(false), left_justify(false), prepend_sign(false), prepend_space(false), alternate_form(false), leading_zeroes(false) {}
+
     basic_string_view<CharT> remaining;
     unsigned width = 0;
     unsigned precision = 0;
     CharT code = 0;
-    bool has_precision = false;
-    bool left_justify = false;
-    bool prepend_sign = false;
-    bool prepend_space = false;
-    bool alternate_form = false;
-    bool leading_zeroes = false;
+    bool has_precision : 1;
+    bool left_justify : 1;
+    bool prepend_sign : 1;
+    bool prepend_space : 1;
+    bool alternate_form : 1;
+    bool leading_zeroes : 1;
 };
 
 namespace formatxx {
