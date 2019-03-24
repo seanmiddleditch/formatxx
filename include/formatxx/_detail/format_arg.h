@@ -72,7 +72,7 @@ public:
     constexpr basic_format_arg(_detail::format_arg_type type, void const* value) noexcept : _type(type), _value(value) {}
     constexpr basic_format_arg(thunk_type thunk, void const* value) noexcept : _type(_detail::format_arg_type::custom), _thunk(thunk), _value(value) {}
 
-    FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_format_spec<CharT> spec) const;
+    FORMATXX_PUBLIC result_code FORMATXX_API format_into(basic_format_writer<CharT>& output, basic_format_spec<CharT> const& spec) const;
 
 private:
     _detail::format_arg_type _type = _detail::format_arg_type::unknown;
@@ -91,7 +91,7 @@ public:
     constexpr basic_format_arg_list() noexcept = default;
     constexpr basic_format_arg_list(std::initializer_list<format_arg_type> args) noexcept : _args(args.begin()), _count(args.size()) {}
 
-    constexpr result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_format_spec<CharT> spec) const {
+    constexpr result_code format_arg(basic_format_writer<CharT>& output, size_type index, basic_format_spec<CharT> const& spec) const {
         return index < _count ? _args[index].format_into(output, spec) : result_code::out_of_range;
     }
 

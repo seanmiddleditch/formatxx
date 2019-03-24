@@ -38,13 +38,13 @@
 namespace formatxx {
 
 	template <typename CharT>
-	FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec) noexcept {
+	FORMATXX_PUBLIC basic_parse_spec_result<CharT> FORMATXX_API parse_format_spec(basic_string_view<CharT> spec_string) noexcept {
 		using Traits = _detail::FormatTraits<CharT>;
 
         basic_parse_spec_result<CharT> result;
 
-        CharT const* start = spec.data();
-		CharT const* const end = start + spec.size();
+        CharT const* start = spec_string.data();
+		CharT const* const end = start + spec_string.size();
 
 		// flags
 		while (start != end) {

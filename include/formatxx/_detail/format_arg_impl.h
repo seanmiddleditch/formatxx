@@ -36,7 +36,7 @@
 #include <cinttypes>
 
 template <typename CharT>
-formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<CharT>::format_into(basic_format_writer<CharT>& output, basic_format_spec<CharT> spec) const {
+formatxx::result_code FORMATXX_API formatxx::_detail::basic_format_arg<CharT>::format_into(basic_format_writer<CharT>& output, basic_format_spec<CharT> const& spec) const {
     switch (_type) {
     case _detail::format_arg_type::char_t:
         _detail::write_char(output, *static_cast<char const*>(_value), spec);
