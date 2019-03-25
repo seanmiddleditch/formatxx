@@ -39,14 +39,15 @@
 
 namespace formatxx::_detail {
 
-	template <typename CharT, typename T> void write_integer(basic_format_writer<CharT>& out, T value, basic_format_options<CharT> const& options);
+	template <typename CharT, typename T>
+    constexpr void write_integer(basic_format_writer<CharT>& out, T value, basic_format_options<CharT> const& options);
 
 	struct prefix_helper {
 		// type prefix (2), sign (1)
 		static constexpr std::size_t buffer_size() { return 3; }
 
 		template <typename CharT>
-		static basic_string_view<CharT> write(CharT* buffer, basic_format_options<CharT> const& options, bool negative, bool add_sign) {
+		static constexpr basic_string_view<CharT> write(CharT* buffer, basic_format_options<CharT> const& options, bool negative, bool add_sign) {
 			CharT* const end = buffer + buffer_size();
 			CharT* ptr = end;
 
@@ -84,7 +85,7 @@ namespace formatxx::_detail {
         static constexpr bool use_signs = true;
 
 		template <typename CharT, typename UnsignedT>
-		static basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
+		static constexpr basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
 			// we'll work on every two decimal digits (groups of 100). notes taken from cppformat,
 			// which took the notes from Alexandrescu from "Three Optimization Tips for C++"
 			CharT const* const table = FormatTraits<CharT>::sDecimalPairs;
@@ -129,7 +130,7 @@ namespace formatxx::_detail {
         static constexpr bool use_signs = false;
 
 		template <typename CharT, typename UnsignedT>
-		static basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
+		static constexpr basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
 			CharT* const end = buffer + buffer_size<UnsignedT>;
 			CharT* ptr = end;
 
@@ -153,7 +154,7 @@ namespace formatxx::_detail {
         static constexpr bool use_signs = true;
 
 		template <typename CharT, typename UnsignedT>
-		static basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
+		static constexpr basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
 			CharT* const end = buffer + buffer_size<UnsignedT>;
 			CharT* ptr = end;
 
@@ -177,7 +178,7 @@ namespace formatxx::_detail {
         static constexpr bool use_signs = true;
 
 		template <typename CharT, typename UnsignedT>
-		static basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
+		static constexpr basic_string_view<CharT> write(CharT* buffer, UnsignedT value) {
 			CharT* const end = buffer + buffer_size<UnsignedT>;
 			CharT* ptr = end;
 
@@ -190,7 +191,7 @@ namespace formatxx::_detail {
 	};
 
 	template <typename HelperT, typename CharT, typename ValueT>
-	void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_options<CharT> const& options) {
+	constexpr void write_integer_helper(basic_format_writer<CharT> & out, ValueT raw_value, basic_format_options<CharT> const& options) {
 		using unsigned_type = std::make_unsigned_t<ValueT>;
 
 		// convert to an unsigned value to make the formatting easier; note that must
@@ -233,7 +234,7 @@ namespace formatxx::_detail {
 	}
 
 	template <typename CharT, typename T>
-	void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_options<CharT> const& options) {
+	constexpr void write_integer(basic_format_writer<CharT> & out, T raw, basic_format_options<CharT> const& options) {
 		switch (options.specifier) {
 		default:
 		case 0:

@@ -37,16 +37,16 @@
 
 namespace formatxx::_detail {
 
-	inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value) {
+	inline int float_helper(char* buf, int result, char const* fmt, int width, int precision, double value) noexcept {
 		return std::snprintf(buf, result, fmt, width, precision, value);
 	}
 
-	inline int float_helper(wchar_t* buf, int result, wchar_t const* fmt, int width, int precision, double value) {
+    inline int float_helper(wchar_t* buf, int result, wchar_t const* fmt, int width, int precision, double value) noexcept {
 		return std::swprintf(buf, result, fmt, width, precision, value);
 	}
 
 	template <typename CharT>
-	void write_float(basic_format_writer<CharT>& out, double value, basic_format_options<CharT> options) {
+    constexpr void write_float(basic_format_writer<CharT>& out, double value, basic_format_options<CharT> options) {
 		constexpr std::size_t fmt_buf_size = 10;
 		CharT fmt_buf[fmt_buf_size];
 		CharT* fmt_ptr = fmt_buf + fmt_buf_size;
