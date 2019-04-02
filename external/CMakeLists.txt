@@ -1,4 +1,6 @@
-add_subdirectory(litexx EXCLUDE_FROM_ALL)
+if(NOT TARGET litexx)
+    add_subdirectory(litexx EXCLUDE_FROM_ALL)
+endif()
 
 if(FORMATXX_BUILD_TESTS AND NOT TARGET doctest)
     set(DOCTEST_WITH_TESTS OFF CACHE BOOL "enable doctest tests")
