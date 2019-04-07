@@ -18,5 +18,5 @@ env:
   - TRAVIS_CXX=g++-6 TRAVIS_CC=gcc-6
   - TRAVIS_CXX=clang++ TRAVIS_CC=clang
 script:
-  - export CXX=$TRAVIS_CXX CC=$TRAVIS_CC
+  - export CXX=$TRAVIS_CXX CC=$TRAVIS_CC CXXFLAGS=-Wall -Werror
   - mkdir build && cd build && cmake .. && cmake --build . && ctest
