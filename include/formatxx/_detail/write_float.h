@@ -103,7 +103,7 @@ namespace formatxx::_detail {
 
 		int const result = float_helper(buf, buf_size, fmt_ptr, options.width, options.precision, value);
 		if (result > 0) {
-			out.write({ buf, result < buf_size ? std::size_t(result) : buf_size });
+			out.write({ buf, std::size_t(result) < buf_size ? std::size_t(result) : buf_size });
 		}
 	}
 
