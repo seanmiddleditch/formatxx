@@ -38,8 +38,10 @@
 
 namespace formatxx::_detail {
 
-#pragma warning(push)
-#pragma warning(disable: 4996)
+#if defined(_MSC_VER)
+#   pragma warning(push)
+#   pragma warning(disable: 4996)
+#endif
 
     inline void write_char(wformat_writer& out, char ch, wformat_options const&) noexcept {
         std::mbstate_t state{};
@@ -83,6 +85,8 @@ namespace formatxx::_detail {
 
 } // namespace formatx::_detail
 
-#pragma warning(pop)
+#if defined(_MSC_VER)
+#   pragma warning(pop)
+#endif
 
 #endif // !defined(_guard_FORMATXX_DETAIL_WRITE_WIDE_H)
