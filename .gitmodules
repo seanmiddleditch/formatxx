@@ -1,6 +1,0 @@
-[submodule "external/litexx"]
-	path = external/litexx
-	url = https://github.com/seanmiddleditch/litexx
-[submodule "external/doctest"]
-	path = external/doctest
-	url = https://github.com/onqtam/doctest
