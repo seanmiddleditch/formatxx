@@ -1,0 +1,78 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: []
+
+jobs:
+  build-windows:
+    strategy:
+      matrix:
+        build_config: [ 'Debug', 'Release' ]
+
+    name: 'Windows (${{ matrix.build_config }} msvc)'
+    runs-on: 'windows-latest'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Setup VS Environment
+        uses: seanmiddleditch/gha-setup-vsdevenv@master
+      - name: Configure
+        env:
+          CXXFLAGS: /W3 /WX
+          CXX: cl.exe
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_config }} ..
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: |
+          cd build
+          ctest -T test --verbose
+
+  build-ubuntu:
+    strategy:
+      matrix:
+        build_config: [ 'Debug', 'Release' ]
+        cxx: [ 'g++', 'g++-9', 'clang++', 'clang++-9' ]
+        include:
+          - cxx: g++-9
+            cxxflags: -Wno-error=init-list-lifetime
+            packages: g++-9 libstdc++-9-dev
+          - cxx: clang++-9
+            cxxflags: -stdlib=libc++
+            packages: clang-9 libc++-9-dev libc++abi-9-dev
+    
+    name: 'Ubuntu (${{ matrix.build_config }} ${{ matrix.cxx }})'
+    runs-on: 'ubuntu-latest'
+
+    steps:
+      - uses: actions/checkout@master
+      - name: Install Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+      - name: Install toolchain
+        run: |
+          sudo apt-get -yq update
+          sudo apt-get -yq install ${{ matrix.packages }}
+        if: success() && matrix.packages != ''
+      - name: Configure
+        env:
+          CXXFLAGS: '-Wall -Werror ${{ matrix.cxxflags }}'
+          CXX: '${{ matrix.cxx }}'
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G Ninja -DBUILD_SHARED_LIBS=OFF "-DCMAKE_BUILD_TYPE:STRING=${{ matrix.build_config }}" ..
+      - name: Build
+        run: cmake --build build --parallel
+      - name: Test
+        run: |
+          cd build
+          ctest -T test --verbose
